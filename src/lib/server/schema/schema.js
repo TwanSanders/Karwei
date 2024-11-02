@@ -10,7 +10,6 @@ import {
   numeric,
   decimal,
 } from "drizzle-orm/pg-core";
-import { numeric } from "drizzle-orm/sqlite-core";
 
 export const schema = pgSchema("karwei");
 
@@ -20,6 +19,7 @@ export const usersTable = schema.table("user", {
     .$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
+  passwordHash: varchar("password_hash", { length: 60 }).notNull(),
   emailVerified: timestamp("emailVerified", {
     mode: "date",
     fsp: 3,
