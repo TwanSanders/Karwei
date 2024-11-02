@@ -1,0 +1,46 @@
+import { float } from "drizzle-orm/mysql-core";
+import {
+  boolean,
+  timestamp,
+  primaryKey,
+  varchar,
+  text,
+  pgSchema,
+  serial,
+  numeric,
+  decimal,
+} from "drizzle-orm/pg-core";
+import { numeric } from "drizzle-orm/sqlite-core";
+
+export const schema = pgSchema("karwei");
+
+export const usersTable = schema.table("user", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
+  emailVerified: timestamp("emailVerified", {
+    mode: "date",
+    fsp: 3,
+  }),
+  image: varchar("image", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const postsTable = schema.table("post", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => usersTable.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  imageUrl: varchar("image_url", { length: 255 }),
+  description: text("description"),
+  purchasedAt: timestamp("purchased_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  type: varchar("type", { length: 255 }),
+  targetPrice: decimal("target_price", { precision: 10, scale: 2 }),
+});
