@@ -32,11 +32,11 @@ export const registerSchema = object({
  * @param {string} email - Email of the user to be retrieved
  * @returns {User} - User object if found, otherwise null. If password is wrong, we return false
  */
-export async function getUserByEmail(email, passwordHash = null) {
+export async function getUserByEmail(email, password = null) {
   try {
     const db = init();
 
-    console.log("email", email, passwordHash);
+    console.log("email", email, password);
     const results = await db
       .select()
       .from(usersTable)
@@ -46,11 +46,11 @@ export async function getUserByEmail(email, passwordHash = null) {
     const user =
       Array.isArray(results) && results.length > 0 ? results[0] : null;
     console.log("user", user);
-    console.log("passwordHash", passwordHash);
+    console.log("password", password);
     if (!user) return null;
 
-    if (passwordHash !== null) {
-      const isValid = await bcrypt.compare(passwordHash, user.passwordHash);
+    if (password !== null) {
+      const isValid = await bcrypt.compare(password, user.passwordHash);
       console.log("isValid", isValid);
       if (!isValid) return false;
     }
@@ -75,7 +75,7 @@ export async function createUser(name, email, password, image) {
       email,
       password,
     });
-    const passwordHash = await saltAndHashPassword(user.password);
+    const passwordHash = await bcrypt.hash(user.password, 10);
 
     // TODO - upload image to bucket
     const imageUrl = null;

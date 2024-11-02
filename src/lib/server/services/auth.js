@@ -1,12 +1,6 @@
 import { SvelteKitAuth } from "@auth/sveltekit";
 import Credentials from "@auth/sveltekit/providers/credentials";
-import bcrypt from "bcryptjs";
 import { getUserByEmail } from "../schema/user";
-
-export async function saltAndHashPassword(password) {
-  const hash = await bcrypt.hash(password, 10);
-  return hash;
-}
 
 export const { signIn, signOut, handle } = SvelteKitAuth({
   providers: [
@@ -20,17 +14,9 @@ export const { signIn, signOut, handle } = SvelteKitAuth({
       authorize: async (credentials) => {
         let user = null;
 
-        // logic to salt and hash password
-        const pwHash = await saltAndHashPassword(credentials.password);
-
         // logic to verify if user exists
-        console.log(
-          "credentials",
-          credentials.email,
-          credentials.password,
-          pwHash
-        );
-        user = await getUserByEmail(credentials.email, pwHash);
+        console.log("credentials", credentials.email, credentials.password);
+        user = await getUserByEmail(credentials.email, credentials.password);
         console.log("userResult", user);
         if (user === false) {
           throw new Error("Invalid credentials.");
