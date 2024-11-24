@@ -1,7 +1,12 @@
 <script>
   import "../app.css";
   import Navbar from "../lib/ui/navbar.svelte";
-  import { onMount } from "svelte";
+  import { setContext } from "svelte";
+
+  export let data;
+  const { session } = data;
+
+  setContext("session", session);
 </script>
 
 <Navbar />

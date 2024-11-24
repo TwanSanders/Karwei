@@ -15,9 +15,7 @@ export const { signIn, signOut, handle } = SvelteKitAuth({
         let user = null;
 
         // logic to verify if user exists
-        console.log("credentials", credentials.email, credentials.password);
         user = await getUserByEmail(credentials.email, credentials.password);
-        console.log("userResult", user);
         if (user === false) {
           throw new Error("Invalid credentials.");
         } else if (user === null) {

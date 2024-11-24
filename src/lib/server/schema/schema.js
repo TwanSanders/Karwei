@@ -27,6 +27,11 @@ export const usersTable = schema.table("user", {
   image: varchar("image", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  skills: varchar("skills", { length: 300 }),
+  lat: decimal("lat", { precision: 10, scale: 2 }),
+  long: decimal("long", { precision: 10, scale: 2 }),
+  bio: varchar("bio", { length: 255 }),
+  maker: boolean("maker"),
 });
 
 export const postsTable = schema.table("post", {
@@ -43,4 +48,19 @@ export const postsTable = schema.table("post", {
   createdAt: timestamp("created_at").defaultNow(),
   type: varchar("type", { length: 255 }),
   targetPrice: decimal("target_price", { precision: 10, scale: 2 }),
+});
+
+export const commentsTable = schema.table("comment", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => usersTable.id),
+  postId: varchar("post_id", { length: 255 })
+    .notNull()
+    .references(() => postsTable.id),
+  message: varchar("message", { length: 255 }).notNull(),
+  imageUrl: varchar("image_url", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
 });

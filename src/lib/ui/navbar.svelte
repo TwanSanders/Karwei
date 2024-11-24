@@ -1,8 +1,29 @@
 <script>
+  import { getContext } from "svelte";
+
+  // Retrieve session from context
+  const session = getContext("session");
+
   function handleThemeChange() {
     let theme = document.documentElement.getAttribute("data-theme");
     theme = theme === "dark" ? "light" : "dark";
     document.documentElement.setAttribute("data-theme", theme);
+  }
+
+  async function handleSignOut() {
+    try {
+      // Create a FormData object since the endpoint expects form data
+      const formData = new FormData();
+      formData.append("action", "signout");
+      const response = await fetch("../api/logout", {
+        method: "POST",
+        body: formData,
+      });
+
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error during sign-out:", error);
+    }
   }
 </script>
 
@@ -14,7 +35,9 @@
   </div>
   <div class="flex-none gap-2">
     <ul class="menu menu-horizontal px-1">
-      <li><a href="/create_post">Create post</a></li>
+      {#if session}
+        <li><a href="/create_post">Create post</a></li>
+      {/if}
       <li><a href="/map">Map</a></li>
     </ul>
     <div class="form-control">
@@ -50,21 +73,57 @@
         />
       </svg>
     </label>
-    <div class="dropdown dropdown-end z-50">
-      <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-        <div class="w-10 rounded-full">
-          <img alt="Tailwind CSS Navbar component" src="img\FotoNYC.jpg" />
+    {#if session}
+      <button class="btn btn-ghost btn-circle">
+        <div class="indicator">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-9 w-9"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
         </div>
-      </div>
+      </button>
+    {/if}
+    <div class="dropdown dropdown-end z-50">
+      {#if session}
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+          <div class="w-10 rounded-full">
+            <img alt="Tailwind CSS Navbar component" src="img\FotoNYC.jpg" />
+          </div>
+        </div>
+      {:else}
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+          <div class="w-10 rounded-full">
+            <img
+              alt="Tailwind CSS Navbar component"
+              src="img\no_session_profile_picture.png"
+            />
+          </div>
+        </div>
+      {/if}
       <ul
         tabindex="-1"
         class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
       >
-        <li>
-          <a href="/profile" class="justify-between"> Profile </a>
-        </li>
-        <li><a href="/settings">Settings</a></li>
-        <li><a href="/logout">Logout</a></li>
+        {#if session}
+          <li>
+            <a href="/my_profile" class="justify-between"> Profile </a>
+          </li>
+          <li><a href="/settings">Settings</a></li>
+          <li><button on:click={handleSignOut}>Log Out</button></li>
+        {:else}
+          <li><a href="/login">Log In</a></li>
+          <li><a href="/register">Register</a></li>
+        {/if}
       </ul>
     </div>
   </div>

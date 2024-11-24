@@ -3,6 +3,7 @@
   import PostCard from "../lib/ui/post_card.svelte";
   export let data;
   import { enhance } from "$app/forms";
+  import Selection from "../lib/ui/selection.svelte";
   let posts = data.props.posts || [];
 
   const limit = posts.length;
@@ -128,78 +129,12 @@
   }
 </script>
 
-<div class="grid grid-cols-12 gap-4">
-  <ul class="menu bg-base-200 rounded-box w-56 col-span-3 m-10">
+<div class="grid grid-cols-12">
+  <div class="col-span-3 m-10">
     <form method="POST" use:enhance on:change={handleChange}>
-      <li><strong>Type karwei</strong></li>
-      <li>
-        <label class="label cursor-pointer">
-          <span class="label-text">Elektriciteit</span>
-          <input
-            type="checkbox"
-            class="checkbox"
-            name="type_select"
-            value="Elektriciteit"
-          />
-        </label>
-      </li>
-      <li>
-        <label class="label cursor-pointer">
-          <span class="label-text">Huishoudelijke apparaten</span>
-          <input
-            type="checkbox"
-            class="checkbox"
-            name="type_select"
-            value="Huishoudelijke apparaten"
-          />
-        </label>
-      </li>
-      <li>
-        <label class="label cursor-pointer">
-          <span class="label-text">Textiel</span>
-          <input
-            type="checkbox"
-            class="checkbox"
-            name="type_select"
-            value="Textiel"
-          />
-        </label>
-      </li>
-      <li>
-        <label class="label cursor-pointer">
-          <span class="label-text">Hout</span>
-          <input
-            type="checkbox"
-            class="checkbox"
-            name="type_select"
-            value="Hout"
-          />
-        </label>
-      </li>
-      <li>
-        <label class="label cursor-pointer">
-          <span class="label-text">Tuinonderhoud</span>
-          <input
-            type="checkbox"
-            class="checkbox"
-            name="type_select"
-            value="Tuinonderhoud"
-          />
-        </label>
-      </li>
-      <li>
-        <label class="label cursor-pointer">
-          <span class="label-text">Elektronica</span>
-          <input
-            type="checkbox"
-            class="checkbox"
-            name="type_select"
-            value="Elektronica"
-          />
-        </label>
-      </li>
+      <Selection full={true} />
     </form>
-  </ul>
+  </div>
 
   <div
     class="carousel carousel-vertical rounded-box h-96 col-span-9 m-10 scrollbar"

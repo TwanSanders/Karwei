@@ -1,6 +1,10 @@
-<ul class="menu bg-base-200 rounded-box w-56 col-span-3 m-10">
-  <form method="POST">
-    <li><strong>Type karwei</strong></li>
+<script>
+  export let full;
+</script>
+
+<div style="max-height: 300px; overflow-y:auto;">
+  <ul class="menu rounded-box w-full" class:bg-base-200={full}>
+    {#if full}<li><strong>Type karwei</strong></li>{/if}
     <li>
       <label class="label cursor-pointer">
         <span class="label-text">Elektriciteit</span>
@@ -47,17 +51,6 @@
     </li>
     <li>
       <label class="label cursor-pointer">
-        <span class="label-text">Tuinonderhoud</span>
-        <input
-          type="checkbox"
-          class="checkbox"
-          name="type_select"
-          value="Tuinonderhoud"
-        />
-      </label>
-    </li>
-    <li>
-      <label class="label cursor-pointer">
         <span class="label-text">Elektronica</span>
         <input
           type="checkbox"
@@ -67,5 +60,49 @@
         />
       </label>
     </li>
-  </form>
-</ul>
+    <li>
+      <label class="label cursor-pointer">
+        <span class="label-text">Meubilair</span>
+        <input
+          type="checkbox"
+          class="checkbox"
+          name="type_select"
+          value="Meubilair"
+        />
+      </label>
+    </li>
+    <li>
+      <label class="label cursor-pointer">
+        <span class="label-text">Lichte verbrandingsmotoren</span>
+        <input
+          type="checkbox"
+          class="checkbox"
+          name="type_select"
+          value="Lichte verbrandingsmotoren"
+        />
+      </label>
+    </li>
+    <li>
+      <label class="label cursor-pointer">
+        <span class="label-text">Metaal</span>
+        <input
+          type="checkbox"
+          class="checkbox"
+          name="type_select"
+          value="Metaal"
+        />
+      </label>
+    </li>
+    <li>
+      <label class="label cursor-pointer">
+        <span class="label-text">Andere</span>
+        <input
+          type="checkbox"
+          class="checkbox"
+          name="type_select"
+          value="Andere"
+        />
+      </label>
+    </li>
+  </ul>
+</div>

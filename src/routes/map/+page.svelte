@@ -1,12 +1,11 @@
 <script>
   import { onMount } from "svelte";
-  import "leaflet/dist/leaflet.css"; // Import the Leaflet CSS
+  import "leaflet/dist/leaflet.css";
   import Selection from "../../lib/ui/selection.svelte";
+  import { enhance } from "$app/forms";
 
-  let makers = [
-    { name: "Twan Sanders", location: [50.7567836, 4.2783928] },
-    { name: "Manno Vanherck", location: [51.1702909, 4.4673399] },
-  ];
+  export let data;
+  let makers = data.makers;
 
   var map;
   let L;
@@ -63,10 +62,7 @@
 
     setTileLayer(isDarkTheme);
 
-    for (const maker of makers) {
-      var marker = L.marker([maker.location[0], maker.location[1]]).addTo(map);
-      marker.bindPopup(`<a href="../profile">${maker.name}</a>`);
-    }
+    updateMakers();
 
     return map;
   }
@@ -86,9 +82,71 @@
         '&copy; <a href="https://carto.com/attributions">Carto</a>, &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
     }).addTo(map);
   }
+
+  async function handleChange(event) {
+    let form = event.target.form;
+
+    const formData = new FormData(form);
+
+    console.log(formData);
+
+    try {
+      // Submit the form manually using fetch
+      const response = await fetch("?/loadMakers", {
+        method: "POST",
+        body: formData,
+      });
+
+      console.log(response);
+
+      // Parse the response and update posts
+      const result = await response.json();
+      data = JSON.parse(result.data);
+
+      makers = data
+        .filter((item) => {
+          return (
+            typeof item === "object" &&
+            item !== null &&
+            "id" in item &&
+            "name" in item
+          );
+        })
+        .map((item) => {
+          return {
+            id: data[item.id],
+            name: data[item.name],
+            lat: data[item.lat],
+            long: data[item.long],
+          };
+        });
+      updateMakers();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  }
+
+  async function updateMakers() {
+    map.eachLayer((layer) => {
+      if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
+
+    for (const maker of makers) {
+      var marker = L.marker([maker.lat, maker.long]).addTo(map);
+      marker.bindPopup(
+        `<a href="../profile?user_id=${maker.id}">${maker.name}</a>`
+      );
+    }
+  }
 </script>
 
 <div class="grid grid-cols-12">
-  <div class=" col-span-3"><Selection /></div>
+  <div class="col-span-3 m-10">
+    <form method="POST" use:enhance on:change={handleChange}>
+      <Selection full={true} />
+    </form>
+  </div>
   <div id="map" class="h-96 col-span-9 m-10 rounded-xl z-40"></div>
 </div>

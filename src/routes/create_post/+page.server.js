@@ -3,7 +3,7 @@ import { postsTable } from "$lib/server/schema/schema";
 import { redirect } from "@sveltejs/kit";
 
 export const actions = {
-  default: async ({ cookies, request }) => {
+  createPost: async ({ cookies, request }) => {
     const db = init(); // Initialize the db inside the function
 
     // Get form data
@@ -15,7 +15,8 @@ export const actions = {
     const purchasedAt = data.get("purchased_at");
     const type = data.get("type");
     const target_price = data.get("price");
-    const user_id = "18676c6e-c0e1-41da-929b-b169a28080f0";
+    const user_id = data.get("userId");
+
     console.log("Form Data:", {
       title,
       description,
@@ -29,15 +30,20 @@ export const actions = {
     //console.log(result);
 
     // Insert data into postsTable
-    await db.insert(postsTable).values({
-      userId: user_id,
-      title: title,
-      description: description,
-      purchasedAt: new Date(purchasedAt),
-      type: type,
-      targetPrice: parseFloat(target_price),
-    });
+    const result = await db
+      .insert(postsTable)
+      .values({
+        userId: user_id,
+        title: title,
+        description: description,
+        purchasedAt: new Date(purchasedAt),
+        type: type,
+        targetPrice: parseFloat(target_price),
+      })
+      .returning({ id: postsTable.id });
 
-    throw redirect(303, "../ ");
+    console.log("Result:", result);
+
+    throw redirect(303, `/`);
   },
 };

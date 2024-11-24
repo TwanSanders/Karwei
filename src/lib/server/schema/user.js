@@ -68,7 +68,17 @@ export async function getUserByEmail(email, password = null) {
  * @param {*} user - New user object to be inserted into the database
  * @returns {id: string} - Id of the newly created user
  */
-export async function createUser(name, email, password, image) {
+export async function createUser(
+  name,
+  email,
+  password,
+  image,
+  skills,
+  bio,
+  lat,
+  long,
+  maker
+) {
   try {
     const user = registerSchema.parse({
       name,
@@ -85,16 +95,20 @@ export async function createUser(name, email, password, image) {
     const results = await db
       .insert(usersTable)
       .values({
-        name,
-        email,
-        passwordHash,
-        image: imageUrl,
+        name: name,
+        email: email,
+        passwordHash: passwordHash,
+        image: "pipikaka",
+        skills: skills,
+        lat: lat,
+        long: long,
+        bio: bio,
+        maker: maker,
       })
       .returning({ id: usersTable.id });
 
     return Array.isArray(results) && results.length > 0 ? results[0] : null;
   } catch (error) {
-    console.error(error);
     throw error;
   }
 }
