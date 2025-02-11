@@ -10,6 +10,15 @@
   let comments = data.comments || [];
   let makers = data.makers || [];
   let message = "";
+  let offers = [
+    {
+      id: 1,
+      name: "Manno Vanherck",
+      description:
+        "Ik wil deze gerust maken! Je mag hem opsturen naar Heldenhuldelaan 24.",
+      price: "35",
+    },
+  ];
   const date = new Date(post.purchasedAt);
 
   async function submitComment(event) {
@@ -144,7 +153,12 @@
   </div>
   <div class="col-span-5 p-10">
     {#if session.user.id == user.id}
-      <div id="map" class="h-96 col-span-9 rounded-xl z-40"></div>
+      <div class="card card-compact bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">People near you who can fix this</h2>
+          <div id="map" class="h-96 col-span-9 rounded-xl z-40"></div>
+        </div>
+      </div>
     {:else}
       <div class="card card-compact bg-base-100 shadow-xl">
         <div class="card-body">
@@ -256,4 +270,33 @@
       {/if}
     </div>
   </div>
+  {#if session.user.id == user.id}
+    <div class="card card-compact bg-base-100 shadow-xl m-10 col-span-12">
+      <div class="card-body">
+        <h2 class="card-title">Pending offers</h2>
+        <hr />
+        {#if offers.length === 0}
+          <p>There are no offers yet.</p>
+        {/if}
+        {#each offers as offer}
+          <div class="border p-2 rounded-lg flex justify-between items-center">
+            <div>
+              <p><strong>Name: </strong>{offer.name}</p>
+              <p>
+                <strong>Description: </strong>{offer.description}
+              </p>
+              <p><strong>Price: </strong>€{offer.price}</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-primary w-1/4"
+              on:click={() => {
+                window.location.href = `/review?offer_id${offer.id}`;
+              }}>Karwei finished!</button
+            >
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
 </div>

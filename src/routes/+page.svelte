@@ -132,7 +132,9 @@
 <div class="grid grid-cols-12">
   <div class="col-span-3 m-10">
     <form method="POST" use:enhance on:change={handleChange}>
+      
       <Selection full={true} />
+
     </form>
   </div>
 
