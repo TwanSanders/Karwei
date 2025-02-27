@@ -48,6 +48,8 @@ export const postsTable = schema.table("post", {
   createdAt: timestamp("created_at").defaultNow(),
   type: varchar("type", { length: 255 }),
   targetPrice: decimal("target_price", { precision: 10, scale: 2 }),
+  makerId: varchar("maker_id", { length: 255 }),
+  score: decimal("score", { precision: 10, scale: 2 }),
 });
 
 export const commentsTable = schema.table("comment", {
@@ -62,5 +64,23 @@ export const commentsTable = schema.table("comment", {
     .references(() => postsTable.id),
   message: varchar("message", { length: 255 }).notNull(),
   imageUrl: varchar("image_url", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const offersTable = schema.table("offer", {
+  id: varchar("id", { length: 255 })
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  postId: varchar("post_id", { length: 255 })
+    .notNull()
+    .references(() => postsTable.id),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => usersTable.id),
+  message: varchar("message", { length: 255 }).notNull(),
+  makerId: varchar("maker_id", { length: 255 })
+    .notNull()
+    .references(() => usersTable.id),
+  price: decimal("price", { precision: 10, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
 });

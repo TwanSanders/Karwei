@@ -23,7 +23,23 @@ export async function load({ url }) {
   let user = await query_user.execute();
   user = user[0];
 
+  let query_rating = db
+    .select()
+    .from(postsTable)
+    .where(eq(postsTable.makerId, userId));
+  let fixedPosts = await query_rating.execute();
+  let rating = 0;
+  let count = 0;
+  fixedPosts.forEach((post) => {
+    if (post.score) {
+      rating += post.score;
+      count++;
+    }
+  });
+  rating = rating / count;
+  console.log("rating", rating);
+
   return {
-    props: { posts, user },
+    props: { posts, user, rating },
   };
 }

@@ -5,7 +5,7 @@
   export let data;
   let posts = data.props.posts || [];
   let user = data.props.user || {};
-  let averageRating = 3.75;
+  let rating = data.props.rating || 0;
 
   // Retrieve session from context
   const session = getContext("session");
@@ -28,11 +28,11 @@
       <div class="flex items-baseline">
         <h1 class="text-3xl font-bold mr-5">{user.name}</h1>
         <div class="flex items-center">
-          <p class="mr-2">{averageRating}</p>
+          <p class="mr-2">{rating}</p>
           {#each Array(5) as _, i}
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill={i < Math.floor(averageRating) ? "currentColor" : "none"}
+              fill={i < Math.floor(rating) ? "currentColor" : "none"}
               viewBox="0 0 24 24"
               stroke="currentColor"
               class="w-5 h-5"

@@ -1,7 +1,7 @@
 import { init } from "$lib/server/schema/init";
 import { usersTable } from "$lib/server/schema/schema";
 import { postsTable } from "$lib/server/schema/schema";
-import { eq, or } from "drizzle-orm";
+import { eq, or, isNull } from "drizzle-orm";
 
 const limit = 2;
 
@@ -16,7 +16,12 @@ async function loadPosts(url) {
   const db = init();
   const geselecteerdeTypes = url.searchParams.getAll("type_select");
 
-  let query = db.select().from(postsTable).limit(limit).offset(0);
+  let query = db
+    .select()
+    .from(postsTable)
+    .limit(limit)
+    .offset(0)
+    .where(isNull(postsTable.makerId));
 
   // Pas de query aan op basis van de geselecteerde types
   if (geselecteerdeTypes.length > 0) {
@@ -38,7 +43,12 @@ export const actions = {
     const selectedTypes = formData.getAll("type_select");
     const offset = formData.get("page") * limit;
 
-    let query = db.select().from(postsTable).limit(limit).offset(offset);
+    let query = db
+      .select()
+      .from(postsTable)
+      .limit(limit)
+      .offset(offset)
+      .where(isNull(postsTable.makerId));
 
     // Pas de query aan op basis van de geselecteerde types
     if (selectedTypes.length > 0) {

@@ -10,27 +10,22 @@
   let comments = data.comments || [];
   let makers = data.makers || [];
   let message = "";
-  let offers = [
-    {
-      id: 1,
-      name: "Manno Vanherck",
-      description:
-        "Ik wil deze gerust maken! Je mag hem opsturen naar Heldenhuldelaan 24.",
-      price: "35",
-    },
-  ];
+  let price = "";
+  let offers = data.offers || [];
+
   const date = new Date(post.purchasedAt);
 
   async function submitComment(event) {
     const form = event.target.form;
     const formData = new FormData(form);
+
     formData.append("post_id", post.id);
     formData.append("user_id", session.user.id);
     formData.append("message", message);
 
     try {
       // Submit the form manually using fetch
-      const response = await fetch("?/sumbitComment", {
+      const response = await fetch("?/submitComment", {
         method: "POST",
         body: formData,
       });
@@ -40,6 +35,34 @@
 
       if (response.status == 200) {
         window.location.reload();
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function submitOffer(event) {
+    const form = event.target.form;
+    const formData = new FormData(form);
+
+    formData.append("post_id", post.id);
+    formData.append("maker_id", session.user.id);
+    formData.append("user_id", user.id);
+    formData.append("message", message);
+    formData.append("price", price);
+
+    try {
+      // Submit the form manually using fetch
+      const response = await fetch("?/submitOffer", {
+        method: "POST",
+        body: formData,
+      });
+
+      // Parse the response and update posts
+      const result = await response.json();
+
+      if (response.status == 200) {
+        window.location.href = `/post?id=${post.id}`;
       }
     } catch (error) {
       console.error(error);
@@ -152,7 +175,7 @@
     </a>
   </div>
   <div class="col-span-5 p-10">
-    {#if session.user.id == user.id}
+    {#if session && session.user.id == user.id}
       <div class="card card-compact bg-base-100 shadow-xl">
         <div class="card-body">
           <h2 class="card-title">People near you who can fix this</h2>
@@ -160,19 +183,28 @@
         </div>
       </div>
     {:else}
-      <div class="card card-compact bg-base-100 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title">Make an offer</h2>
-          <strong>Price</strong>
-          <input name="price" class="input input-bordered" />
-          <strong>Description</strong>
-          <textarea name="description" class="textarea textarea-bordered"
-          ></textarea>
-          <button type="button" class="btn btn-primary w-full mt-6"
-            >Offer</button
-          >
+      <form on:submit={submitOffer}>
+        <div class="card card-compact bg-base-100 shadow-xl">
+          <div class="card-body">
+            <h2 class="card-title">Make an offer</h2>
+            <strong>Price</strong>
+            <input
+              name="price"
+              class="input input-bordered"
+              bind:value={price}
+            />
+            <strong>Description</strong>
+            <textarea
+              name="message"
+              class="textarea textarea-bordered"
+              bind:value={message}
+            ></textarea>
+            <button type="submit" class="btn btn-primary w-full mt-6"
+              >Offer</button
+            >
+          </div>
         </div>
-      </div>
+      </form>
     {/if}
   </div>
 
@@ -281,17 +313,17 @@
         {#each offers as offer}
           <div class="border p-2 rounded-lg flex justify-between items-center">
             <div>
-              <p><strong>Name: </strong>{offer.name}</p>
+              <p><strong>Name: </strong>{offer.user.name}</p>
               <p>
-                <strong>Description: </strong>{offer.description}
+                <strong>Description: </strong>{offer.offer.message}
               </p>
-              <p><strong>Price: </strong>€{offer.price}</p>
+              <p><strong>Price: </strong>€{offer.offer.price}</p>
             </div>
             <button
               type="button"
               class="btn btn-primary w-1/4"
               on:click={() => {
-                window.location.href = `/review?offer_id${offer.id}`;
+                window.location.href = `/review?offer_id=${offer.offer.id}&post_id=${post.id}&maker_id=${offer.user.id}`;
               }}>Karwei finished!</button
             >
           </div>

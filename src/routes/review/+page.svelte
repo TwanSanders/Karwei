@@ -1,14 +1,60 @@
 <script>
   let score = 1.5;
 
+  import { onMount } from "svelte";
+
+  onMount(() => {
+    // Get info out of url
+    const url = new URL(window.location.href);
+    offer_id = url.searchParams.get("offer_id");
+    post_id = url.searchParams.get("post_id");
+    maker_id = url.searchParams.get("maker_id");
+    user_id = url.searchParams.get("user_id");
+  });
+
+  let offer_id = 0;
+  let post_id = 0;
+  let maker_id = 0;
+  let user_id = 0;
+
   async function handleScore(new_score) {
+    console.log(new_score);
     score = new_score;
-    console.log(score);
+  }
+
+  async function submitReview(event) {
+    const form = event.target.form;
+    const formData = new FormData(form);
+
+    formData.append("post_id", post_id);
+    formData.append("maker_id", maker_id);
+    formData.append("offer_id", offer_id);
+    formData.append("score", score);
+
+    try {
+      // Submit the form manually using fetch
+      const response = await fetch("?/submitReview", {
+        method: "POST",
+        body: formData,
+      });
+
+      // Parse the response and update posts
+      const result = await response.json();
+
+      if (response.status == 200) {
+        window.location.href = `/`;
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 </script>
 
-<form action="?/submitReview" method="POST">
+<form on:submit={submitReview}>
   <input type="hidden" name="score" value={score} />
+  <input type="hidden" name="offer_id" value={offer_id} />
+  <input type="hidden" name="post_id" value={post_id} />
+  <input type="hidden" name="maker_id" value={maker_id} />
   <div class="grid grid-cols-12">
     <div class="card card-compact bg-base-100 shadow-xl m-10 col-span-6">
       <div class="card-body">

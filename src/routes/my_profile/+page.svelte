@@ -78,11 +78,28 @@
       </div>
 
       <!-- User Info -->
-      <div class="flex">
-        <h1 class="text-3xl font-bold">
-          {user.name}
-        </h1>
-        <img src="img/edit.png" alt="edit" title="edit" class="ml-5 size-9" />
+      <div class="flex items-baseline">
+        <h1 class="text-3xl font-bold mr-5">{user.name}</h1>
+        <div class="flex items-center">
+          <p class="mr-2">{rating}</p>
+          {#each Array(5) as _, i}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill={i < Math.floor(rating) ? "currentColor" : "none"}
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              class="w-5 h-5"
+              color="orange"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"
+              />
+            </svg>
+          {/each}
+        </div>
       </div>
       <p class="text-gray-500">{user.title}</p>
     </div>
