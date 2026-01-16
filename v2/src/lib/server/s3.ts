@@ -1,44 +1,33 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { NodeHttpHandler } from "@smithy/node-http-handler"; 
-import { Agent } from "https";
 import { env } from "$env/dynamic/private";
 
+// Haal variabelen op
 const R2_ACCOUNT_ID = env.R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = env.R2_BUCKET_NAME || "karwei";
 const R2_PUBLIC_URL = env.R2_PUBLIC_URL;
 
-// Debugging: Laat zien wat we hebben (veilig)
-console.log("🔧 R2 Config Check:", {
-    accountIdPresent: !!R2_ACCOUNT_ID,
-    accessKeyPresent: !!R2_ACCESS_KEY_ID,
-    secretKeyPresent: !!R2_SECRET_ACCESS_KEY,
+// Debug log voor versie en config
+console.log("🟢 Node Version:", process.version);
+console.log("🔧 R2 Config:", {
+    accountId: R2_ACCOUNT_ID ? "Present" : "MISSING",
     bucket: R2_BUCKET_NAME
 });
 
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
-    console.error("❌ CRITICAL: R2 Keys ontbreken in .env bestand!");
+    throw new Error("R2 Credentials missing via $env/dynamic/private");
 }
 
-// DE OPLOSSING VOOR DE NIEUWE NODE VERSIE
-// We gebruiken minVersion in plaats van secureProtocol.
-// Dit laat Node.js en Cloudflare zelf de beste beveiliging kiezen (TLS 1.2 of 1.3).
-const requestHandler = new NodeHttpHandler({
-    httpsAgent: new Agent({
-        minVersion: "TLSv1.2", // <--- DIT IS DE BELANGRIJKE WIJZIGING
-        keepAlive: true
-    })
-});
-
+// "Clean Slate" Client: Geen custom requestHandlers meer.
+// We vertrouwen erop dat Node v20+ dit zelf kan.
 const s3Client = new S3Client({
     region: "auto",
     endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
-        accessKeyId: R2_ACCESS_KEY_ID!,
-        secretAccessKey: R2_SECRET_ACCESS_KEY!,
-    },
-    requestHandler: requestHandler,
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+    }
 });
 
 export async function uploadToR2(file: File): Promise<string> {
@@ -62,8 +51,7 @@ export async function uploadToR2(file: File): Promise<string> {
         console.log("✅ Upload geslaagd!");
         return `${R2_PUBLIC_URL}/${filename}`;
     } catch (error) {
-        console.error("🔥 Fout tijdens uploaden naar R2:", error);
-        // Gooi de fout opnieuw op zodat de frontend weet dat het mislukt is
+        console.error("🔥 Fout tijdens uploaden:", error);
         throw error;
     }
 }
