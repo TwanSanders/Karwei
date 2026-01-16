@@ -9,9 +9,9 @@
   setContext("session", session);
 </script>
 
-<Navbar />
+<Navbar {session} />
 
-<div class="  bg-neutral-200 dark:bg-zinc-700">
+<div class="content-padding min-h-screen bg-neutral-200 dark:bg-zinc-700">
   <slot />
 </div>
 

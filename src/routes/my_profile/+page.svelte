@@ -64,7 +64,12 @@
 
   onMount(() => {
     retreivePosts();
+    if (avatarEl && avatarEl.complete) {
+      avatarEl.classList.remove("blur-lg");
+    }
   });
+
+  let avatarEl;
 </script>
 
 <div class="grid grid-cols-12">
@@ -73,7 +78,13 @@
       <!-- Avatar -->
       <div class="avatar">
         <div class="w-24 mask rounded">
-          <img src="img\FotoNYC.jpg" alt="Pipi" />
+          <img
+            src="img\FotoNYC.jpg"
+            alt="Pipi"
+            loading="lazy"
+            class="transition-all duration-300 ease-out blur-lg"
+            on:load={(e) => e.currentTarget.classList.remove("blur-lg")}
+          />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 <script>
   import PostCard from "../../lib/ui/post_card.svelte";
-  import { getContext } from "svelte";
+  import { getContext, onMount } from "svelte";
 
   export let data;
   let posts = data.props.posts || [];
@@ -20,9 +20,24 @@
       <!-- Avatar -->
       <div class="avatar">
         <div class="w-24 mask rounded">
-          <img src="img\FotoNYC.jpg" alt="Pipi" />
+          <img
+            bind:this={avatarEl}
+            src="img\FotoNYC.jpg"
+            alt="Pipi"
+            loading="lazy"
+            class="transition-all duration-300 ease-out blur-lg"
+          />
         </div>
       </div>
+
+      <script>
+        let avatarEl;
+        onMount(() => {
+          if (avatarEl && avatarEl.complete) {
+            avatarEl.classList.remove("blur-lg");
+          }
+        });
+      </script>
 
       <!-- User Info -->
       <div class="flex items-baseline">

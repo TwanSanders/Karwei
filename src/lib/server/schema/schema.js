@@ -28,8 +28,8 @@ export const usersTable = schema.table("user", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
   skills: varchar("skills", { length: 300 }),
-  lat: decimal("lat", { precision: 10, scale: 2 }),
-  long: decimal("long", { precision: 10, scale: 2 }),
+  lat: decimal("lat", { precision: 10, scale: 6 }),
+  long: decimal("long", { precision: 10, scale: 6 }),
   bio: varchar("bio", { length: 255 }),
   maker: boolean("maker"),
 });

@@ -60,7 +60,13 @@
   />
   {#if imgUrl}
     <div class="w-1/5">
-      <img id="image" src={imgUrl} alt="" class="block max-w-max" />
+      <img
+        id="image"
+        src={imgUrl}
+        alt=""
+        class="block max-w-max"
+        loading="lazy"
+      />
     </div>
     <script>
       const image = document.getElementById("image");

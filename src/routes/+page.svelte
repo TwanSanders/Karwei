@@ -132,43 +132,35 @@
 <div class="grid grid-cols-12">
   <div class="col-span-3 m-10">
     <form method="POST" use:enhance on:change={handleChange}>
-      
       <Selection full={true} />
-
     </form>
   </div>
 
-  <div
-    class="carousel carousel-vertical rounded-box h-96 col-span-9 m-10 scrollbar"
-    bind:this={carousel}
-  >
-    {#each posts as post}
-      <div class="carousel-item h-full">
-        <PostCard
-          title={post.title}
-          description={post.description}
-          type={post.type}
-          id={post.id}
-        />
-      </div>
-    {/each}
-    {#if no_more_posts}
-      <div class="carousel-item h-full">
-        <div class="flex justify-center items-center h-full">
-          <p>You've reached the end!</p>
-        </div>
-      </div>
-    {:else}
-      <div class="carousel-item h-full">
-        <div class="flex justify-center items-center h-full">
-          <input
-            type="button"
-            value="Load more"
-            class="btn btn-primary"
-            on:click={loadMore}
+  <div class="col-span-9 m-10">
+    <div class="space-y-6" bind:this={carousel}>
+      {#each posts as post}
+        <div>
+          <PostCard
+            title={post.title}
+            description={post.description}
+            type={post.type}
+            id={post.id}
           />
         </div>
-      </div>
-    {/if}
+      {/each}
+    </div>
+
+    <div class="flex justify-center mt-8">
+      {#if no_more_posts}
+        <p class="text-sm text-slate-600">You've reached the end!</p>
+      {:else}
+        <input
+          type="button"
+          value="Load more"
+          class="btn btn-primary"
+          on:click={loadMore}
+        />
+      {/if}
+    </div>
   </div>
 </div>

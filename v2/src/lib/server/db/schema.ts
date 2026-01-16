@@ -1,0 +1,62 @@
+import { pgTable, text, timestamp, boolean, varchar, decimal, pgSchema } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+
+export const karweiSchema = pgSchema("karwei");
+
+export const usersTable = karweiSchema.table("user", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	name: text("name").notNull(),
+	email: text("email").unique().notNull(),
+	passwordHash: text("password_hash").notNull(),
+	emailVerified: timestamp("emailVerified", { mode: "date", precision: 3 }),
+	image: text("image"),
+	phoneNumber: text("phone_number"),
+	skills: text("skills"), // Comma separated skills
+	lat: decimal("lat", { precision: 10, scale: 6 }),
+	long: decimal("long", { precision: 10, scale: 6 }),
+	bio: text("bio"),
+	maker: boolean("maker").default(false),
+	createdAt: timestamp("created_at").defaultNow(),
+	updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const postsTable = karweiSchema.table("post", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id").notNull().references(() => usersTable.id),
+	title: text("title").notNull(),
+	imageUrl: text("image_url"),
+	description: text("description"),
+	purchasedAt: timestamp("purchased_at"),
+	type: text("type"),
+	targetPrice: decimal("target_price", { precision: 10, scale: 2 }),
+	makerId: text("maker_id"), // Assigned maker?
+	score: decimal("score", { precision: 10, scale: 2 }),
+	createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const commentsTable = karweiSchema.table("comment", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id").notNull().references(() => usersTable.id),
+	postId: text("post_id").notNull().references(() => postsTable.id),
+	message: text("message").notNull(),
+	imageUrl: text("image_url"),
+	createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const offersTable = karweiSchema.table("offer", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id").notNull().references(() => usersTable.id),
+	postId: text("post_id").notNull().references(() => postsTable.id),
+	makerId: text("maker_id").notNull().references(() => usersTable.id),
+	message: text("message").notNull(),
+	price: decimal("price", { precision: 10, scale: 2 }),
+	createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const contactRequestsTable = karweiSchema.table("contact_request", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	requesterId: text("requester_id").notNull().references(() => usersTable.id),
+	targetUserId: text("target_user_id").notNull().references(() => usersTable.id),
+	status: text("status", { enum: ["pending", "accepted", "denied"] }).default("pending").notNull(),
+	createdAt: timestamp("created_at").defaultNow(),
+});

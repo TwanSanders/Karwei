@@ -122,13 +122,30 @@
   onMount(() => {
     LoadMap();
   });
+  let rootEl;
+
+  // ensure any images that already finished loading (cached) lose the blur
+  onMount(() => {
+    if (rootEl) {
+      const imgs = rootEl.querySelectorAll("img.blur-lg");
+      imgs.forEach((img) => {
+        if (img.complete) img.classList.remove("blur-lg");
+      });
+    }
+  });
 </script>
 
-<div class="grid grid-cols-12">
+<div bind:this={rootEl} class="grid grid-cols-12">
   <div class="col-span-4 p-10">
     <div class="card card-compact bg-base-100 shadow-xl">
       <figure>
-        <img src="img\magnetron.jpg" alt="Magnetron" />
+        <img
+          src="img\magnetron.jpg"
+          alt="Magnetron"
+          loading="lazy"
+          class="transition-all duration-300 ease-out blur-lg"
+          on:load={(e) => e.currentTarget.classList.remove("blur-lg")}
+        />
       </figure>
       <div class="card-body">
         <h2 class="card-title">{post.title}</h2>
@@ -225,6 +242,9 @@
                 src={session && session.user.id === comment.user.id
                   ? "img/FotoNYC.jpg"
                   : "https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"}
+                loading="lazy"
+                class="transition-all duration-300 ease-out blur-lg"
+                on:load={(e) => e.currentTarget.classList.remove("blur-lg")}
               />
             </div>
           </div>

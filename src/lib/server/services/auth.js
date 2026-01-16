@@ -16,16 +16,20 @@ export const { signIn, signOut, handle } = SvelteKitAuth({
 
         // logic to verify if user exists
         user = await getUserByEmail(credentials.email, credentials.password);
-        if (user === false) {
-          throw new Error("Invalid credentials.");
-        } else if (user === null) {
-          throw new Error(
-            "Email address not found, please register before logging in."
-          );
+
+        // The Credentials provider expects `null` on failure. Throwing an Error
+        // here results in a 500 Internal Server Error. Return `null` so the
+        // client receives a proper authentication failure response.
+        if (user === false || user === null) {
+          return null;
         }
 
-        // return JSON object with the user data
-        return user;
+        // Ensure passwordHash isn't leaked in the session
+        if (user && typeof user === "object") {
+          const { passwordHash, ...safeUser } = user;
+          return safeUser;
+        }
+        return null;
       },
     }),
   ],

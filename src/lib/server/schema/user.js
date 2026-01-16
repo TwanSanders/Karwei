@@ -36,26 +36,23 @@ export async function getUserByEmail(email, password = null) {
   try {
     const db = init();
 
-    console.log("email", email, password);
     const results = await db
       .select()
       .from(usersTable)
       .where(eq(usersTable.email, email));
-    console.log("results", results);
 
     const user =
       Array.isArray(results) && results.length > 0 ? results[0] : null;
-    console.log("user", user);
-    console.log("password", password);
     if (!user) return null;
 
     if (password !== null) {
       const isValid = await bcrypt.compare(password, user.passwordHash);
-      console.log("isValid", isValid);
       if (!isValid) return false;
     }
 
-    return user;
+    // Return a sanitized user object without sensitive fields
+    const { passwordHash, ...sanitized } = user;
+    return sanitized;
   } catch (error) {
     console.error(error);
     return null;
@@ -88,7 +85,18 @@ export async function createUser(
     const passwordHash = await bcrypt.hash(user.password, 10);
 
     // TODO - upload image to bucket
-    const imageUrl = null;
+    const imageUrl = image ?? null;
+
+    // coerce lat/long to numbers (or null) to match decimal DB precision
+    const parsedLat =
+      lat !== null && lat !== undefined ? parseFloat(lat) : null;
+    const parsedLong =
+      long !== null && long !== undefined ? parseFloat(long) : null;
+    const safeLat = Number.isFinite(parsedLat) ? parsedLat : null;
+    const safeLong = Number.isFinite(parsedLong) ? parsedLong : null;
+
+    // if skills is an array (from formData.getAll), join to a string
+    const safeSkills = Array.isArray(skills) ? skills.join(",") : skills;
 
     // Save user to database
     const db = init();
@@ -98,10 +106,10 @@ export async function createUser(
         name: name,
         email: email,
         passwordHash: passwordHash,
-        image: "pipikaka",
-        skills: skills,
-        lat: lat,
-        long: long,
+        image: imageUrl,
+        skills: safeSkills,
+        lat: safeLat,
+        long: safeLong,
         bio: bio,
         maker: maker,
       })
