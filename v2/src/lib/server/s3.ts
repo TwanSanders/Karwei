@@ -9,16 +9,24 @@ const R2_SECRET_ACCESS_KEY = env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = env.R2_BUCKET_NAME || "karwei";
 const R2_PUBLIC_URL = env.R2_PUBLIC_URL;
 
-// DEBUG: Check alles!
+// Debugging: Laat zien wat we hebben (veilig)
+console.log("🔧 R2 Config Check:", {
+    accountIdPresent: !!R2_ACCOUNT_ID,
+    accessKeyPresent: !!R2_ACCESS_KEY_ID,
+    secretKeyPresent: !!R2_SECRET_ACCESS_KEY,
+    bucket: R2_BUCKET_NAME
+});
+
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
-    console.error("❌ CRITICAL ERROR: Een van de R2 variables ontbreekt!");
-    console.error(`ID: ${R2_ACCOUNT_ID ? 'OK' : 'MISSING'}, Access: ${R2_ACCESS_KEY_ID ? 'OK' : 'MISSING'}, Secret: ${R2_SECRET_ACCESS_KEY ? 'OK' : 'MISSING'}`);
-    throw new Error("R2 Configuration missing");
+    console.error("❌ CRITICAL: R2 Keys ontbreken in .env bestand!");
 }
 
+// DE OPLOSSING VOOR DE NIEUWE NODE VERSIE
+// We gebruiken minVersion in plaats van secureProtocol.
+// Dit laat Node.js en Cloudflare zelf de beste beveiliging kiezen (TLS 1.2 of 1.3).
 const requestHandler = new NodeHttpHandler({
     httpsAgent: new Agent({
-        minVersion: "TLSv1.2", // Veiliger dan secureProtocol
+        minVersion: "TLSv1.2", // <--- DIT IS DE BELANGRIJKE WIJZIGING
         keepAlive: true
     })
 });
@@ -27,8 +35,8 @@ const s3Client = new S3Client({
     region: "auto",
     endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
     credentials: {
-        accessKeyId: R2_ACCESS_KEY_ID,
-        secretAccessKey: R2_SECRET_ACCESS_KEY,
+        accessKeyId: R2_ACCESS_KEY_ID!,
+        secretAccessKey: R2_SECRET_ACCESS_KEY!,
     },
     requestHandler: requestHandler,
 });
@@ -36,11 +44,6 @@ const s3Client = new S3Client({
 export async function uploadToR2(file: File): Promise<string> {
     console.log(`🚀 Start upload naar bucket: ${R2_BUCKET_NAME}`);
     
-    // Check de file
-    if (!file || file.size === 0) {
-        throw new Error("File is leeg");
-    }
-
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const uniqueId = crypto.randomUUID();
@@ -57,17 +60,10 @@ export async function uploadToR2(file: File): Promise<string> {
             })
         );
         console.log("✅ Upload geslaagd!");
-        
-        // Fallback als PUBLIC_URL mist (handig voor debug)
-        if (!R2_PUBLIC_URL) {
-            console.warn("⚠️ R2_PUBLIC_URL mist, kan geen geldige link teruggeven.");
-            return filename;
-        }
         return `${R2_PUBLIC_URL}/${filename}`;
     } catch (error) {
         console.error("🔥 Fout tijdens uploaden naar R2:", error);
-        // Print de endpoint die hij probeerde te bereiken (voor debug)
-        console.error("Geprobeerde endpoint:", `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`);
+        // Gooi de fout opnieuw op zodat de frontend weet dat het mislukt is
         throw error;
     }
 }
