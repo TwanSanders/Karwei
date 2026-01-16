@@ -30,6 +30,7 @@ export const postsTable = karweiSchema.table("post", {
 	type: text("type"),
 	targetPrice: decimal("target_price", { precision: 10, scale: 2 }),
 	makerId: text("maker_id"), // Assigned maker?
+	status: text("status", { enum: ["open", "in_progress", "fixed", "closed"] }).default("open").notNull(),
 	score: decimal("score", { precision: 10, scale: 2 }),
 	createdAt: timestamp("created_at").defaultNow(),
 });
@@ -50,6 +51,16 @@ export const offersTable = karweiSchema.table("offer", {
 	makerId: text("maker_id").notNull().references(() => usersTable.id),
 	message: text("message").notNull(),
 	price: decimal("price", { precision: 10, scale: 2 }),
+	createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const reviewsTable = karweiSchema.table("review", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	reviewerId: text("reviewer_id").notNull().references(() => usersTable.id),
+	targetUserId: text("target_user_id").notNull().references(() => usersTable.id),
+	postId: text("post_id").notNull().references(() => postsTable.id),
+	rating: decimal("rating", { precision: 2, scale: 1 }).notNull(), // 1.0 to 5.0
+	comment: text("comment"),
 	createdAt: timestamp("created_at").defaultNow(),
 });
 

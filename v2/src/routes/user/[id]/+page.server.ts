@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 import { ContactRequestRepository } from '$lib/server/repositories/contactRequestRepository';
+import { ReviewRepository } from '$lib/server/repositories/reviewRepository';
 
 export const load: PageServerLoad = async ({ params, cookies }) => {
     const userId = cookies.get('session_id');
@@ -36,10 +37,15 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
         targetUser.phoneNumber = 'Hidden';
     }
 
+    const reviews = await ReviewRepository.getByTargetUserId(targetUserId);
+    const averageRating = await ReviewRepository.getAverageRating(targetUserId);
+
     return {
         publicUser: targetUser,
         contactRequest,
-        currentUserId: userId
+        currentUserId: userId,
+        reviews,
+        averageRating
     };
 };
 

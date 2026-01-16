@@ -28,7 +28,24 @@
             </div>
             <div>
                 <span
-                    class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800"
+                    class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium
+                    {post.status === 'open'
+                        ? 'bg-green-100 text-green-800'
+                        : post.status === 'in_progress'
+                          ? 'bg-blue-100 text-blue-800'
+                          : post.status === 'fixed'
+                            ? 'bg-indigo-100 text-indigo-800'
+                            : 'bg-gray-100 text-gray-800'}"
+                >
+                    {post.status === "in_progress"
+                        ? "In Progress"
+                        : post.status
+                          ? post.status.charAt(0).toUpperCase() +
+                            post.status.slice(1)
+                          : "Open"}
+                </span>
+                <span
+                    class="ml-2 inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
                 >
                     {post.type || "General"}
                 </span>
@@ -142,6 +159,33 @@
                                     Offered Price: €{offer.price.toFixed(2)}
                                 </div>
                             {/if}
+
+                            {#if isOwner && post.status === "open"}
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <form
+                                        action="?/acceptOffer"
+                                        method="POST"
+                                        use:enhance
+                                    >
+                                        <input
+                                            type="hidden"
+                                            name="offerId"
+                                            value={offer.id}
+                                        />
+                                        <input
+                                            type="hidden"
+                                            name="makerId"
+                                            value={offer.makerId}
+                                        />
+                                        <button
+                                            type="submit"
+                                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm"
+                                        >
+                                            Accept Offer
+                                        </button>
+                                    </form>
+                                </div>
+                            {/if}
                         </div>
                     {/each}
                 {/if}
@@ -196,6 +240,110 @@
                         </button>
                     </form>
                 </div>
+            {/if}
+
+            <!-- Post Workflow Actions for Owner -->
+            {#if isOwner}
+                {#if post.status === "in_progress"}
+                    <div
+                        class="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-100"
+                    >
+                        <h4 class="text-base font-medium text-blue-900">
+                            Repair in Progress
+                        </h4>
+                        <p class="mt-1 text-sm text-blue-700 mb-4">
+                            The repair is currently underway. Once the job is
+                            done, mark it as fixed.
+                        </p>
+                        <form action="?/markFixed" method="POST" use:enhance>
+                            <button
+                                type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                                Mark as Fixed
+                            </button>
+                        </form>
+                    </div>
+                {:else if post.status === "fixed"}
+                    <div
+                        class="mt-8 bg-green-50 p-6 rounded-lg border border-green-100"
+                    >
+                        <h4 class="text-base font-medium text-green-900">
+                            Repair Complete!
+                        </h4>
+                        <p class="mt-1 text-sm text-green-700 mb-4">
+                            This item has been marked as fixed. Please leave a
+                            review for the repairer.
+                        </p>
+
+                        <form
+                            action="?/submitReview"
+                            method="POST"
+                            use:enhance
+                            class="space-y-4"
+                        >
+                            <div>
+                                <label
+                                    for="rating"
+                                    class="block text-sm font-medium text-green-900"
+                                    >Rating</label
+                                >
+                                <select
+                                    id="rating"
+                                    name="rating"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+                                >
+                                    <option value="5">5 - Excellent</option>
+                                    <option value="4">4 - Very Good</option>
+                                    <option value="3">3 - Good</option>
+                                    <option value="2">2 - Fair</option>
+                                    <option value="1">1 - Poor</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    for="review-comment"
+                                    class="block text-sm font-medium text-green-900"
+                                    >Review</label
+                                >
+                                <textarea
+                                    id="review-comment"
+                                    name="comment"
+                                    rows="3"
+                                    class="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    placeholder="How was the service?"
+                                ></textarea>
+                            </div>
+                            <button
+                                type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            >
+                                Submit Review
+                            </button>
+                        </form>
+                    </div>
+                {:else if post.status === "closed"}
+                    <div
+                        class="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200"
+                    >
+                        <div class="flex items-center">
+                            <svg
+                                class="h-5 w-5 text-gray-400 mr-2"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                            >
+                                <path
+                                    fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd"
+                                />
+                            </svg>
+                            <span class="text-gray-900 font-medium"
+                                >This repair is closed. Thank you!</span
+                            >
+                        </div>
+                    </div>
+                {/if}
             {/if}
         </div>
 

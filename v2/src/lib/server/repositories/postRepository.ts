@@ -17,6 +17,7 @@ export class PostRepository {
       type: row.type,
       targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
       makerId: row.makerId,
+      status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
       createdAt: row.createdAt || new Date(),
     }));
@@ -38,6 +39,7 @@ export class PostRepository {
       type: row.type,
       targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
       makerId: row.makerId,
+      status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
       createdAt: row.createdAt || new Date(),
     };
@@ -56,6 +58,7 @@ export class PostRepository {
       type: row.type,
       targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
       makerId: row.makerId,
+      status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
       createdAt: row.createdAt || new Date(),
     };
@@ -73,6 +76,7 @@ export class PostRepository {
       type: row.type,
       targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
       makerId: row.makerId,
+      status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
       createdAt: row.createdAt || new Date(),
     }));
@@ -80,5 +84,18 @@ export class PostRepository {
 
   static async delete(id: string): Promise<void> {
     await db.delete(postsTable).where(eq(postsTable.id, id));
+  }
+
+  static async updateStatus(id: string, status: 'open' | 'in_progress' | 'fixed' | 'closed'): Promise<void> {
+    await db.update(postsTable).set({ status }).where(eq(postsTable.id, id));
+  }
+
+  static async assignMaker(id: string, makerId: string): Promise<void> {
+    await db.update(postsTable)
+        .set({ 
+            makerId, 
+            status: 'in_progress' 
+        })
+        .where(eq(postsTable.id, id));
   }
 }
