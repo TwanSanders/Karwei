@@ -95,14 +95,37 @@
                             class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm"
                         >
                             <div class="flex justify-between">
-                                <h4 class="text-sm font-bold text-gray-900">
-                                    <a
-                                        href="/user/{offer.makerId}"
-                                        class="hover:underline hover:text-indigo-600"
-                                    >
-                                        {offer.makerName || "A Repairer"}
-                                    </a>
-                                </h4>
+                                <div class="flex items-center">
+                                    {#if offer.makerImage}
+                                        <img
+                                            src={offer.makerImage}
+                                            alt=""
+                                            class="h-8 w-8 rounded-full mr-2 object-cover"
+                                        />
+                                    {:else}
+                                        <span
+                                            class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 mr-2"
+                                        >
+                                            <svg
+                                                class="h-full w-full text-gray-300"
+                                                fill="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path
+                                                    d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
+                                                />
+                                            </svg>
+                                        </span>
+                                    {/if}
+                                    <h4 class="text-sm font-bold text-gray-900">
+                                        <a
+                                            href="/user/{offer.makerId}"
+                                            class="hover:underline hover:text-indigo-600"
+                                        >
+                                            {offer.makerName || "A Repairer"}
+                                        </a>
+                                    </h4>
+                                </div>
                                 <span class="text-xs text-gray-500"
                                     >{new Date(
                                         offer.createdAt,

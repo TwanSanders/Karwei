@@ -14,11 +14,12 @@ The core mission is to:
 - **User Roles**: Users can be "Makers" (repairers) or Requesters.
 - **Profile Management**:
   - Detailed profiles including Name, Bio, Skills (for Makers), and Location.
+  - **Profile Picture**: Users can upload and update their profile picture.
   - Contact details (Phone number) which are privacy-protected.
 
 ### 2. Repair Requests (Posts)
 - **Create Post**: Users can post items that need repairing.
-  - Includes Title, Description, Image, Target Price, and Item Type.
+  - Includes Title, Description, Image (upload supported), Target Price, and Item Type.
 - **Browse Requests**: A feed of recent repair requests is available on the homepage.
 - **Detailed View**: dedicated page for each repair request to view details and interactions.
 

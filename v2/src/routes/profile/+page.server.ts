@@ -44,6 +44,30 @@ export const actions = {
 
         return { success: true };
     },
+    updateImage: async ({ request, cookies }) => {
+        const userId = cookies.get('session_id');
+        if (!userId) throw redirect(303, '/login');
+
+        const data = await request.formData();
+        const image = data.get('image') as File;
+
+        if (image && image.size > 0) {
+            try {
+                // Dynamic import to avoid circular dependencies or load only when needed
+                const { uploadToR2 } = await import('$lib/server/s3');
+                const imageUrl = await uploadToR2(image);
+                
+                await UserRepository.update(userId, {
+                    image: imageUrl
+                });
+            } catch (err) {
+                console.error('Update profile image failed', err);
+                return fail(500, { message: 'Upload failed' });
+            }
+        }
+        
+        return { success: true };
+    },
     respondRequest: async ({ request, cookies }) => {
         const userId = cookies.get('session_id');
         if (!userId) throw redirect(303, '/login');

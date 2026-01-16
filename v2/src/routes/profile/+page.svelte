@@ -38,6 +38,61 @@
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
                         <dt class="text-sm font-medium text-gray-500">
+                            Profile Picture
+                        </dt>
+                        <dd
+                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                        >
+                            <div class="flex items-center space-x-4">
+                                {#if user.image}
+                                    <img
+                                        src={user.image}
+                                        alt=""
+                                        class="h-12 w-12 rounded-full"
+                                    />
+                                {:else}
+                                    <span
+                                        class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100"
+                                    >
+                                        <svg
+                                            class="h-full w-full text-gray-300"
+                                            fill="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
+                                            />
+                                        </svg>
+                                    </span>
+                                {/if}
+                                <form
+                                    action="?/updateImage"
+                                    method="POST"
+                                    enctype="multipart/form-data"
+                                    use:enhance
+                                >
+                                    <div class="flex items-center space-x-2">
+                                        <input
+                                            type="file"
+                                            name="image"
+                                            accept="image/*"
+                                            class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                        />
+                                        <button
+                                            type="submit"
+                                            class="text-sm text-indigo-600 hover:text-indigo-500"
+                                        >
+                                            Update
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </dd>
+                    </div>
+                    <div
+                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                    >
+                        <dt class="text-sm font-medium text-gray-500">
                             Email address
                         </dt>
                         <dd

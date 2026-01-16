@@ -18,6 +18,8 @@
 - **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
 - **Driver**: `postgres` (node-postgres)
 - **Migrations**: Managed via Drizzle Kit.
+- **Storage**: Cloudflare R2 (S3-compatible object storage) for user-uploaded images.
+  - Utility: `src/lib/server/s3.ts` handles uploads.
 
 ## Architecture Overview
 

@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
     const offersWithMakers = await Promise.all(offers.map(async (offer) => {
         const maker = await UserRepository.getById(offer.makerId);
-        return { ...offer, makerName: maker?.name };
+        return { ...offer, makerName: maker?.name, makerImage: maker?.image };
     }));
 
     const comments = await CommentRepository.getByPostId(postId);

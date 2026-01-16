@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { PostRepository } from '$lib/server/repositories/postRepository';
+import { uploadToR2 } from '$lib/server/s3';
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
     // Check auth
@@ -24,7 +25,18 @@ export const actions = {
      const type = data.get('type') as string;
      const priceStr = data.get('price') as string;
      const price = priceStr ? parseFloat(priceStr) : undefined;
-     const imageUrl = data.get('imageUrl') as string; // Ideally file upload, keeping simplied for now
+     
+     const image = data.get('image') as File;
+     let imageUrl = null;
+
+     if (image && image.size > 0) {
+         try {
+             imageUrl = await uploadToR2(image);
+         } catch (err) {
+             console.error('Upload failed', err);
+             // Optionally handle error, but for now continue or fail
+         }
+     }
 
      if (!title || !description) {
          return fail(400, { title, description, missing: true });

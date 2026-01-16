@@ -26,6 +26,8 @@
 		"vite": "^7.2.6"
 	},
 	"dependencies": {
+		"@aws-sdk/client-s3": "^3.970.0",
+		"@smithy/node-http-handler": "^4.4.8",
 		"drizzle-orm": "^0.45.1",
 		"lucide-svelte": "^0.562.0",
 		"postgres": "^3.4.8"
