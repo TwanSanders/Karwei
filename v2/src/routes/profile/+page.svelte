@@ -1,9 +1,11 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
+    import { goto } from "$app/navigation";
     import type { PageData } from "./$types";
 
     export let data: PageData;
     $: user = data.user;
+    $: userPosts = data.userPosts;
     $: incomingRequests = data.incomingRequests.filter(
         (r) => r.status === "pending",
     );
@@ -48,7 +50,7 @@
                                     <img
                                         src={user.image}
                                         alt=""
-                                        class="h-12 w-12 rounded-full"
+                                        class="h-12 w-12 rounded-full object-cover"
                                     />
                                 {:else}
                                     <span
@@ -155,6 +157,117 @@
                         </dd>
                     </div>
                 </dl>
+            </div>
+        </div>
+
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
+            <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    My Posts
+                </h3>
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                    Manage your repair requests.
+                </p>
+            </div>
+            <div class="border-t border-gray-200">
+                {#if userPosts.length === 0}
+                    <div
+                        class="px-4 py-5 sm:px-6 text-center text-gray-500 italic"
+                    >
+                        You haven't posted anything yet.
+                    </div>
+                {:else}
+                    <ul role="list" class="divide-y divide-gray-200">
+                        {#each userPosts as post}
+                            <li
+                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors cursor-pointer"
+                                onclick={() => goto(`/post/${post.id}`)}
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            {#if post.imageUrl}
+                                                <img
+                                                    class="h-10 w-10 rounded-full object-cover"
+                                                    src={post.imageUrl}
+                                                    alt=""
+                                                />
+                                            {:else}
+                                                <div
+                                                    class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center"
+                                                >
+                                                    <svg
+                                                        class="h-6 w-6 text-gray-400"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                            {/if}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div
+                                                class="text-sm font-medium text-indigo-600 truncate max-w-xs sm:max-w-sm"
+                                            >
+                                                <a
+                                                    href="/post/{post.id}"
+                                                    class="hover:underline"
+                                                >
+                                                    {post.title}
+                                                </a>
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                {new Date(
+                                                    post.createdAt,
+                                                ).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-4">
+                                        <div
+                                            class="text-sm text-gray-500 hidden sm:block"
+                                        >
+                                            {post.type || "General"}
+                                        </div>
+                                        <form
+                                            action="?/deletePost"
+                                            method="POST"
+                                            use:enhance
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="postId"
+                                                value={post.id}
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                onclick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (
+                                                        !confirm(
+                                                            "Are you sure you want to delete this post?",
+                                                        )
+                                                    )
+                                                        e.preventDefault();
+                                                }}
+                                            >
+                                                Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </li>
+                        {/each}
+                    </ul>
+                {/if}
             </div>
         </div>
 

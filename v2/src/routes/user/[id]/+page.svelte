@@ -41,7 +41,7 @@
                 <img
                     src={user.image}
                     alt={user.name}
-                    class="h-24 w-24 rounded-full"
+                    class="h-24 w-24 rounded-full object-cover"
                 />
             {/if}
         </div>

@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 import { ContactRequestRepository } from '$lib/server/repositories/contactRequestRepository';
+import { PostRepository } from '$lib/server/repositories/postRepository';
 
 export const load: PageServerLoad = async ({ cookies }) => {
     const userId = cookies.get('session_id');
@@ -20,9 +21,12 @@ export const load: PageServerLoad = async ({ cookies }) => {
         return { ...req, requesterName: requester?.name };
     }));
 
+    const userPosts = await PostRepository.findByUserId(userId);
+
     return {
         user,
-        incomingRequests: requestsWithUsers
+        incomingRequests: requestsWithUsers,
+        userPosts
     };
 };
 
@@ -82,6 +86,23 @@ export const actions = {
         // Ideally verify that the request belongs to the current user
 
         await ContactRequestRepository.updateStatus(requestId, status);
+        return { success: true };
+    },
+    deletePost: async ({ request, cookies }) => {
+        const userId = cookies.get('session_id');
+        if (!userId) throw redirect(303, '/login');
+
+        const formData = await request.formData();
+        const postId = formData.get('postId') as string;
+
+        if (!postId) return fail(400, { missing: true });
+
+        const post = await PostRepository.getById(postId);
+        if (!post || post.userId !== userId) {
+            return fail(403, { unauthorized: true });
+        }
+
+        await PostRepository.delete(postId);
         return { success: true };
     },
     logout: async ({ cookies }) => {

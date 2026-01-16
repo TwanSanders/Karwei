@@ -60,4 +60,25 @@ export class PostRepository {
       createdAt: row.createdAt || new Date(),
     };
   }
+  static async findByUserId(userId: string): Promise<Post[]> {
+    const results = await db.select().from(postsTable).where(eq(postsTable.userId, userId)).orderBy(desc(postsTable.createdAt));
+    
+    return results.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      title: row.title,
+      imageUrl: row.imageUrl,
+      description: row.description,
+      purchasedAt: row.purchasedAt,
+      type: row.type,
+      targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
+      makerId: row.makerId,
+      score: row.score ? parseFloat(row.score) : null,
+      createdAt: row.createdAt || new Date(),
+    }));
+  }
+
+  static async delete(id: string): Promise<void> {
+    await db.delete(postsTable).where(eq(postsTable.id, id));
+  }
 }

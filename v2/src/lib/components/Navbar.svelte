@@ -12,14 +12,6 @@
                         >Karwei</a
                     >
                 </div>
-                <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                    <a
-                        href="/"
-                        class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-                    >
-                        Home
-                    </a>
-                </div>
             </div>
             <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -32,7 +24,10 @@
                 </div>
                 <div class="ml-4 flex items-center">
                     {#if $page.data.user}
-                        <div class="flex items-center mr-4">
+                        <a
+                            href="/profile"
+                            class="flex items-center mr-4 hover:bg-gray-50 px-3 py-2 rounded-md transition-colors"
+                        >
                             {#if $page.data.user.image}
                                 <img
                                     class="h-8 w-8 rounded-full object-cover mr-2"
@@ -57,12 +52,7 @@
                             <span class="text-gray-700 text-sm font-medium"
                                 >{$page.data.user.name}</span
                             >
-                        </div>
-                        <a
-                            href="/profile"
-                            class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium mr-2"
-                            >Profile</a
-                        >
+                        </a>
                         <form
                             action="/profile?/logout"
                             method="POST"

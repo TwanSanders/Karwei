@@ -217,7 +217,7 @@
                                         <img
                                             src={comment.userImage}
                                             alt=""
-                                            class="h-6 w-6 rounded-full mr-2"
+                                            class="h-6 w-6 rounded-full mr-2 object-cover"
                                         />
                                     {/if}
                                     <h4 class="text-sm font-bold text-gray-900">
