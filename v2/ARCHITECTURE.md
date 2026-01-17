@@ -27,20 +27,57 @@
 The active development resides in the `v2/` directory, representing a modernized version of the platform.
 
 ### Data Model
-The application is built around a relational schema (defined in `src/lib/server/db/schema.ts`):
-- **User**: Central entity with auth data, profile info, and "Maker" status.
-- **Post**: Represents a repair request linked to a User.
-- **Comment**: Public discussions on Posts.
-- **Offer**: Formal bids from Makers on Posts.
-- **ContactRequest**: Gatekeeper system for sharing private contact info between users.
+The application is built around a relational schema (defined in `src/lib/server/db/schema.ts`). 
+Key relationships:
+- **User**: Central entity. Can be both a Requester and a Maker.
+- **Post**: The core work unit. 
+  - `userId`: The Requester (Owner).
+  - `makerId`: The assigned Repairer (nullable until assigned).
+  - `status`: `open` | `in_progress` | `fixed` | `closed`.
+- **Offer**: 
+  - Connects `makerId` -> `postId`.
+  - Represents a bid. One Post can have multiple Offers.
+- **Review**:
+  - Connects `reviewerId` (Customer) -> `targetUserId` (Maker).
+  - One-directional: Reviews are currently only for Makers.
+  - Linked to a specific `postId`.
+
+### Business Logic & State Flow
+
+#### Post Lifecycle
+1.  **Creation**: User creates Post -> Status `Open`.
+2.  **Bidding**: Makers create `Offer`s. Status remains `Open`.
+3.  **Assignment**: Customer accepts an `Offer`.
+    - Backend: `PostRepository.assignMaker(postId, makerId)`
+    - Status Update: `Open` -> `In Progress`.
+    - Maker is recorded in `post.makerId`.
+4.  **Completion**: Customer marks "Fixed".
+    - Backend: `PostRepository.updateStatus(postId, 'fixed')`
+    - Status Update: `In Progress` -> `Fixed`.
+5.  **Review & Close**: Customer submits `Review`.
+    - Backend: `ReviewRepository.create(...)`
+    - Status Update: `Fixed` -> `Closed`.
 
 ### Application Structure
 - **Routing**: File-system based routing in `src/routes/`.
-- **Server Logic**: Logic is co-located in `+page.server.ts` files (Server-Side Rendering & Form Actions).
-- **Authentication**: Custom implementation using bcrypt for hashing and database sessions (inferred).
-- **Security**: 
-  - Inputs are validated server-side.
-  - Sensitive data (contact info) is only delivered after explicit `ContactRequest` approval.
+- **Server Actions**: All mutations (create post, offer, accept, review) are handled in `+page.server.ts` actions.
+- **Repositories**: `src/lib/server/repositories/` contains data access logic, abstracting Drizzle calls.
+  - `OfferRepository`: Handles fetching and creating offers.
+  - `PostRepository`: Handles post lifecycle mutations.
+  - `ReviewRepository`: Handles review creation and rating aggregation.
+
+### Security
+- **Authentication**: Session-based auth using cookies.
+- **Authorization**: 
+  - Server-side checks ensure only `maker` users can create offers.
+  - Only Post owners can Accept Offers or Mark Fixed.
+  - Private data (phone numbers) protected by `ContactRequest` approval flow.
 
 ---
-> **NOTE**: This file must be updated whenever a new feature is added.
+
+## Architectural Logic & Limitations
+*Analysis of current system logical boundaries.*
+
+1.  **State Logic**: The transition from `Open` to `In Progress` is implicit upon assigning a maker. However, there is no enforcement that stops other makers from *trying* to offer on an `In Progress` post at the API level (though UI might hide it).
+2.  **Immutable Assignment**: Currently, there is no "Unassign" or "Cancel" transaction in the `PostRepository`. Once a maker is assigned, the DB state is rigid.
+3.  **One-Way Review Loop**: The architecture supports generic User-to-User reviews, but the business logic in `submitReview` restricts it to Customer -> Maker only.

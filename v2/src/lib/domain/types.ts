@@ -22,6 +22,7 @@ export interface Post {
   type?: string | null;
   targetPrice?: number | null;
   makerId?: string | null;
+  status: 'open' | 'in_progress' | 'fixed' | 'closed';
   score?: number | null;
   createdAt: Date;
 }

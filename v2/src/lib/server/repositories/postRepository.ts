@@ -98,4 +98,13 @@ export class PostRepository {
         })
         .where(eq(postsTable.id, id));
   }
+
+  static async unassignMaker(id: string): Promise<void> {
+    await db.update(postsTable)
+        .set({ 
+            makerId: null, 
+            status: 'open' 
+        })
+        .where(eq(postsTable.id, id));
+  }
 }

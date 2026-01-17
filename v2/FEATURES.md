@@ -9,27 +9,60 @@ The core mission is to:
 
 ## Key Features
 
-### 1. User Accounts & meaningful Profiles
+### 1. User Accounts & Meaningful Profiles
 - **Registration & Login**: Secure email/password authentication.
 - **User Roles**: Users can be "Makers" (repairers) or Requesters.
 - **Profile Management**:
   - Detailed profiles including Name, Bio, Skills (for Makers), and Location.
   - **Profile Picture**: Users can upload and update their profile picture.
   - Contact details (Phone number) which are privacy-protected.
+  - **Makers**: Users can toggle "Maker" status to receive offers.
 
-### 2. Repair Requests (Posts)
+### 2. Repair Lifecycle (Posts)
 - **Create Post**: Users can post items that need repairing.
-  - Includes Title, Description, Image (upload supported), Target Price, and Item Type.
+  - Includes Title, Description, Image (Cloudflare R2), Target Price, and Item Type.
+  - Initial Status: `Open`.
 - **Browse Requests**: A feed of recent repair requests is available on the homepage.
-- **Detailed View**: dedicated page for each repair request to view details and interactions.
+- **Detailed View**: Dedicated page for each repair request.
 
-### 3. Community Interaction
-- **Comments**: Users can discuss the repair publicly on the post.
-- **Offers**: Makers can submit specific offers to fix an item, including a proposed price and message.
+### 3. Offer & Assignment System
+- **Making Offers**: Makers can submit offers on `Open` posts.
+  - Offers include a message and a proposed price.
+- **Accepting Offers**: The Post Owner (Customer) can accept an offer.
+  - **Action**: Assigns the Maker to the post.
+  - **State Transition**: `Open` -> `In Progress`.
+  - **Logic**: Currently, accepting an offer does not automatically reject others, but visual cues imply the post is taken.
+
+### 4. Work & Completion
+- **Execution**: The repair is carried out offline.
+- **Completion**: The Customer marks the job as "Fixed".
+  - **State Transition**: `In Progress` -> `Fixed`.
+
+### 5. Review & Closure
+- **Reviews**: After a post is `Fixed`, the Customer can leave a review for the Maker.
+  - **Ratings**: 1-5 Stars and a text comment.
+  - **State Transition**: `Fixed` -> `Closed`.
+  - **Logic**: Submitting a review officially closes the transaction context.
+
+### 6. Community Interaction
+- **Comments**: Public discussions on posts (Q&A before offering).
 - **Privacy-First Contact System**: 
-  - Direct contact information (like phone numbers) is hidden by default.
+  - Direct contact information (phone numbers) is hidden by default.
   - Users must send a **Contact Request** to reveal private details.
   - The target user must **Accept** the request before information is shared.
 
 ---
-> **NOTE**: This file must be updated whenever a new feature is added.
+
+## System Analysis & Gaps (Sceptical Review)
+
+### Logic Gaps
+1.  **One-Sided Reviews**: Currently, only Customers can review Makers. Makers cannot review Customers, which leaves them vulnerable to bad clients.
+2.  **No Cancellation Flow**: Once a Maker is assigned (`In Progress`), there is no in-app way to cancel if the Maker or Client ghosts. The post remains stuck.
+3.  **Completion Trust**: Only the Customer can mark an item as "Fixed". If a Customer refuses to mark it (or forgets), the Maker receives no on-platform credit/history for the job.
+4.  **Payment Isolation**: Financial transactions are offline. The app tracks "Price" but handles no money.
+
+### Recommended Improvements
+- **Two-way Reviews**: Allow Makers to rate Customers.
+- **Dispute/Cancellation**: Add "Cancel Job" buttons for both parties with reasoning.
+- **Status Visibility**: Better visual indicators for `In Progress` vs `Open` states in the feed.
+- **Notifications**: Email or in-app notifications for Offers, Acceptances, and Contact Requests (currently missing).

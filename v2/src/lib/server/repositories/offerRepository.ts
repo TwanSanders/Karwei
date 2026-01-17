@@ -31,4 +31,22 @@ export class OfferRepository {
       createdAt: row.createdAt || new Date(),
     };
   }
+
+  static async getByMakerId(makerId: string): Promise<Offer[]> {
+    const results = await db.select().from(offersTable).where(eq(offersTable.makerId, makerId)).orderBy(desc(offersTable.createdAt));
+    
+    return results.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      postId: row.postId,
+      makerId: row.makerId,
+      message: row.message,
+      price: row.price ? parseFloat(row.price) : null,
+      createdAt: row.createdAt || new Date(),
+    }));
+  }
+
+  static async delete(id: string): Promise<void> {
+    await db.delete(offersTable).where(eq(offersTable.id, id));
+  }
 }

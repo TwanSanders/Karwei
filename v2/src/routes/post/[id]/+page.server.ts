@@ -150,18 +150,31 @@ export const actions = {
       const post = await PostRepository.getById(postId);
 
       if (!post) throw error(404, 'Post not found');
-      if (post.userId !== userId) return fail(403, { unauthorized: true });
-      if (!post.makerId) return fail(400, { message: 'No maker assigned' });
+      
+      let targetUserId: string;
+      if (post.userId === userId) {
+          // Current user is the Customer (Owner) -> Reviewing Maker
+          if (!post.makerId) return fail(400, { message: 'No maker assigned' });
+          targetUserId = post.makerId;
+      } else if (post.makerId === userId) {
+          // Current user is the Maker -> Reviewing Customer
+          targetUserId = post.userId;
+      } else {
+          return fail(403, { unauthorized: true });
+      }
 
       await ReviewRepository.create({
           reviewerId: userId,
-          targetUserId: post.makerId,
+          targetUserId: targetUserId,
           postId: postId,
           rating: ratingStr,
           comment
       });
 
-      await PostRepository.updateStatus(postId, 'closed');
+      // Only close if the owner reviews (end of lifecycle)
+      if (post.userId === userId) {
+          await PostRepository.updateStatus(postId, 'closed');
+      }
       return { success: true };
   }
 } satisfies Actions;

@@ -6,6 +6,7 @@
     export let data: PageData;
     $: user = data.user;
     $: userPosts = data.userPosts;
+    $: userOffers = data.userOffers;
     $: incomingRequests = data.incomingRequests.filter(
         (r) => r.status === "pending",
     );
@@ -230,38 +231,105 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="flex items-center space-x-4">
+                                    <div
+                                        class="flex items-center space-x-2 sm:space-x-4"
+                                    >
                                         <div
-                                            class="text-sm text-gray-500 hidden sm:block"
+                                            class="text-sm text-gray-500 hidden sm:block capitalize"
                                         >
-                                            {post.type || "General"}
+                                            {post.status.replace("_", " ")}
                                         </div>
-                                        <form
-                                            action="?/deletePost"
-                                            method="POST"
-                                            use:enhance
-                                        >
-                                            <input
-                                                type="hidden"
-                                                name="postId"
-                                                value={post.id}
-                                            />
-                                            <button
-                                                type="submit"
-                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                onclick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (
-                                                        !confirm(
-                                                            "Are you sure you want to delete this post?",
-                                                        )
-                                                    )
-                                                        e.preventDefault();
-                                                }}
+
+                                        {#if post.status === "open"}
+                                            <form
+                                                action="?/cancelPost"
+                                                method="POST"
+                                                use:enhance
                                             >
-                                                Delete
-                                            </button>
-                                        </form>
+                                                <input
+                                                    type="hidden"
+                                                    name="postId"
+                                                    value={post.id}
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                    onclick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (
+                                                            !confirm(
+                                                                "Are you sure you want to cancel this post? It will be closed.",
+                                                            )
+                                                        )
+                                                            e.preventDefault();
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </form>
+                                        {:else if post.status === "in_progress"}
+                                            <form
+                                                action="?/markFixed"
+                                                method="POST"
+                                                use:enhance
+                                                class="inline-flex"
+                                            >
+                                                <input
+                                                    type="hidden"
+                                                    name="postId"
+                                                    value={post.id}
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    class="inline-flex items-center px-2 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200"
+                                                    onclick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (
+                                                            !confirm(
+                                                                "Mark as fixed?",
+                                                            )
+                                                        )
+                                                            e.preventDefault();
+                                                    }}
+                                                >
+                                                    Fixed
+                                                </button>
+                                            </form>
+                                            <form
+                                                action="?/unassignMaker"
+                                                method="POST"
+                                                use:enhance
+                                                class="inline-flex"
+                                            >
+                                                <input
+                                                    type="hidden"
+                                                    name="postId"
+                                                    value={post.id}
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    class="inline-flex items-center px-2 py-1.5 border border-transparent text-xs font-medium rounded text-orange-700 bg-orange-100 hover:bg-orange-200"
+                                                    onclick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (
+                                                            !confirm(
+                                                                "Unassign maker? This will reopen the post.",
+                                                            )
+                                                        )
+                                                            e.preventDefault();
+                                                    }}
+                                                >
+                                                    Unassign
+                                                </button>
+                                            </form>
+                                        {:else if post.status === "fixed"}
+                                            <a
+                                                href="/post/{post.id}#review"
+                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+                                            >
+                                                Review
+                                            </a>
+                                        {/if}
                                     </div>
                                 </div>
                             </li>
@@ -270,6 +338,92 @@
                 {/if}
             </div>
         </div>
+
+        {#if user.maker && userOffers && userOffers.length > 0}
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                        My Offers
+                    </h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                        Offers you have made on repair requests.
+                    </p>
+                </div>
+                <div class="border-t border-gray-200">
+                    <ul role="list" class="divide-y divide-gray-200">
+                        {#each userOffers as offer}
+                            <li
+                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors"
+                            >
+                                <div class="flex items-center justify-between">
+                                    <div class="flex flex-col">
+                                        <div
+                                            class="text-sm font-medium text-indigo-600 truncate max-w-xs sm:max-w-sm"
+                                        >
+                                            <a
+                                                href="/post/{offer.postId}"
+                                                class="hover:underline"
+                                            >
+                                                {offer.postTitle ||
+                                                    "Unknown Post"}
+                                            </a>
+                                        </div>
+                                        <div class="text-xs text-gray-500">
+                                            Offer: €{offer.price}
+                                        </div>
+                                        <div class="text-xs text-gray-400">
+                                            Status: {offer.postStatus}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {#if offer.postStatus === "open"}
+                                            <form
+                                                action="?/cancelOffer"
+                                                method="POST"
+                                                use:enhance
+                                            >
+                                                <input
+                                                    type="hidden"
+                                                    name="offerId"
+                                                    value={offer.id}
+                                                />
+                                                <button
+                                                    type="submit"
+                                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                                    onclick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (
+                                                            !confirm(
+                                                                "Withdraw this offer?",
+                                                            )
+                                                        )
+                                                            e.preventDefault();
+                                                    }}
+                                                >
+                                                    Withdraw
+                                                </button>
+                                            </form>
+                                        {:else if offer.postStatus === "fixed"}
+                                            <a
+                                                href="/post/{offer.postId}#review"
+                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+                                            >
+                                                Review
+                                            </a>
+                                        {:else}
+                                            <span
+                                                class="text-xs text-gray-400 italic"
+                                                >Cannot withdraw</span
+                                            >
+                                        {/if}
+                                    </div>
+                                </div>
+                            </li>
+                        {/each}
+                    </ul>
+                </div>
+            </div>
+        {/if}
 
         {#if incomingRequests.length > 0}
             <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
