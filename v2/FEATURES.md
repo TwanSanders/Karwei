@@ -50,6 +50,14 @@ The core mission is to:
   - Direct contact information (phone numbers) is hidden by default.
   - Users must send a **Contact Request** to reveal private details.
   - The target user must **Accept** the request before information is shared.
+### 7. Notifications & Location
+- **Notifications**: Users receive in-app notifications for:
+  - New Offers (for Posters).
+  - Offer Accepted (for Makers).
+  - Contact Requests (for both parties).
+- **Location-Based Discovery**:
+  - Users can filter posts by distance (e.g., 5km, 10km, 50km).
+  - Posts are sorted by proximity to the user (using Browser location or Profile location).
 
 ---
 
@@ -65,4 +73,5 @@ The core mission is to:
 - **Two-way Reviews**: Allow Makers to rate Customers.
 - **Dispute/Cancellation**: Add "Cancel Job" buttons for both parties with reasoning.
 - **Status Visibility**: Better visual indicators for `In Progress` vs `Open` states in the feed.
-- **Notifications**: Email or in-app notifications for Offers, Acceptances, and Contact Requests (currently missing).
+- **Notifications**: In-app notifications for Offers, Acceptances, and Contact Requests.
+- **Location filtering**: Filter posts by distance from user location.

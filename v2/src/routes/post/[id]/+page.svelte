@@ -192,7 +192,7 @@
             </div>
 
             <!-- Offer Form for Repairers -->
-            {#if isRepairer && !isOwner}
+            {#if isRepairer && !isOwner && post.status === "open"}
                 <div
                     class="mt-8 bg-indigo-50 p-6 rounded-lg border border-indigo-100"
                 >

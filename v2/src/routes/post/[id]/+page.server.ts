@@ -65,6 +65,10 @@ export const actions = {
      const post = await PostRepository.getById(postId);
      if (!post) throw error(404, 'Post not found');
 
+     if (post.status !== 'open') {
+         return fail(400, { message: 'This post is no longer accepting offers' });
+     }
+
      await OfferRepository.create({
         postId: postId,
         makerId: userId,

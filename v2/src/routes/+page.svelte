@@ -2,6 +2,54 @@
     import type { PageData } from "./$types";
 
     export let data: PageData;
+
+    import { goto } from "$app/navigation";
+    import { page } from "$app/stores";
+
+    let userLat: number | null = null;
+    let userLong: number | null = null;
+    let maxDistance: number = 50; // Default 50km
+    let locationStatus = "Use My Location";
+
+    // Initialize from URL if present
+    $: {
+        const lat = $page.url.searchParams.get("lat");
+        const long = $page.url.searchParams.get("long");
+        const dist = $page.url.searchParams.get("distance");
+
+        if (lat) userLat = parseFloat(lat);
+        if (long) userLong = parseFloat(long);
+        if (dist) maxDistance = parseFloat(dist);
+    }
+
+    async function getLocation() {
+        locationStatus = "Locating...";
+        if (!navigator.geolocation) {
+            locationStatus = "Not Supported";
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                userLat = position.coords.latitude;
+                userLong = position.coords.longitude;
+                locationStatus = "Use My Location";
+                updateFilter();
+            },
+            () => {
+                locationStatus = "Permission Denied";
+            },
+        );
+    }
+
+    function updateFilter() {
+        const params = new URLSearchParams($page.url.searchParams);
+        if (userLat) params.set("lat", userLat.toString());
+        if (userLong) params.set("long", userLong.toString());
+        params.set("distance", maxDistance.toString());
+
+        goto(`?${params.toString()}`, { keepFocus: true });
+    }
 </script>
 
 <div class="bg-indigo-600">
@@ -24,6 +72,72 @@
                     Post an Item to Repair
                 </a>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Location Filtering -->
+    <div
+        class="bg-white rounded-lg shadow p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4"
+    >
+        <div class="flex items-center gap-4">
+            <button
+                on:click={getLocation}
+                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 mr-2 -ml-1 text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                </svg>
+                {locationStatus}
+            </button>
+            {#if userLat && userLong}
+                <span class="text-sm text-green-600 font-medium"
+                    >Location Active</span
+                >
+            {/if}
+        </div>
+
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <label
+                for="distance"
+                class="block text-sm font-medium text-gray-700 whitespace-nowrap"
+            >
+                Max Distance: <span class="text-indigo-600 font-bold"
+                    >{maxDistance} km</span
+                >
+            </label>
+            <input
+                id="distance"
+                type="range"
+                min="5"
+                max="100"
+                step="5"
+                value={maxDistance}
+                on:input={(e) => {
+                    maxDistance = parseFloat(e.currentTarget.value);
+                    updateFilter();
+                }}
+                disabled={!userLat}
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+            />
         </div>
     </div>
 </div>

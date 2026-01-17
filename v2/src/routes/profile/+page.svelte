@@ -438,7 +438,7 @@
                 <div class="border-t border-gray-200">
                     <ul role="list" class="divide-y divide-gray-200">
                         {#each incomingRequests as req}
-                            <li class="px-4 py-4 sm:px-6">
+                            <li class="px-4 py-4 sm:px-6" id="request-{req.id}">
                                 <div class="flex items-center justify-between">
                                     <div
                                         class="text-sm font-medium text-indigo-600 truncate"

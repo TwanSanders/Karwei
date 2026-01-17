@@ -1,11 +1,66 @@
 import { db } from '../db';
 import { postsTable } from '../db/schema';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import type { Post } from '$lib/domain/types';
 
 export class PostRepository {
-  static async getAll(): Promise<Post[]> {
-    const results = await db.select().from(postsTable).orderBy(desc(postsTable.createdAt));
+  static async getAll(userLat?: number, userLong?: number, maxDistanceKm?: number): Promise<Post[]> {
+    let query = db.select().from(postsTable);
+
+    if (userLat && userLong) {
+        // Use SQL for Haversine formula to sort by distance
+        // 6371 is Earth's radius in km
+        const distanceExpr = sql`
+            6371 * acos(
+                cos(radians(${userLat})) * cos(radians(${postsTable.lat})) *
+                cos(radians(${postsTable.long}) - radians(${userLong})) +
+                sin(radians(${userLat})) * sin(radians(${postsTable.lat}))
+            )
+        `;
+        
+        if (maxDistanceKm) {
+             // We can't easily put this in WHERE clause with standard drizzle helpers without raw sql
+             // So we might filter in memory or use a more complex where clause.
+             // For now, let's just properly sort.
+             // Actually, extending the query to return distance would be better.
+        }
+       
+       // For simplicity in this iteration, let's fetch all and filter/sort in memory if dataset is small, 
+       // OR use raw sql order by.
+       // Given it's a prototype, let's do the raw SQL order by.
+       
+       return (await query.orderBy(distanceExpr)).map(row => ({
+            id: row.id,
+            userId: row.userId,
+            title: row.title,
+            imageUrl: row.imageUrl,
+            description: row.description,
+            purchasedAt: row.purchasedAt,
+            type: row.type,
+            targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
+            makerId: row.makerId,
+            status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
+            score: row.score ? parseFloat(row.score) : null,
+            lat: row.lat ? parseFloat(row.lat) : null,
+            long: row.long ? parseFloat(row.long) : null,
+            createdAt: row.createdAt || new Date(),
+       })).filter(post => {
+           if (!maxDistanceKm || !post.lat || !post.long) return true;
+           // Double check distance in memory
+           const R = 6371; // km
+           const dLat = (post.lat - userLat) * Math.PI / 180;
+           const dLon = (post.long - userLong) * Math.PI / 180;
+           const lat1 = userLat * Math.PI / 180;
+           const lat2 = post.lat * Math.PI / 180;
+           const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                   Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+           const d = R * c;
+           return d <= maxDistanceKm;
+       });
+    }
+
+    const results = await query.orderBy(desc(postsTable.createdAt));
     
     return results.map(row => ({
       id: row.id,
@@ -19,6 +74,8 @@ export class PostRepository {
       makerId: row.makerId,
       status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
+      lat: row.lat ? parseFloat(row.lat) : null,
+      long: row.long ? parseFloat(row.long) : null,
       createdAt: row.createdAt || new Date(),
     }));
   }
@@ -41,6 +98,8 @@ export class PostRepository {
       makerId: row.makerId,
       status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
+      lat: row.lat ? parseFloat(row.lat) : null,
+      long: row.long ? parseFloat(row.long) : null,
       createdAt: row.createdAt || new Date(),
     };
   }
@@ -60,6 +119,8 @@ export class PostRepository {
       makerId: row.makerId,
       status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
+      lat: row.lat ? parseFloat(row.lat) : null,
+      long: row.long ? parseFloat(row.long) : null,
       createdAt: row.createdAt || new Date(),
     };
   }
@@ -78,6 +139,8 @@ export class PostRepository {
       makerId: row.makerId,
       status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
       score: row.score ? parseFloat(row.score) : null,
+      lat: row.lat ? parseFloat(row.lat) : null,
+      long: row.long ? parseFloat(row.long) : null,
       createdAt: row.createdAt || new Date(),
     }));
   }

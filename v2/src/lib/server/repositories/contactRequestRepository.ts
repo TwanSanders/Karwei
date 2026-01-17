@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { contactRequestsTable } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
+import { NotificationRepository } from './notificationRepository';
 
 export interface ContactRequest {
     id: string;
@@ -18,6 +19,10 @@ export class ContactRequestRepository {
         }).returning();
         
         const row = result[0];
+
+        // Trigger Notification
+        await NotificationRepository.create(targetUserId, 'contact_request', row.id);
+
         return {
             id: row.id,
             requesterId: row.requesterId,
@@ -65,5 +70,16 @@ export class ContactRequestRepository {
         await db.update(contactRequestsTable)
             .set({ status })
             .where(eq(contactRequestsTable.id, id));
+
+        if (status === 'accepted') {
+             // Fetch request to get requester ID
+             const request = await db.select().from(contactRequestsTable).where(eq(contactRequestsTable.id, id)).then(res => res[0]);
+             if (request) {
+                // Notify the requester that their request was accepted
+                await NotificationRepository.create(request.requesterId, 'contact_request', id); 
+                // Note: reusing 'contact_request' type, frontend can check status or we can add 'contact_request_accepted' type.
+                // For now, let's stick to simple types. 'contact_request' notification for requester means "Check your requests"
+             }
+        }
     }
 }

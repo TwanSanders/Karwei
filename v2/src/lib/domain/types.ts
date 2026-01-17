@@ -23,6 +23,8 @@ export interface Post {
   targetPrice?: number | null;
   makerId?: string | null;
   status: 'open' | 'in_progress' | 'fixed' | 'closed';
+  lat?: number | null;
+  long?: number | null;
   score?: number | null;
   createdAt: Date;
 }
@@ -43,5 +45,14 @@ export interface Comment {
   postId: string;
   message: string;
   imageUrl?: string | null;
+  createdAt: Date;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: 'offer' | 'accept' | 'contact_request';
+  relatedId: string;
+  read: boolean;
   createdAt: Date;
 }

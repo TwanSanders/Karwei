@@ -63,8 +63,9 @@ Key relationships:
 - **Server Actions**: All mutations (create post, offer, accept, review) are handled in `+page.server.ts` actions.
 - **Repositories**: `src/lib/server/repositories/` contains data access logic, abstracting Drizzle calls.
   - `OfferRepository`: Handles fetching and creating offers.
-  - `PostRepository`: Handles post lifecycle mutations.
+  - `PostRepository`: Handles post lifecycle mutations and location-based fetching.
   - `ReviewRepository`: Handles review creation and rating aggregation.
+  - `NotificationRepository`: Handles creation and retrieval of user notifications.
 
 ### Security
 - **Authentication**: Session-based auth using cookies.
@@ -72,12 +73,6 @@ Key relationships:
   - Server-side checks ensure only `maker` users can create offers.
   - Only Post owners can Accept Offers or Mark Fixed.
   - Private data (phone numbers) protected by `ContactRequest` approval flow.
+  - Notifications are strictly scoped to the `userId`.
 
----
 
-## Architectural Logic & Limitations
-*Analysis of current system logical boundaries.*
-
-1.  **State Logic**: The transition from `Open` to `In Progress` is implicit upon assigning a maker. However, there is no enforcement that stops other makers from *trying* to offer on an `In Progress` post at the API level (though UI might hide it).
-2.  **Immutable Assignment**: Currently, there is no "Unassign" or "Cancel" transaction in the `PostRepository`. Once a maker is assigned, the DB state is rigid.
-3.  **One-Way Review Loop**: The architecture supports generic User-to-User reviews, but the business logic in `submitReview` restricts it to Customer -> Maker only.

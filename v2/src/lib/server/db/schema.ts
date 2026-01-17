@@ -31,6 +31,8 @@ export const postsTable = karweiSchema.table("post", {
 	targetPrice: decimal("target_price", { precision: 10, scale: 2 }),
 	makerId: text("maker_id"), // Assigned maker?
 	status: text("status", { enum: ["open", "in_progress", "fixed", "closed"] }).default("open").notNull(),
+	lat: decimal("lat", { precision: 10, scale: 6 }),
+	long: decimal("long", { precision: 10, scale: 6 }),
 	score: decimal("score", { precision: 10, scale: 2 }),
 	createdAt: timestamp("created_at").defaultNow(),
 });
@@ -71,3 +73,13 @@ export const contactRequestsTable = karweiSchema.table("contact_request", {
 	status: text("status", { enum: ["pending", "accepted", "denied"] }).default("pending").notNull(),
 	createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const notificationsTable = karweiSchema.table("notification", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id").notNull().references(() => usersTable.id),
+	type: text("type", { enum: ["offer", "accept", "contact_request"] }).notNull(),
+	relatedId: text("related_id").notNull(), // ID of the Offer, Post, or ContactRequest
+	read: boolean("read").default(false).notNull(),
+	createdAt: timestamp("created_at").defaultNow(),
+});
+
