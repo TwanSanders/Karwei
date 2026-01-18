@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { postsTable } from '../db/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, and, isNotNull } from 'drizzle-orm';
 import type { Post } from '$lib/domain/types';
 
 export class PostRepository {
@@ -169,5 +169,54 @@ export class PostRepository {
             status: 'open' 
         })
         .where(eq(postsTable.id, id));
+  }
+  static async findAllOpenWithLocation(userLat?: number, userLong?: number, maxDistanceKm?: number): Promise<Post[]> {
+    let query = db.select().from(postsTable)
+        .where(
+            and(
+                eq(postsTable.status, 'open'),
+                isNotNull(postsTable.lat),
+                isNotNull(postsTable.long)
+            )
+        )
+        .orderBy(desc(postsTable.createdAt));
+    
+    // If we have location data, we could sort by distance in SQL in the future.
+    // For now, let's filter in memory as the dataset is likely small.
+    
+    let posts = (await query).map(row => ({
+      id: row.id,
+      userId: row.userId,
+      title: row.title,
+      imageUrl: row.imageUrl,
+      description: row.description,
+      purchasedAt: row.purchasedAt,
+      type: row.type,
+      targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
+      makerId: row.makerId,
+      status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
+      score: row.score ? parseFloat(row.score) : null,
+      lat: row.lat ? parseFloat(row.lat) : null,
+      long: row.long ? parseFloat(row.long) : null,
+      createdAt: row.createdAt || new Date(),
+    }));
+
+    if (userLat && userLong && maxDistanceKm) {
+        posts = posts.filter(post => {
+            if (!post.lat || !post.long) return false;
+            const R = 6371; // km
+            const dLat = (post.lat - userLat) * Math.PI / 180;
+            const dLon = (post.long - userLong) * Math.PI / 180;
+            const lat1 = userLat * Math.PI / 180;
+            const lat2 = post.lat * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+            const d = R * c;
+            return d <= maxDistanceKm;
+        });
+    }
+
+    return posts;
   }
 }

@@ -44,6 +44,14 @@
                         >Karwei</a
                     >
                 </div>
+                <div class="hidden md:ml-6 md:flex md:space-x-8">
+                    <a
+                        href="/map"
+                        class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-indigo-500"
+                    >
+                        Map
+                    </a>
+                </div>
             </div>
             <div class="flex items-center">
                 <div class="flex-shrink-0">

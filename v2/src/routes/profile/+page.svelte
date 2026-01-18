@@ -10,6 +10,8 @@
     $: incomingRequests = data.incomingRequests.filter(
         (r) => r.status === "pending",
     );
+    import InfoTooltip from "$lib/components/InfoTooltip.svelte";
+    import LocationPicker from "$lib/components/LocationPicker.svelte";
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -102,6 +104,38 @@
                             class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
                         >
                             {user.email}
+                        </dd>
+                    </div>
+                    <div
+                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                    >
+                        <dt class="text-sm font-medium text-gray-500">
+                            Location
+                            <InfoTooltip
+                                text="Used to show you repairs/makers in your neighborhood. We calculate distance but never reveal your exact home address."
+                            />
+                        </dt>
+                        <dd
+                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                        >
+                            <form
+                                action="?/updateLocation"
+                                method="POST"
+                                use:enhance
+                            >
+                                <LocationPicker
+                                    lat={user.lat}
+                                    long={user.long}
+                                />
+                                <div class="mt-2 flex justify-end">
+                                    <button
+                                        type="submit"
+                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                        Update Location
+                                    </button>
+                                </div>
+                            </form>
                         </dd>
                     </div>
                     <div

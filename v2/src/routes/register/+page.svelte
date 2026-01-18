@@ -1,5 +1,7 @@
 <script lang="ts">
     import type { ActionData } from "./$types";
+    import InfoTooltip from "$lib/components/InfoTooltip.svelte";
+    import LocationPicker from "$lib/components/LocationPicker.svelte";
 
     export let form: ActionData;
 </script>
@@ -49,6 +51,9 @@
                         class="block text-sm font-medium text-gray-700"
                     >
                         Email address
+                        <InfoTooltip
+                            text="Used for login and important updates. Never sold to third parties."
+                        />
                     </label>
                     <div class="mt-1">
                         <input
@@ -69,6 +74,9 @@
                         class="block text-sm font-medium text-gray-700"
                     >
                         Phone Number
+                        <InfoTooltip
+                            text="Only shared with a user AFTER you accept their contact request. Kept hidden by default."
+                        />
                     </label>
                     <div class="mt-1">
                         <input
@@ -117,6 +125,18 @@
                             required
                             class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         />
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">
+                        Home Location
+                        <InfoTooltip
+                            text="Used to show you repairs/makers in your neighborhood. We calculate distance but never reveal your exact home address."
+                        />
+                    </label>
+                    <div class="mt-1">
+                        <LocationPicker />
                     </div>
                 </div>
 

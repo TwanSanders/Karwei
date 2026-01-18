@@ -9,7 +9,7 @@
     let userLat: number | null = null;
     let userLong: number | null = null;
     let maxDistance: number = 50; // Default 50km
-    let locationStatus = "Use My Location";
+    let locationStatus = "home"; // 'home' or 'current'
 
     // Initialize from URL if present
     $: {
@@ -17,15 +17,24 @@
         const long = $page.url.searchParams.get("long");
         const dist = $page.url.searchParams.get("distance");
 
-        if (lat) userLat = parseFloat(lat);
-        if (long) userLong = parseFloat(long);
+        if (lat && long) {
+            userLat = parseFloat(lat);
+            userLong = parseFloat(long);
+            locationStatus = "current";
+        } else {
+            // If no params, we assume Home (server loaded logic), but visual state should match
+            locationStatus = "home";
+            userLat = null;
+            userLong = null;
+        }
+
         if (dist) maxDistance = parseFloat(dist);
     }
 
     async function getLocation() {
-        locationStatus = "Locating...";
         if (!navigator.geolocation) {
-            locationStatus = "Not Supported";
+            alert("Geolocation is not supported");
+            locationStatus = "home";
             return;
         }
 
@@ -33,21 +42,41 @@
             (position) => {
                 userLat = position.coords.latitude;
                 userLong = position.coords.longitude;
-                locationStatus = "Use My Location";
+                locationStatus = "current";
                 updateFilter();
             },
             () => {
-                locationStatus = "Permission Denied";
+                alert("Permission Denied");
+                locationStatus = "home";
             },
         );
     }
 
     function updateFilter() {
         const params = new URLSearchParams($page.url.searchParams);
-        if (userLat) params.set("lat", userLat.toString());
-        if (userLong) params.set("long", userLong.toString());
+
+        if (locationStatus === "current" && userLat && userLong) {
+            params.set("lat", userLat.toString());
+            params.set("long", userLong.toString());
+        } else {
+            // Home: Remove params, let server fallback to DB
+            params.delete("lat");
+            params.delete("long");
+        }
+
         params.set("distance", maxDistance.toString());
 
+        goto(`?${params.toString()}`, { keepFocus: true });
+    }
+    import ResultsMap from "$lib/components/ResultsMap.svelte";
+
+    let searchType = data.searchType || "posts"; // 'posts' or 'makers'
+    let viewMode = "list"; // 'list' or 'map'
+
+    function updateSearchType(newType: string) {
+        searchType = newType;
+        const params = new URLSearchParams($page.url.searchParams);
+        params.set("type", newType);
         goto(`?${params.toString()}`, { keepFocus: true });
     }
 </script>
@@ -77,45 +106,102 @@
 </div>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Location Filtering -->
-    <div
-        class="bg-white rounded-lg shadow p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4"
-    >
-        <div class="flex items-center gap-4">
-            <button
-                on:click={getLocation}
-                class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-indigo-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-5 w-5 mr-2 -ml-1 text-gray-500"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+    <!-- Filters & Toggles -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8 flex flex-col space-y-4">
+        <!-- Top Row: Location & Type & View Mode -->
+        <div
+            class="flex flex-col md:flex-row items-center justify-between gap-4"
+        >
+            <!-- Location Source -->
+            <div class="flex items-center gap-4">
+                <div class="relative inline-block text-left">
+                    <label
+                        for="locationSource"
+                        class="block text-sm font-medium text-gray-700 mr-2"
+                        >Location Source</label
+                    >
+                    <select
+                        id="locationSource"
+                        bind:value={locationStatus}
+                        on:change={(e) => {
+                            // @ts-ignore
+                            const val = e.target.value;
+                            if (val === "current") {
+                                getLocation();
+                            } else {
+                                // Home
+                                userLat = null;
+                                userLong = null;
+                                updateFilter();
+                            }
+                        }}
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    >
+                        <option value="home">My Home Address</option>
+                        <option value="current">Current Device Location</option>
+                    </select>
+                </div>
+
+                {#if locationStatus === "current" && !userLat}
+                    <span class="text-sm text-gray-500 animate-pulse"
+                        >Locating...</span
+                    >
+                {:else if userLat}
+                    <span
+                        class="text-sm text-green-600 font-medium flex items-center"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 mr-1"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd"
+                            />
+                        </svg>
+                        Active
+                    </span>
+                {/if}
+            </div>
+
+            <!-- Search Type: Items vs Makers -->
+            <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-md">
+                <button
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${searchType === "posts" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    on:click={() => updateSearchType("posts")}
                 >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                </svg>
-                {locationStatus}
-            </button>
-            {#if userLat && userLong}
-                <span class="text-sm text-green-600 font-medium"
-                    >Location Active</span
+                    Items
+                </button>
+                <button
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${searchType === "makers" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    on:click={() => updateSearchType("makers")}
                 >
-            {/if}
+                    Makers
+                </button>
+            </div>
+
+            <!-- View Mode: List vs Map -->
+            <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-md">
+                <button
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "list" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    on:click={() => (viewMode = "list")}
+                >
+                    List
+                </button>
+                <button
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "map" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    on:click={() => (viewMode = "map")}
+                >
+                    Map
+                </button>
+            </div>
         </div>
 
-        <div class="flex items-center gap-4 w-full md:w-auto">
+        <!-- Distance Slider (Full Width) -->
+        <div class="flex items-center gap-4 w-full">
             <label
                 for="distance"
                 class="block text-sm font-medium text-gray-700 whitespace-nowrap"
@@ -135,8 +221,7 @@
                     maxDistance = parseFloat(e.currentTarget.value);
                     updateFilter();
                 }}
-                disabled={!userLat}
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
         </div>
     </div>
@@ -144,16 +229,27 @@
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">
-        Recent Repair Requests
+        {searchType === "posts" ? "Recent Repair Requests" : "Available Makers"}
     </h2>
 
-    {#if data.posts.length === 0}
+    {#if viewMode === "map"}
+        <div class="mb-8 p-4 bg-white rounded-lg shadow">
+            <ResultsMap
+                items={searchType === "posts" ? data.posts : data.makers}
+                type={searchType}
+                {userLat}
+                {userLong}
+            />
+        </div>
+    {:else if (searchType === "posts" && data.posts.length === 0) || (searchType === "makers" && (!data.makers || data.makers.length === 0))}
         <div class="text-center py-12 bg-white rounded-lg shadow">
             <p class="text-gray-500">
-                No repair requests found. Be the first to post!
+                {searchType === "posts"
+                    ? "No repair requests found. Be the first to post!"
+                    : "No makers found nearby."}
             </p>
         </div>
-    {:else}
+    {:else if searchType === "posts"}
         <div
             class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-3 xl:gap-x-8"
         >
@@ -220,6 +316,77 @@
                             <span>{post.type || "General"}</span>
                         </div>
                     </div>
+                </div>
+            {/each}
+        </div>
+    {:else if searchType === "makers"}
+        <div
+            class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-3 xl:gap-x-8"
+        >
+            {#each data.makers as maker}
+                <div
+                    class="group relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow p-6"
+                >
+                    <div class="flex items-center space-x-4">
+                        {#if maker.image}
+                            <img
+                                class="h-12 w-12 rounded-full object-cover"
+                                src={maker.image}
+                                alt={maker.name}
+                            />
+                        {:else}
+                            <span
+                                class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100"
+                            >
+                                <svg
+                                    class="h-full w-full text-gray-300"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
+                                    />
+                                </svg>
+                            </span>
+                        {/if}
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">
+                                <a href={`/user/${maker.id}`}>
+                                    <span
+                                        aria-hidden="true"
+                                        class="absolute inset-0"
+                                    ></span>
+                                    {maker.name}
+                                </a>
+                            </h3>
+                            <p class="text-sm text-gray-500">
+                                {maker.skills || "Repairer"}
+                            </p>
+                        </div>
+                    </div>
+                    {#if maker.lat && userLat && userLong}
+                        <div class="mt-2 text-xs text-gray-400">
+                            {Math.round(
+                                6371 *
+                                    Math.acos(
+                                        Math.cos((userLat * Math.PI) / 180) *
+                                            Math.cos(
+                                                (maker.lat * Math.PI) / 180,
+                                            ) *
+                                            Math.cos(
+                                                (maker.long * Math.PI) / 180 -
+                                                    (userLong * Math.PI) / 180,
+                                            ) +
+                                            Math.sin(
+                                                (userLat * Math.PI) / 180,
+                                            ) *
+                                                Math.sin(
+                                                    (maker.lat * Math.PI) / 180,
+                                                ),
+                                    ),
+                            ).toFixed(1)} km away
+                        </div>
+                    {/if}
                 </div>
             {/each}
         </div>

@@ -60,6 +60,21 @@ export const actions = {
 
         return { success: true };
     },
+    updateLocation: async ({ request, cookies }) => {
+        const userId = cookies.get('session_id');
+        if (!userId) throw redirect(303, '/login');
+
+        const data = await request.formData();
+        const lat = data.get('lat') ? parseFloat(data.get('lat') as string) : null;
+        const long = data.get('long') ? parseFloat(data.get('long') as string) : null;
+
+        await UserRepository.update(userId, {
+            lat: lat ? lat.toString() : null,
+            long: long ? long.toString() : null
+        });
+
+        return { success: true };
+    },
     updateImage: async ({ request, cookies }) => {
         const userId = cookies.get('session_id');
         if (!userId) throw redirect(303, '/login');

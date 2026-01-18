@@ -11,6 +11,8 @@ export const actions = {
     const phoneNumber = data.get('phoneNumber') as string;
     const password = data.get('password') as string;
     const isMaker = data.get('role_maker') === 'on';
+    const lat = data.get('lat') ? parseFloat(data.get('lat') as string) : null;
+    const long = data.get('long') ? parseFloat(data.get('long') as string) : null;
 
     if (!name || !email || !password || !phoneNumber) {
       return fail(400, { name, email, phoneNumber, missing: true });
@@ -58,6 +60,8 @@ export const actions = {
         phoneNumber,
         passwordHash,
         maker: isMaker,
+        lat: lat ? lat.toString() : null,
+        long: long ? long.toString() : null,
         image: imageUrl, // Add image url
         // Default values for other fields
         bio: '',
