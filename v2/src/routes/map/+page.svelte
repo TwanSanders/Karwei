@@ -8,10 +8,16 @@
 
     export let data: PageData;
 
+    import { theme } from "$lib/stores/theme"; // Import the store
+
+    // ...
+
     let mapElement: HTMLElement;
     let map: any;
+    let tileLayer: any; // Keep track of tile layer
     let userLat: number | null = null;
     let userLong: number | null = null;
+    let unsubscribe: () => void; // To clean up listener
 
     onMount(async () => {
         if (browser) {
@@ -35,16 +41,31 @@
 
             map = L.map(mapElement).setView(defaultCenter, defaultZoom);
 
-            L.tileLayer(
-                "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-                {
-                    attribution:
-                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-                },
-            ).addTo(map);
+            // Function to set tile layer based on theme
+            const setTileLayer = (isDark: boolean) => {
+                if (tileLayer) {
+                    map.removeLayer(tileLayer);
+                }
+
+                const tileLayerURL = isDark
+                    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+                    : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png";
+
+                tileLayer = L.tileLayer(tileLayerURL, {
+                    maxZoom: 19,
+                    attribution: "&copy; Carto, &copy; OpenStreetMap",
+                }).addTo(map);
+            };
+
+            // SUBSCRIBE to the store. This runs automatically whenever the toggle is clicked.
+            unsubscribe = theme.subscribe((value) => {
+                const isDark = value === "dark";
+                setTileLayer(isDark);
+            });
 
             // Try to get user location
             if (navigator.geolocation) {
+                // ... (rest of geolocation code)
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         userLat = position.coords.latitude;
@@ -74,7 +95,7 @@
             }
 
             const markers: any[] = [];
-
+            // ... (rest of marker logic)
             if (data.posts && data.posts.length > 0) {
                 data.posts.forEach((post) => {
                     if (post.lat && post.long) {
@@ -115,6 +136,7 @@
     });
 
     onDestroy(() => {
+        if (unsubscribe) unsubscribe();
         if (map) {
             map.remove();
         }
@@ -131,9 +153,13 @@
 </svelte:head>
 
 <div class="flex flex-col h-full w-full">
-    <div class="flex-none p-4 bg-white shadow-sm z-10">
-        <h1 class="text-2xl font-bold text-gray-900">Explore Repairs</h1>
-        <p class="text-sm text-gray-500">
+    <div
+        class="flex-none p-4 bg-white dark:bg-gray-800 shadow-sm z-10 transition-colors duration-200"
+    >
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            Explore Repairs
+        </h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
             Find items that need fixing near you.
         </p>
     </div>

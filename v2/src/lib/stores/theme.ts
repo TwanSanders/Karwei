@@ -1,39 +1,20 @@
 import { browser } from '$app/environment';
 import { writable } from 'svelte/store';
 
-type Theme = 'light' | 'dark' | 'system';
+// 1. Determine initial value (Storage -> System Preference -> Default Light)
+const defaultValue = 'light';
+const initialValue = browser 
+    ? window.localStorage.getItem('theme') ?? 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : defaultValue)
+    : defaultValue;
 
-const defaultValue = 'system';
-const initialValue = browser ? (localStorage.getItem('theme') as Theme) ?? defaultValue : defaultValue;
+export const theme = writable(initialValue);
 
-export const theme = writable<Theme>(initialValue);
-
-if (browser) {
-    theme.subscribe((value) => {
-        if (value === 'system') {
-            localStorage.removeItem('theme');
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        } else {
-            localStorage.setItem('theme', value);
-            if (value === 'dark') {
-                document.documentElement.classList.add('dark');
-            } else {
-                document.documentElement.classList.remove('dark');
-            }
-        }
-    });
-
-    // Listen for system changes if in system mode
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (localStorage.getItem('theme')) return; // explicit override exists
-        if (e.matches) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    });
-}
+// 2. Subscribe to changes to update the DOM and Storage
+theme.subscribe((value) => {
+    if (browser) {
+        window.localStorage.setItem('theme', value);
+        // This is the actual switch:
+        document.documentElement.classList.toggle('dark', value === 'dark');
+    }
+});

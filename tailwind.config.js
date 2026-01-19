@@ -1,9 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ["./src/**/*.{html,js,svelte,ts}"],
-  darkMode: ["selector", '[data-theme="dark"]'],
+  darkMode: 'class',
+  content: ['./src/**/*.{html,js,svelte,ts}', './v2/src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {},
   },
-  plugins: [require("daisyui"), require("tailwind-scrollbar")],
-};
+  plugins: [],
+}
