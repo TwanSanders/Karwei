@@ -10,6 +10,8 @@
 
     let mapElement: HTMLElement;
     let map: any;
+    let userLat: number | null = null;
+    let userLong: number | null = null;
 
     onMount(async () => {
         if (browser) {
@@ -33,12 +35,45 @@
 
             map = L.map(mapElement).setView(defaultCenter, defaultZoom);
 
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution:
-                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            }).addTo(map);
+            L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+                {
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                },
+            ).addTo(map);
 
-            const markers = [];
+            // Try to get user location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLat = position.coords.latitude;
+                        userLong = position.coords.longitude;
+
+                        const userIcon = L.divIcon({
+                            className: "custom-user-pin",
+                            html: `<div class="relative flex h-4 w-4">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-4 w-4 bg-sky-500 border-2 border-white shadow-sm"></span>
+                           </div>`,
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8],
+                        });
+
+                        L.marker([userLat, userLong], { icon: userIcon })
+                            .addTo(map)
+                            .bindPopup("Your Location");
+                    },
+                    (err) => {
+                        console.warn(
+                            "Location permission denied or error:",
+                            err,
+                        );
+                    },
+                );
+            }
+
+            const markers: any[] = [];
 
             if (data.posts && data.posts.length > 0) {
                 data.posts.forEach((post) => {

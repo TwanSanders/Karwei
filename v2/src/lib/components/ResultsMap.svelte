@@ -56,21 +56,27 @@
 
             map = L.map(mapElement).setView([initialLat, initialLng], zoom);
 
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution:
-                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            }).addTo(map);
+            L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+                {
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                },
+            ).addTo(map);
 
             // Add user location marker if available
             if (userLat && userLong) {
-                L.circleMarker([userLat, userLong], {
-                    radius: 8,
-                    fillColor: "#3388ff",
-                    color: "#fff",
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.8,
-                })
+                const userIcon = L.divIcon({
+                    className: "custom-user-pin",
+                    html: `<div class="relative flex h-4 w-4">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-4 w-4 bg-sky-500 border-2 border-white shadow-sm"></span>
+                           </div>`,
+                    iconSize: [16, 16], // Size of the div
+                    iconAnchor: [8, 8], // Center it
+                });
+
+                L.marker([userLat, userLong], { icon: userIcon })
                     .addTo(map)
                     .bindPopup("Your Location");
             }

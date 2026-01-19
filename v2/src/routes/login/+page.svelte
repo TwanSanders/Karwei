@@ -7,10 +7,12 @@
 
 <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+        <h2
+            class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white"
+        >
             Sign in to your account
         </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
+        <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Or
             <a
                 href="/register"
@@ -22,12 +24,14 @@
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+        <div
+            class="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10"
+        >
             <form class="space-y-6" action="?/login" method="POST" use:enhance>
                 <div>
                     <label
                         for="email"
-                        class="block text-sm font-medium text-gray-700"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                         Email address
                     </label>
@@ -38,7 +42,7 @@
                             type="email"
                             autocomplete="email"
                             required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                             value={form?.email ?? ""}
                         />
                     </div>
@@ -47,7 +51,7 @@
                 <div>
                     <label
                         for="password"
-                        class="block text-sm font-medium text-gray-700"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                     >
                         Password
                     </label>
@@ -58,7 +62,7 @@
                             type="password"
                             autocomplete="current-password"
                             required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         />
                     </div>
                 </div>

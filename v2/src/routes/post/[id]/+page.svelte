@@ -11,16 +11,20 @@
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg">
         <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
             <div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                <h3
+                    class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                >
                     {post.title}
                 </h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                <p
+                    class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
+                >
                     Posted by <a
                         href="/user/{post.userId}"
-                        class="font-medium text-gray-900 hover:underline"
+                        class="font-medium text-gray-900 dark:text-gray-200 hover:underline"
                         >{data.postUser?.name}</a
                     >
                     on {new Date(post.createdAt).toLocaleDateString()}
@@ -45,35 +49,39 @@
                           : "Open"}
                 </span>
                 <span
-                    class="ml-2 inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800"
+                    class="ml-2 inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 >
                     {post.type || "General"}
                 </span>
             </div>
         </div>
-        <div class="border-t border-gray-200">
+        <div class="border-t border-gray-200 dark:border-gray-700">
             <dl>
                 <div
-                    class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                    class="bg-gray-50 dark:bg-gray-700/50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                 >
-                    <dt class="text-sm font-medium text-gray-500">
+                    <dt
+                        class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                    >
                         Description
                     </dt>
                     <dd
-                        class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                        class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                     >
                         {post.description}
                     </dd>
                 </div>
                 {#if post.targetPrice}
                     <div
-                        class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                        class="bg-white dark:bg-gray-800 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
                             Target Budget
                         </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             €{post.targetPrice.toFixed(2)}
                         </dd>
@@ -81,11 +89,15 @@
                 {/if}
                 {#if post.imageUrl}
                     <div
-                        class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                        class="bg-gray-50 dark:bg-gray-700/50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">Image</dt>
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
+                            Image
+                        </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             <img
                                 src={post.imageUrl}
@@ -101,15 +113,19 @@
 
     <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-            <h3 class="text-lg font-medium text-gray-900">Offers</h3>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                Offers
+            </h3>
 
             <div class="mt-4 space-y-4">
                 {#if offers.length === 0}
-                    <p class="text-gray-500 italic">No offers yet.</p>
+                    <p class="text-gray-500 dark:text-gray-400 italic">
+                        No offers yet.
+                    </p>
                 {:else}
                     {#each offers as offer}
                         <div
-                            class="bg-white rounded-lg border border-gray-200 p-4 shadow-sm"
+                            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
                         >
                             <div class="flex justify-between">
                                 <div class="flex items-center">
@@ -121,7 +137,7 @@
                                         />
                                     {:else}
                                         <span
-                                            class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 mr-2"
+                                            class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600 mr-2"
                                         >
                                             <svg
                                                 class="h-full w-full text-gray-300"
@@ -134,22 +150,27 @@
                                             </svg>
                                         </span>
                                     {/if}
-                                    <h4 class="text-sm font-bold text-gray-900">
+                                    <h4
+                                        class="text-sm font-bold text-gray-900 dark:text-white"
+                                    >
                                         <a
                                             href="/user/{offer.makerId}"
-                                            class="hover:underline hover:text-indigo-600"
+                                            class="hover:underline hover:text-indigo-600 dark:hover:text-indigo-400"
                                         >
                                             {offer.makerName || "A Repairer"}
                                         </a>
                                     </h4>
                                 </div>
-                                <span class="text-xs text-gray-500"
+                                <span
+                                    class="text-xs text-gray-500 dark:text-gray-400"
                                     >{new Date(
                                         offer.createdAt,
                                     ).toLocaleString()}</span
                                 >
                             </div>
-                            <p class="mt-2 text-sm text-gray-700">
+                            <p
+                                class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+                            >
                                 {offer.message}
                             </p>
                             {#if offer.price}
@@ -161,7 +182,9 @@
                             {/if}
 
                             {#if isOwner && post.status === "open"}
-                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                <div
+                                    class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700"
+                                >
                                     <form
                                         action="?/acceptOffer"
                                         method="POST"
@@ -194,9 +217,11 @@
             <!-- Offer Form for Repairers -->
             {#if isRepairer && !isOwner && post.status === "open"}
                 <div
-                    class="mt-8 bg-indigo-50 p-6 rounded-lg border border-indigo-100"
+                    class="mt-8 bg-indigo-50 dark:bg-indigo-900/40 p-6 rounded-lg border border-indigo-100 dark:border-indigo-800"
                 >
-                    <h4 class="text-base font-medium text-indigo-900">
+                    <h4
+                        class="text-base font-medium text-indigo-900 dark:text-indigo-100"
+                    >
                         Make an Offer
                     </h4>
                     <form
@@ -208,7 +233,7 @@
                         <div>
                             <label
                                 for="message"
-                                class="block text-sm font-medium text-gray-700"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >Message</label
                             >
                             <textarea
@@ -216,20 +241,20 @@
                                 id="message"
                                 rows="3"
                                 required
-                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white"
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                             ></textarea>
                         </div>
                         <div>
                             <label
                                 for="price"
-                                class="block text-sm font-medium text-gray-700"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >Price (€)</label
                             >
                             <input
                                 type="number"
                                 name="price"
                                 id="price"
-                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md bg-white w-32"
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white w-32"
                             />
                         </div>
                         <button
@@ -246,12 +271,16 @@
             {#if isOwner}
                 {#if post.status === "in_progress"}
                     <div
-                        class="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-100"
+                        class="mt-8 bg-blue-50 dark:bg-blue-900/40 p-6 rounded-lg border border-blue-100 dark:border-blue-800"
                     >
-                        <h4 class="text-base font-medium text-blue-900">
+                        <h4
+                            class="text-base font-medium text-blue-900 dark:text-blue-100"
+                        >
                             Repair in Progress
                         </h4>
-                        <p class="mt-1 text-sm text-blue-700 mb-4">
+                        <p
+                            class="mt-1 text-sm text-blue-700 dark:text-blue-300 mb-4"
+                        >
                             The repair is currently underway. Once the job is
                             done, mark it as fixed.
                         </p>
@@ -266,12 +295,16 @@
                     </div>
                 {:else if post.status === "fixed"}
                     <div
-                        class="mt-8 bg-green-50 p-6 rounded-lg border border-green-100"
+                        class="mt-8 bg-green-50 dark:bg-green-900/40 p-6 rounded-lg border border-green-100 dark:border-green-800"
                     >
-                        <h4 class="text-base font-medium text-green-900">
+                        <h4
+                            class="text-base font-medium text-green-900 dark:text-green-100"
+                        >
                             Repair Complete!
                         </h4>
-                        <p class="mt-1 text-sm text-green-700 mb-4">
+                        <p
+                            class="mt-1 text-sm text-green-700 dark:text-green-300 mb-4"
+                        >
                             This item has been marked as fixed. Please leave a
                             review for the repairer.
                         </p>
@@ -291,7 +324,7 @@
                                 <select
                                     id="rating"
                                     name="rating"
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                 >
                                     <option value="5">5 - Excellent</option>
                                     <option value="4">4 - Very Good</option>
@@ -310,7 +343,7 @@
                                     id="review-comment"
                                     name="comment"
                                     rows="3"
-                                    class="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                    class="shadow-sm focus:ring-green-500 focus:border-green-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                     placeholder="How was the service?"
                                 ></textarea>
                             </div>
@@ -324,7 +357,7 @@
                     </div>
                 {:else if post.status === "closed"}
                     <div
-                        class="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200"
+                        class="mt-8 bg-gray-50 dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700"
                     >
                         <div class="flex items-center">
                             <svg
@@ -338,7 +371,8 @@
                                     clip-rule="evenodd"
                                 />
                             </svg>
-                            <span class="text-gray-900 font-medium"
+                            <span
+                                class="text-gray-900 dark:text-white font-medium"
                                 >This repair is closed. Thank you!</span
                             >
                         </div>
@@ -348,16 +382,18 @@
         </div>
 
         <div>
-            <h3 class="text-lg font-medium text-gray-900">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
                 Comments ({comments.length})
             </h3>
             <div class="mt-4 space-y-4">
                 {#if comments.length === 0}
-                    <p class="text-gray-500 italic">No comments yet.</p>
+                    <p class="text-gray-500 dark:text-gray-400 italic">
+                        No comments yet.
+                    </p>
                 {:else}
                     {#each comments as comment}
                         <div
-                            class="bg-gray-50 rounded-lg p-4 border border-gray-100"
+                            class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700"
                         >
                             <div class="flex justify-between items-start">
                                 <div class="flex items-center">
@@ -368,18 +404,21 @@
                                             class="h-6 w-6 rounded-full mr-2 object-cover"
                                         />
                                     {/if}
-                                    <h4 class="text-sm font-bold text-gray-900">
+                                    <h4
+                                        class="text-sm font-bold text-gray-900 dark:text-white"
+                                    >
                                         {comment.userName || "User"}
                                     </h4>
                                 </div>
-                                <span class="text-xs text-gray-500"
+                                <span
+                                    class="text-xs text-gray-500 dark:text-gray-400"
                                     >{new Date(
                                         comment.createdAt,
                                     ).toLocaleDateString()}</span
                                 >
                             </div>
                             <p
-                                class="mt-2 text-sm text-gray-700 whitespace-pre-wrap"
+                                class="mt-2 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap"
                             >
                                 {comment.message}
                             </p>
@@ -390,7 +429,7 @@
 
             <!-- Comment Form -->
             {#if data.currentUser}
-                <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                <div class="mt-6 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
                     <form
                         action="?/comment"
                         method="POST"
@@ -400,7 +439,7 @@
                         <div>
                             <label
                                 for="comment-message"
-                                class="block text-sm font-medium text-gray-700"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                                 >Add a comment</label
                             >
                             <textarea
@@ -408,14 +447,14 @@
                                 id="comment-message"
                                 rows="2"
                                 placeholder="Ask a question..."
-                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md mt-1"
+                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md mt-1 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                                 required
                             ></textarea>
                         </div>
                         <div class="flex justify-end">
                             <button
                                 type="submit"
-                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-indigo-700 dark:text-indigo-200 bg-indigo-100 dark:bg-indigo-900/60 hover:bg-indigo-200 dark:hover:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 Post Comment
                             </button>

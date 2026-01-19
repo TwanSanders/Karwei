@@ -11,6 +11,7 @@
 - **CSS Engine**: [TailwindCSS v4](https://tailwindcss.com/)
 - **Processor**: PostCSS
 - **Icons**: [Lucide Svelte](https://lucide.dev/guide/packages/lucide-svelte)
+- **Maps**: [Leaflet](https://leafletjs.com/) with CartoDB Voyager tiles.
 - **Design System**: Custom utility-first design using Tailwind classes.
 
 ### Database & Backend

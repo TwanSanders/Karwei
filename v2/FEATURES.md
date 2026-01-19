@@ -59,6 +59,13 @@ The core mission is to:
   - Users can filter posts by distance (e.g., 5km, 10km, 50km).
   - Posts are sorted by proximity to the user (using Browser location or Profile location).
 
+### 8. UI/UX Refinements
+- **Map Aesthetics**: Modern CartoDB Voyager map tiles for a cleaner look.
+- **Visual Feedback**: Pulsing blue dot for user's current location on the map.
+- **Smart Interactions**: 
+  - Sliders update content without scrolling the page.
+  - Notification dropdowns close intelligently when clicking outside.
+
 ---
 
 ## System Analysis & Gaps (Sceptical Review)

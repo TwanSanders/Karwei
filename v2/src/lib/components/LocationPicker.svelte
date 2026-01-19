@@ -31,10 +31,13 @@
                 zoomLevel,
             );
 
-            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                attribution:
-                    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            }).addTo(map);
+            L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+                {
+                    attribution:
+                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+                },
+            ).addTo(map);
 
             // Initialize location if provided, otherwise wait for move
             if (!lat) {
@@ -152,9 +155,3 @@
     <input type="hidden" name="lat" value={lat ?? ""} />
     <input type="hidden" name="long" value={long ?? ""} />
 </div>
-
-<style>
-    .leaflet-container {
-        z-index: 1;
-    }
-</style>

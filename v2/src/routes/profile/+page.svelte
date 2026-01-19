@@ -16,25 +16,35 @@
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <div class="max-w-3xl mx-auto">
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div
+            class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg"
+        >
             <div class="px-4 py-5 sm:px-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                <h3
+                    class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                >
                     User Profile
                 </h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                <p
+                    class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
+                >
                     Personal details and preferences.
                 </p>
             </div>
-            <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
-                <dl class="sm:divide-y sm:divide-gray-200">
+            <div
+                class="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-0"
+            >
+                <dl class="sm:divide-y sm:divide-gray-200 dark:divide-gray-700">
                     <div
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
                             Full name
                         </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             {user.name}
                         </dd>
@@ -42,11 +52,13 @@
                     <div
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
                             Profile Picture
                         </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             <div class="flex items-center space-x-4">
                                 {#if user.image}
@@ -57,10 +69,10 @@
                                     />
                                 {:else}
                                     <span
-                                        class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100"
+                                        class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700"
                                     >
                                         <svg
-                                            class="h-full w-full text-gray-300"
+                                            class="h-full w-full text-gray-300 dark:text-gray-500"
                                             fill="currentColor"
                                             viewBox="0 0 24 24"
                                         >
@@ -78,14 +90,13 @@
                                 >
                                     <div class="flex items-center space-x-2">
                                         <input
-                                            type="file"
                                             name="image"
                                             accept="image/*"
-                                            class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                                            class="text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/60"
                                         />
                                         <button
                                             type="submit"
-                                            class="text-sm text-indigo-600 hover:text-indigo-500"
+                                            class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
                                         >
                                             Update
                                         </button>
@@ -97,11 +108,13 @@
                     <div
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
                             Email address
                         </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             {user.email}
                         </dd>
@@ -109,14 +122,16 @@
                     <div
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
                             Location
                             <InfoTooltip
                                 text="Used to show you repairs/makers in your neighborhood. We calculate distance but never reveal your exact home address."
                             />
                         </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             <form
                                 action="?/updateLocation"
@@ -141,19 +156,23 @@
                     <div
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">Roles</dt>
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
+                            Roles
+                        </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             <div class="flex flex-col space-y-2">
                                 <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 w-fit"
+                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 w-fit"
                                 >
                                     Customer
                                 </span>
                                 {#if user.maker}
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 w-fit"
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 w-fit"
                                     >
                                         Repairer
                                     </span>
@@ -164,11 +183,13 @@
                     <div
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
-                        <dt class="text-sm font-medium text-gray-500">
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
                             Settings
                         </dt>
                         <dd
-                            class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2"
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
                         >
                             <form
                                 action="?/toggleMaker"
@@ -177,13 +198,15 @@
                             >
                                 <button
                                     type="submit"
-                                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                 >
                                     {user.maker
                                         ? "Stop offering repair services"
                                         : "I want to offer repair services"}
                                 </button>
-                                <p class="mt-2 text-xs text-gray-500">
+                                <p
+                                    class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                                >
                                     {user.maker
                                         ? "You will no longer be listed as a repairer, but you can still post items."
                                         : "Enabling this will allow you to make offers on posts."}
@@ -195,27 +218,36 @@
             </div>
         </div>
 
-        <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
+        <div
+            class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mt-8"
+        >
             <div class="px-4 py-5 sm:px-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                <h3
+                    class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                >
                     My Posts
                 </h3>
-                <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                <p
+                    class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
+                >
                     Manage your repair requests.
                 </p>
             </div>
             <div class="border-t border-gray-200">
                 {#if userPosts.length === 0}
                     <div
-                        class="px-4 py-5 sm:px-6 text-center text-gray-500 italic"
+                        class="px-4 py-5 sm:px-6 text-center text-gray-500 dark:text-gray-400 italic"
                     >
                         You haven't posted anything yet.
                     </div>
                 {:else}
-                    <ul role="list" class="divide-y divide-gray-200">
+                    <ul
+                        role="list"
+                        class="divide-y divide-gray-200 dark:divide-gray-700"
+                    >
                         {#each userPosts as post}
                             <li
-                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors cursor-pointer"
+                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                                 onclick={() => goto(`/post/${post.id}`)}
                             >
                                 <div class="flex items-center justify-between">
@@ -229,10 +261,10 @@
                                                 />
                                             {:else}
                                                 <div
-                                                    class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center"
+                                                    class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
                                                 >
                                                     <svg
-                                                        class="h-6 w-6 text-gray-400"
+                                                        class="h-6 w-6 text-gray-400 dark:text-gray-500"
                                                         fill="none"
                                                         viewBox="0 0 24 24"
                                                         stroke="currentColor"
@@ -249,7 +281,7 @@
                                         </div>
                                         <div class="ml-4">
                                             <div
-                                                class="text-sm font-medium text-indigo-600 truncate max-w-xs sm:max-w-sm"
+                                                class="text-sm font-medium text-indigo-600 dark:text-indigo-400 truncate max-w-xs sm:max-w-sm"
                                             >
                                                 <a
                                                     href="/post/{post.id}"
@@ -258,7 +290,9 @@
                                                     {post.title}
                                                 </a>
                                             </div>
-                                            <div class="text-xs text-gray-500">
+                                            <div
+                                                class="text-xs text-gray-500 dark:text-gray-400"
+                                            >
                                                 {new Date(
                                                     post.createdAt,
                                                 ).toLocaleDateString()}
@@ -269,7 +303,7 @@
                                         class="flex items-center space-x-2 sm:space-x-4"
                                     >
                                         <div
-                                            class="text-sm text-gray-500 hidden sm:block capitalize"
+                                            class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block capitalize"
                                         >
                                             {post.status.replace("_", " ")}
                                         </div>
@@ -374,25 +408,34 @@
         </div>
 
         {#if user.maker && userOffers && userOffers.length > 0}
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
+            <div
+                class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mt-8"
+            >
                 <div class="px-4 py-5 sm:px-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    <h3
+                        class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                    >
                         My Offers
                     </h3>
-                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                    <p
+                        class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
+                    >
                         Offers you have made on repair requests.
                     </p>
                 </div>
-                <div class="border-t border-gray-200">
-                    <ul role="list" class="divide-y divide-gray-200">
+                <div class="border-t border-gray-200 dark:border-gray-700">
+                    <ul
+                        role="list"
+                        class="divide-y divide-gray-200 dark:divide-gray-700"
+                    >
                         {#each userOffers as offer}
                             <li
-                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors"
+                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
                                 <div class="flex items-center justify-between">
                                     <div class="flex flex-col">
                                         <div
-                                            class="text-sm font-medium text-indigo-600 truncate max-w-xs sm:max-w-sm"
+                                            class="text-sm font-medium text-indigo-600 dark:text-indigo-400 truncate max-w-xs sm:max-w-sm"
                                         >
                                             <a
                                                 href="/post/{offer.postId}"
@@ -402,10 +445,14 @@
                                                     "Unknown Post"}
                                             </a>
                                         </div>
-                                        <div class="text-xs text-gray-500">
+                                        <div
+                                            class="text-xs text-gray-500 dark:text-gray-400"
+                                        >
                                             Offer: €{offer.price}
                                         </div>
-                                        <div class="text-xs text-gray-400">
+                                        <div
+                                            class="text-xs text-gray-400 dark:text-gray-500"
+                                        >
                                             Status: {offer.postStatus}
                                         </div>
                                     </div>
@@ -460,22 +507,31 @@
         {/if}
 
         {#if incomingRequests.length > 0}
-            <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-8">
+            <div
+                class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mt-8"
+            >
                 <div class="px-4 py-5 sm:px-6">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    <h3
+                        class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                    >
                         Incoming Contact Requests
                     </h3>
-                    <p class="mt-1 max-w-2xl text-sm text-gray-500">
+                    <p
+                        class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
+                    >
                         Other users want to see your contact details.
                     </p>
                 </div>
-                <div class="border-t border-gray-200">
-                    <ul role="list" class="divide-y divide-gray-200">
+                <div class="border-t border-gray-200 dark:border-gray-700">
+                    <ul
+                        role="list"
+                        class="divide-y divide-gray-200 dark:divide-gray-700"
+                    >
                         {#each incomingRequests as req}
                             <li class="px-4 py-4 sm:px-6" id="request-{req.id}">
                                 <div class="flex items-center justify-between">
                                     <div
-                                        class="text-sm font-medium text-indigo-600 truncate"
+                                        class="text-sm font-medium text-indigo-600 dark:text-indigo-400 truncate"
                                     >
                                         <a
                                             href={`/user/${req.requesterId}`}

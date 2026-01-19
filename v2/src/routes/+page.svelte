@@ -66,14 +66,15 @@
 
         params.set("distance", maxDistance.toString());
 
-        goto(`?${params.toString()}`, { keepFocus: true });
+        goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
     }
     import ResultsMap from "$lib/components/ResultsMap.svelte";
 
-    let searchType = data.searchType || "posts"; // 'posts' or 'makers'
+    let searchType: "posts" | "makers" =
+        (data.searchType as "posts" | "makers") || "posts";
     let viewMode = "list"; // 'list' or 'map'
 
-    function updateSearchType(newType: string) {
+    function updateSearchType(newType: "posts" | "makers") {
         searchType = newType;
         const params = new URLSearchParams($page.url.searchParams);
         params.set("type", newType);
@@ -96,7 +97,7 @@
             <div class="mt-8">
                 <a
                     href="/post/create"
-                    class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50"
+                    class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 dark:bg-gray-800 dark:text-indigo-400 dark:hover:bg-gray-700 transition-colors"
                 >
                     Post an Item to Repair
                 </a>
@@ -107,7 +108,9 @@
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Filters & Toggles -->
-    <div class="bg-white rounded-lg shadow p-6 mb-8 flex flex-col space-y-4">
+    <div
+        class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8 flex flex-col space-y-4 transition-colors duration-200"
+    >
         <!-- Top Row: Location & Type & View Mode -->
         <div
             class="flex flex-col md:flex-row items-center justify-between gap-4"
@@ -117,7 +120,7 @@
                 <div class="relative inline-block text-left">
                     <label
                         for="locationSource"
-                        class="block text-sm font-medium text-gray-700 mr-2"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mr-2"
                         >Location Source</label
                     >
                     <select
@@ -135,7 +138,7 @@
                                 updateFilter();
                             }
                         }}
-                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                         <option value="home">My Home Address</option>
                         <option value="current">Current Device Location</option>
@@ -168,15 +171,17 @@
             </div>
 
             <!-- Search Type: Items vs Makers -->
-            <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-md">
+            <div
+                class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-md transition-colors"
+            >
                 <button
-                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${searchType === "posts" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${searchType === "posts" ? "bg-white dark:bg-gray-600 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"}`}
                     on:click={() => updateSearchType("posts")}
                 >
                     Items
                 </button>
                 <button
-                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${searchType === "makers" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${searchType === "makers" ? "bg-white dark:bg-gray-600 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"}`}
                     on:click={() => updateSearchType("makers")}
                 >
                     Makers
@@ -184,15 +189,17 @@
             </div>
 
             <!-- View Mode: List vs Map -->
-            <div class="flex items-center gap-2 bg-gray-100 p-1 rounded-md">
+            <div
+                class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 p-1 rounded-md transition-colors"
+            >
                 <button
-                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "list" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "list" ? "bg-white dark:bg-gray-600 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"}`}
                     on:click={() => (viewMode = "list")}
                 >
                     List
                 </button>
                 <button
-                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "map" ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}
+                    class={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${viewMode === "map" ? "bg-white dark:bg-gray-600 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"}`}
                     on:click={() => (viewMode = "map")}
                 >
                     Map
@@ -204,9 +211,10 @@
         <div class="flex items-center gap-4 w-full">
             <label
                 for="distance"
-                class="block text-sm font-medium text-gray-700 whitespace-nowrap"
+                class="block text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
             >
-                Max Distance: <span class="text-indigo-600 font-bold"
+                Max Distance: <span
+                    class="text-indigo-600 dark:text-indigo-400 font-bold"
                     >{maxDistance} km</span
                 >
             </label>
@@ -221,19 +229,23 @@
                     maxDistance = parseFloat(e.currentTarget.value);
                     updateFilter();
                 }}
-                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                class="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-lg appearance-none cursor-pointer"
             />
         </div>
     </div>
 </div>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <h2 class="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">
+    <h2
+        class="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-8"
+    >
         {searchType === "posts" ? "Recent Repair Requests" : "Available Makers"}
     </h2>
 
     {#if viewMode === "map"}
-        <div class="mb-8 p-4 bg-white rounded-lg shadow">
+        <div
+            class="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-200"
+        >
             <ResultsMap
                 items={searchType === "posts" ? data.posts : data.makers}
                 type={searchType}
@@ -242,8 +254,10 @@
             />
         </div>
     {:else if (searchType === "posts" && data.posts.length === 0) || (searchType === "makers" && (!data.makers || data.makers.length === 0))}
-        <div class="text-center py-12 bg-white rounded-lg shadow">
-            <p class="text-gray-500">
+        <div
+            class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow transition-colors duration-200"
+        >
+            <p class="text-gray-500 dark:text-gray-400">
                 {searchType === "posts"
                     ? "No repair requests found. Be the first to post!"
                     : "No makers found nearby."}
@@ -255,10 +269,10 @@
         >
             {#each data.posts as post}
                 <div
-                    class="group relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                    class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow"
                 >
                     <div
-                        class="w-full min-h-60 bg-gray-200 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 h-60"
+                        class="w-full min-h-60 bg-gray-200 dark:bg-gray-700 aspect-w-1 aspect-h-1 rounded-md overflow-hidden group-hover:opacity-75 h-60"
                     >
                         {#if post.imageUrl}
                             <img
@@ -268,7 +282,7 @@
                             />
                         {:else}
                             <div
-                                class="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400"
+                                class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
                             >
                                 <svg
                                     class="h-12 w-12"
@@ -289,7 +303,9 @@
                     <div class="mt-4 px-4 pb-4">
                         <div class="flex justify-between">
                             <div>
-                                <h3 class="text-lg font-medium text-gray-900">
+                                <h3
+                                    class="text-lg font-medium text-gray-900 dark:text-white"
+                                >
                                     <a href={`/post/${post.id}`}>
                                         <span
                                             aria-hidden="true"
@@ -299,7 +315,7 @@
                                     </a>
                                 </h3>
                                 <p
-                                    class="mt-1 text-sm text-gray-500 line-clamp-2"
+                                    class="mt-1 text-sm text-gray-500 dark:text-gray-400 line-clamp-2"
                                 >
                                     {post.description}
                                 </p>
@@ -311,7 +327,7 @@
                             {/if}
                         </div>
                         <div
-                            class="mt-2 flex items-center text-xs text-gray-500"
+                            class="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400"
                         >
                             <span>{post.type || "General"}</span>
                         </div>
@@ -325,7 +341,7 @@
         >
             {#each data.makers as maker}
                 <div
-                    class="group relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow p-6"
+                    class="group relative bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow p-6"
                 >
                     <div class="flex items-center space-x-4">
                         {#if maker.image}
@@ -336,10 +352,10 @@
                             />
                         {:else}
                             <span
-                                class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100"
+                                class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600"
                             >
                                 <svg
-                                    class="h-full w-full text-gray-300"
+                                    class="h-full w-full text-gray-300 dark:text-gray-500"
                                     fill="currentColor"
                                     viewBox="0 0 24 24"
                                 >
@@ -350,7 +366,9 @@
                             </span>
                         {/if}
                         <div>
-                            <h3 class="text-lg font-medium text-gray-900">
+                            <h3
+                                class="text-lg font-medium text-gray-900 dark:text-white"
+                            >
                                 <a href={`/user/${maker.id}`}>
                                     <span
                                         aria-hidden="true"
@@ -365,7 +383,9 @@
                         </div>
                     </div>
                     {#if maker.lat && userLat && userLong}
-                        <div class="mt-2 text-xs text-gray-400">
+                        <div
+                            class="mt-2 text-xs text-gray-400 dark:text-gray-500"
+                        >
                             {Math.round(
                                 6371 *
                                     Math.acos(
