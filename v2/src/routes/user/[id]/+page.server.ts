@@ -28,6 +28,14 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
             contactRequest = await ContactRequestRepository.getStatus(userId, targetUserId);
             if (contactRequest?.status === 'accepted') {
                 canViewContact = true;
+            } else {
+                // Check if they requested us and it is accepted (Mutual Exchange)
+                const inverseRequest = await ContactRequestRepository.getStatus(targetUserId, userId);
+                if (inverseRequest?.status === 'accepted') {
+                    canViewContact = true;
+                    // Optionally set contactRequest to inverseRequest so the UI knows there is a connection
+                    if (!contactRequest) contactRequest = inverseRequest;
+                }
             }
         }
     }
@@ -39,9 +47,13 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
     const reviews = await ReviewRepository.getByTargetUserId(targetUserId);
     const averageRating = await ReviewRepository.getAverageRating(targetUserId);
+    
+    // Calculate level and completed repairs count
+    const completedRepairs = await UserRepository.countCompletedRepairs(targetUserId);
+    const level = UserRepository.calculateLevel(completedRepairs);
 
     return {
-        publicUser: targetUser,
+        publicUser: { ...targetUser, completedRepairs, level },
         contactRequest,
         currentUserId: userId,
         reviews,

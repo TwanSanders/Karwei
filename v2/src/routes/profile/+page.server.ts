@@ -4,6 +4,8 @@ import { UserRepository } from '$lib/server/repositories/userRepository';
 import { ContactRequestRepository } from '$lib/server/repositories/contactRequestRepository';
 import { PostRepository } from '$lib/server/repositories/postRepository';
 import { OfferRepository } from '$lib/server/repositories/offerRepository';
+import { SkillRepository } from '$lib/server/repositories/skillRepository';
+import { ReviewRepository } from '$lib/server/repositories/reviewRepository';
 
 export const load: PageServerLoad = async ({ cookies }) => {
     const userId = cookies.get('session_id');
@@ -33,11 +35,22 @@ export const load: PageServerLoad = async ({ cookies }) => {
         }));
     }
 
+    const skills = await SkillRepository.getActive();
+
+    // Calculate level and reviews for maker
+    const completedRepairs = await UserRepository.countCompletedRepairs(userId);
+    const level = UserRepository.calculateLevel(completedRepairs);
+    const averageRating = await ReviewRepository.getAverageRating(userId);
+    const reviews = await ReviewRepository.getByTargetUserId(userId);
+
     return {
-        user,
+        user: { ...user, completedRepairs, level },
         incomingRequests: requestsWithUsers,
         userPosts,
-        userOffers
+        userOffers,
+        skills,
+        averageRating,
+        reviews
     };
 };
 
@@ -199,6 +212,32 @@ export const actions = {
         // Let's blindly delete for now as per plan focus on features, but note it.
         
         await OfferRepository.delete(offerId);
+        return { success: true };
+    },
+    updateSkills: async ({ request, cookies }) => {
+        const userId = cookies.get('session_id');
+        if (!userId) throw redirect(303, '/login');
+
+        const formData = await request.formData();
+        const skills = formData.get('skills') as string || '';
+
+        await UserRepository.update(userId, {
+            skills: skills
+        });
+
+        return { success: true };
+    },
+    updateBio: async ({ request, cookies }) => {
+        const userId = cookies.get('session_id');
+        if (!userId) throw redirect(303, '/login');
+
+        const formData = await request.formData();
+        const bio = formData.get('bio') as string || '';
+
+        await UserRepository.update(userId, {
+            bio: bio.trim().substring(0, 500) // Limit to 500 chars
+        });
+
         return { success: true };
     },
     logout: async ({ cookies }) => {

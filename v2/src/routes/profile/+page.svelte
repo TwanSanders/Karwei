@@ -1,17 +1,56 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
     import { goto } from "$app/navigation";
+    import { invalidateAll } from "$app/navigation";
     import type { PageData } from "./$types";
+    import InfoTooltip from "$lib/components/InfoTooltip.svelte";
+    import LocationPicker from "$lib/components/LocationPicker.svelte";
+    import SkillSelector from "$lib/components/SkillSelector.svelte";
+    import SkillBadges from "$lib/components/SkillBadges.svelte";
+    import MakerBadge from "$lib/components/MakerBadge.svelte";
 
     export let data: PageData;
-    $: user = data.user;
-    $: userPosts = data.userPosts;
-    $: userOffers = data.userOffers;
+    $: ({ user, userPosts, userOffers, skills, averageRating, reviews } = data);
     $: incomingRequests = data.incomingRequests.filter(
         (r) => r.status === "pending",
     );
-    import InfoTooltip from "$lib/components/InfoTooltip.svelte";
-    import LocationPicker from "$lib/components/LocationPicker.svelte";
+
+    // Change tracking - use data.user for initial values
+    let bioChanged = false;
+    let currentBio = data.user.bio || "";
+    $: bioChanged = currentBio !== (data.user.bio || "");
+
+    // Helper to round coordinates to 8 decimal places (about 1mm precision)
+    const roundCoord = (val: number | null) =>
+        val !== null ? Math.round(val * 100000000) / 100000000 : null;
+
+    // Location tracking - convert decimals to numbers and round for comparison
+    let locationChanged = false;
+    let currentLocationLat: number | null = data.user.lat
+        ? Number(data.user.lat)
+        : null;
+    let currentLocationLong: number | null = data.user.long
+        ? Number(data.user.long)
+        : null;
+    $: {
+        const originalLat = data.user.lat ? Number(data.user.lat) : null;
+        const originalLong = data.user.long ? Number(data.user.long) : null;
+        locationChanged =
+            roundCoord(currentLocationLat) !== roundCoord(originalLat) ||
+            roundCoord(currentLocationLong) !== roundCoord(originalLong);
+    }
+
+    let skillsChanged = false;
+    let currentSkills = data.user.skills || "";
+    $: skillsChanged = currentSkills !== (data.user.skills || "");
+
+    let imageChanged = false;
+    let currentImageFile: FileList | null = null;
+    function handleImageChange(event: Event) {
+        const input = event.target as HTMLInputElement;
+        currentImageFile = input.files;
+        imageChanged = currentImageFile !== null && currentImageFile.length > 0;
+    }
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -136,18 +175,88 @@
                             <form
                                 action="?/updateLocation"
                                 method="POST"
-                                use:enhance
+                                use:enhance={() => {
+                                    return async ({ result }) => {
+                                        if (result.type === "success") {
+                                            // Reload data from server to get database values as source of truth
+                                            await invalidateAll();
+                                            // Sync local state with the fresh data from server to ensure button resets
+                                            currentLocationLat = data.user.lat
+                                                ? Number(data.user.lat)
+                                                : null;
+                                            currentLocationLong = data.user.long
+                                                ? Number(data.user.long)
+                                                : null;
+                                        }
+                                    };
+                                }}
                             >
                                 <LocationPicker
-                                    lat={user.lat}
-                                    long={user.long}
+                                    bind:lat={currentLocationLat}
+                                    bind:long={currentLocationLong}
                                 />
                                 <div class="mt-2 flex justify-end">
                                     <button
                                         type="submit"
-                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        disabled={!locationChanged}
+                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white transition-all {locationChanged
+                                            ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                            : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
                                     >
                                         Update Location
+                                    </button>
+                                </div>
+                            </form>
+                        </dd>
+                    </div>
+                    <div
+                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                    >
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
+                            Biography
+                        </dt>
+                        <dd
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
+                        >
+                            <form
+                                action="?/updateBio"
+                                method="POST"
+                                use:enhance={() => {
+                                    return async ({ result, update }) => {
+                                        if (result.type === "success") {
+                                            // Update the user bio in data to reflect the change
+                                            data.user.bio = currentBio;
+                                        }
+                                        await update({ reset: false });
+                                    };
+                                }}
+                            >
+                                <textarea
+                                    name="bio"
+                                    bind:value={currentBio}
+                                    rows="4"
+                                    maxlength="500"
+                                    placeholder="Tell others about yourself and your repair experience..."
+                                    class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                ></textarea>
+                                <div
+                                    class="mt-2 flex items-center justify-between"
+                                >
+                                    <span
+                                        class="text-xs text-gray-500 dark:text-gray-400"
+                                    >
+                                        {currentBio.length}/500 characters
+                                    </span>
+                                    <button
+                                        type="submit"
+                                        disabled={!bioChanged}
+                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white transition-all {bioChanged
+                                            ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                            : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
+                                    >
+                                        Update Biography
                                     </button>
                                 </div>
                             </form>
@@ -178,6 +287,164 @@
                                     </span>
                                 {/if}
                             </div>
+                        </dd>
+                    </div>
+                    {#if user.maker}
+                        <div
+                            class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                        >
+                            <dt
+                                class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                            >
+                                Maker Stats
+                            </dt>
+                            <dd
+                                class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
+                            >
+                                <div class="flex flex-col space-y-3">
+                                    <div class="flex items-center gap-2">
+                                        <MakerBadge
+                                            level={user.level}
+                                            showRepairer={false}
+                                        />
+                                        <InfoTooltip>
+                                            <p class="font-semibold mb-2">
+                                                Maker Levels
+                                            </p>
+                                            <ul class="text-xs space-y-1 mb-2">
+                                                <li
+                                                    class={user.level ===
+                                                    "novice"
+                                                        ? "font-semibold text-green-300"
+                                                        : ""}
+                                                >
+                                                    🟢 Novice: 0-5 reviews
+                                                </li>
+                                                <li
+                                                    class={user.level ===
+                                                    "handyman"
+                                                        ? "font-semibold text-blue-300"
+                                                        : ""}
+                                                >
+                                                    🔵 Handyman: 6-20 reviews
+                                                </li>
+                                                <li
+                                                    class={user.level ===
+                                                    "master"
+                                                        ? "font-semibold text-purple-300"
+                                                        : ""}
+                                                >
+                                                    🟣 Master: 21+ reviews
+                                                </li>
+                                            </ul>
+                                            {#if user.completedRepairs !== undefined}
+                                                <p
+                                                    class="text-xs pt-2 border-t border-gray-600"
+                                                >
+                                                    {#if user.level === "novice"}
+                                                        <strong
+                                                            >{6 -
+                                                                user.completedRepairs}</strong
+                                                        >
+                                                        more review{6 -
+                                                            user.completedRepairs !==
+                                                        1
+                                                            ? "s"
+                                                            : ""} to reach Handyman
+                                                    {:else if user.level === "handyman"}
+                                                        <strong
+                                                            >{21 -
+                                                                user.completedRepairs}</strong
+                                                        >
+                                                        more review{21 -
+                                                            user.completedRepairs !==
+                                                        1
+                                                            ? "s"
+                                                            : ""} to reach Master
+                                                    {:else}
+                                                        You've reached the
+                                                        highest level! 🎉
+                                                    {/if}
+                                                </p>
+                                            {/if}
+                                        </InfoTooltip>
+                                    </div>
+                                    {#if averageRating}
+                                        <div class="text-sm">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
+                                            >
+                                                ★ {averageRating.toFixed(1)}
+                                                {#if user.completedRepairs !== undefined}
+                                                    ({user.completedRepairs})
+                                                {/if}
+                                            </span>
+                                        </div>
+                                    {/if}
+                                    {#if reviews && reviews.length > 0}
+                                        <div
+                                            class="text-xs text-gray-600 dark:text-gray-400"
+                                        >
+                                            <p class="font-medium mb-1">
+                                                Recent Reviews:
+                                            </p>
+                                            <ul class="space-y-1">
+                                                {#each reviews.slice(0, 3) as review}
+                                                    <li>
+                                                        ★ {review.rating} - {review.comment ||
+                                                            "No comment"}
+                                                    </li>
+                                                {/each}
+                                            </ul>
+                                        </div>
+                                    {:else}
+                                        <div
+                                            class="text-xs text-gray-500 dark:text-gray-400 italic"
+                                        >
+                                            No reviews yet. Complete repairs to
+                                            earn your first review!
+                                        </div>
+                                    {/if}
+                                </div>
+                            </dd>
+                        </div>
+                    {/if}
+                    <div
+                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                    >
+                        <dt
+                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        >
+                            Skills
+                        </dt>
+                        <dd
+                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
+                        >
+                            <SkillBadges skills={user.skills} />
+                            <form
+                                action="?/updateSkills"
+                                method="POST"
+                                use:enhance
+                                class="mt-4"
+                            >
+                                <SkillSelector
+                                    bind:selectedSkills={currentSkills}
+                                    availableSkills={data.skills.map(
+                                        (s) => s.name,
+                                    )}
+                                />
+                                <div class="mt-2 flex justify-end">
+                                    <button
+                                        type="submit"
+                                        disabled={!skillsChanged}
+                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white transition-all {skillsChanged
+                                            ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                            : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
+                                    >
+                                        Update Skills
+                                    </button>
+                                </div>
+                            </form>
                         </dd>
                     </div>
                     <div

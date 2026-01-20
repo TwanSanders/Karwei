@@ -10,6 +10,8 @@ export interface User {
   bio?: string | null;
   maker: boolean;
   createdAt: Date;
+  level?: 'novice' | 'handyman' | 'master';
+  completedRepairs?: number;
 }
 
 export interface Post {
@@ -54,5 +56,16 @@ export interface Notification {
   type: 'offer' | 'accept' | 'contact_request';
   relatedId: string;
   read: boolean;
+  createdAt: Date;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  icon: string | null;
+  displayOrder: number | null;
+  active: boolean;
   createdAt: Date;
 }

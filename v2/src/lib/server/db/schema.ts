@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, varchar, decimal, pgSchema } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, varchar, decimal, integer, pgSchema } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const karweiSchema = pgSchema("karwei");
@@ -12,8 +12,8 @@ export const usersTable = karweiSchema.table("user", {
 	image: text("image"),
 	phoneNumber: text("phone_number"),
 	skills: text("skills"), // Comma separated skills
-	lat: decimal("lat", { precision: 10, scale: 6 }),
-	long: decimal("long", { precision: 10, scale: 6 }),
+	lat: decimal("lat", { precision: 12, scale: 8 }),
+	long: decimal("long", { precision: 12, scale: 8 }),
 	bio: text("bio"),
 	maker: boolean("maker").default(false),
 	createdAt: timestamp("created_at").defaultNow(),
@@ -31,8 +31,8 @@ export const postsTable = karweiSchema.table("post", {
 	targetPrice: decimal("target_price", { precision: 10, scale: 2 }),
 	makerId: text("maker_id"), // Assigned maker?
 	status: text("status", { enum: ["open", "in_progress", "fixed", "closed"] }).default("open").notNull(),
-	lat: decimal("lat", { precision: 10, scale: 6 }),
-	long: decimal("long", { precision: 10, scale: 6 }),
+	lat: decimal("lat", { precision: 12, scale: 8 }),
+	long: decimal("long", { precision: 12, scale: 8 }),
 	score: decimal("score", { precision: 10, scale: 2 }),
 	createdAt: timestamp("created_at").defaultNow(),
 });
@@ -77,9 +77,20 @@ export const contactRequestsTable = karweiSchema.table("contact_request", {
 export const notificationsTable = karweiSchema.table("notification", {
 	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
 	userId: text("user_id").notNull().references(() => usersTable.id),
-	type: text("type", { enum: ["offer", "accept", "contact_request"] }).notNull(),
+	type: text("type", { enum: ["offer", "accept", "contact_request", "unassign"] }).notNull(),
 	relatedId: text("related_id").notNull(), // ID of the Offer, Post, or ContactRequest
 	read: boolean("read").default(false).notNull(),
+	createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const skillsTable = karweiSchema.table("skill", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	name: text("name").notNull().unique(),
+	category: text("category"),
+	description: text("description"),
+	icon: text("icon"),
+	displayOrder: integer("display_order"),
+	active: boolean("active").default(true),
 	createdAt: timestamp("created_at").defaultNow(),
 });
 

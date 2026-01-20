@@ -11,9 +11,15 @@
     let map: any;
     let L: any;
     let markers: any[] = [];
+    let userMarker: any = null; // Keep reference to user location marker
 
     $: if (map && items) {
         updateMarkers();
+    }
+
+    // Watch for changes in user location and update marker
+    $: if (map && L && (userLat || userLong)) {
+        updateUserMarker();
     }
 
     onMount(async () => {
@@ -64,21 +70,20 @@
                 },
             ).addTo(map);
 
-            // Add user location marker if available
-            if (userLat && userLong) {
-                const userIcon = L.divIcon({
-                    className: "custom-user-pin",
-                    html: `<div class="relative flex h-4 w-4">
-                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                              <span class="relative inline-flex rounded-full h-4 w-4 bg-sky-500 border-2 border-white shadow-sm"></span>
-                           </div>`,
-                    iconSize: [16, 16], // Size of the div
-                    iconAnchor: [8, 8], // Center it
-                });
-
-                L.marker([userLat, userLong], { icon: userIcon })
-                    .addTo(map)
-                    .bindPopup("Your Location");
+            // Try to get user's current location for the map
+            if (!userLat && !userLong && navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLat = position.coords.latitude;
+                        userLong = position.coords.longitude;
+                        // updateUserMarker will be called automatically via reactive statement
+                    },
+                    (err) => {
+                        console.log("Geolocation not available or denied");
+                    },
+                );
+            } else if (userLat && userLong) {
+                updateUserMarker();
             }
 
             updateMarkers();
@@ -90,6 +95,31 @@
             map.remove();
         }
     });
+
+    function updateUserMarker() {
+        if (!map || !L || !userLat || !userLong) return;
+
+        // Remove existing user marker
+        if (userMarker) {
+            map.removeLayer(userMarker);
+        }
+
+        // Create pulsing blue dot icon
+        const userIcon = L.divIcon({
+            className: "custom-user-pin",
+            html: `<div class="relative flex h-4 w-4">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-4 w-4 bg-sky-500 border-2 border-white shadow-sm"></span>
+                   </div>`,
+            iconSize: [16, 16],
+            iconAnchor: [8, 8],
+        });
+
+        // Add new user marker
+        userMarker = L.marker([userLat, userLong], { icon: userIcon })
+            .addTo(map)
+            .bindPopup("Your Location");
+    }
 
     function updateMarkers() {
         // Clear existing markers
@@ -114,16 +144,21 @@
             }
         });
 
-        // Adjust bounds if we have markers
-        if (markers.length > 0) {
-            const group = L.featureGroup(markers);
+        // Adjust bounds if we have markers or user location
+        const boundsLayers = [...markers];
+        if (userMarker) {
+            boundsLayers.push(userMarker);
+        }
+
+        if (boundsLayers.length > 0) {
+            const group = L.featureGroup(boundsLayers);
             map.fitBounds(group.getBounds().pad(0.1));
         }
     }
 </script>
 
 <div
-    class="h-96 w-full rounded-md border border-gray-300 shadow-sm z-0"
+    class="h-full w-full rounded-md border border-gray-300 shadow-sm z-0"
     bind:this={mapElement}
 ></div>
 

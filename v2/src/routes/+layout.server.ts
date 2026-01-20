@@ -5,7 +5,7 @@ import { NotificationRepository } from '$lib/server/repositories/notificationRep
 export const load: LayoutServerLoad = async ({ locals }) => {
     if (locals.user) {
         const unreadCount = await NotificationRepository.getUnreadCount(locals.user.id);
-        const notifications = await NotificationRepository.getByUser(locals.user.id);
+        const notifications = await NotificationRepository.getByUser(locals.user.id, true);
         return {
             user: locals.user,
             unreadCount,

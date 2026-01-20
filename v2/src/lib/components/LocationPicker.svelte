@@ -128,11 +128,11 @@
     <button
         type="button"
         on:click={locateMe}
-        class="align-middle self-start inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        class="align-middle self-start inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:ring-offset-gray-800 focus:ring-indigo-500 transition-colors"
     >
         <svg
             xmlns="http://www.w3.org/2000/svg"
-            class="-ml-0.5 mr-2 h-4 w-4 text-gray-500"
+            class="-ml-0.5 mr-2 h-4 w-4 text-gray-500 dark:text-gray-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"

@@ -117,78 +117,84 @@
                 Offers
             </h3>
 
-            <div class="mt-4 space-y-4">
-                {#if offers.length === 0}
-                    <p class="text-gray-500 dark:text-gray-400 italic">
-                        No offers yet.
-                    </p>
-                {:else}
-                    {#each offers as offer}
-                        <div
-                            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
-                        >
-                            <div class="flex justify-between">
-                                <div class="flex items-center">
-                                    {#if offer.makerImage}
-                                        <img
-                                            src={offer.makerImage}
-                                            alt=""
-                                            class="h-8 w-8 rounded-full mr-2 object-cover"
-                                        />
-                                    {:else}
-                                        <span
-                                            class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600 mr-2"
-                                        >
-                                            <svg
-                                                class="h-full w-full text-gray-300"
-                                                fill="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
-                                                />
-                                            </svg>
-                                        </span>
-                                    {/if}
-                                    <h4
-                                        class="text-sm font-bold text-gray-900 dark:text-white"
-                                    >
-                                        <a
-                                            href="/user/{offer.makerId}"
-                                            class="hover:underline hover:text-indigo-600 dark:hover:text-indigo-400"
-                                        >
-                                            {offer.makerName || "A Repairer"}
-                                        </a>
-                                    </h4>
-                                </div>
-                                <span
-                                    class="text-xs text-gray-500 dark:text-gray-400"
-                                    >{new Date(
-                                        offer.createdAt,
-                                    ).toLocaleString()}</span
-                                >
-                            </div>
-                            <p
-                                class="mt-2 text-sm text-gray-700 dark:text-gray-300"
-                            >
-                                {offer.message}
-                            </p>
-                            {#if offer.price}
-                                <div
-                                    class="mt-2 text-sm font-medium text-green-600"
-                                >
-                                    Offered Price: €{offer.price.toFixed(2)}
-                                </div>
-                            {/if}
+            <div
+                class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8"
+            >
+                <h2
+                    class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4"
+                >
+                    Offers
+                </h2>
 
-                            {#if isOwner && post.status === "open"}
+                {#if data.offers.length > 0}
+                    <div class="space-y-4 mb-8">
+                        {#each data.offers as offer}
+                            <!-- Existing Offer UI -->
+                            <div
+                                class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm"
+                            >
                                 <div
-                                    class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700"
+                                    class="flex items-center justify-between mb-2"
                                 >
+                                    <a
+                                        href="/user/{offer.makerId}"
+                                        class="flex items-center space-x-3 group"
+                                    >
+                                        {#if offer.makerImage}
+                                            <img
+                                                class="h-8 w-8 rounded-full"
+                                                src={offer.makerImage}
+                                                alt={offer.makerName}
+                                            />
+                                        {:else}
+                                            <span
+                                                class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600"
+                                            >
+                                                <svg
+                                                    class="h-full w-full text-gray-300"
+                                                    fill="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
+                                                    />
+                                                </svg>
+                                            </span>
+                                        {/if}
+                                        <span
+                                            class="text-sm font-medium text-gray-900 dark:text-white group-hover:underline"
+                                            >{offer.makerName ||
+                                                "Unknown Maker"}</span
+                                        >
+                                    </a>
+                                    <span
+                                        class="text-xs text-gray-500 dark:text-gray-400"
+                                    >
+                                        {new Date(
+                                            offer.createdAt,
+                                        ).toLocaleString()}
+                                    </span>
+                                </div>
+                                <p
+                                    class="text-gray-700 dark:text-gray-300 mb-2"
+                                >
+                                    {offer.message}
+                                </p>
+                                {#if offer.price}
+                                    <p
+                                        class="text-green-600 dark:text-green-500 font-medium text-sm"
+                                    >
+                                        Offered Price: €{offer.price.toFixed(2)}
+                                    </p>
+                                {/if}
+
+                                <!-- Accept Button (Owner Only) -->
+                                {#if data.currentUser && data.post.userId === data.currentUser.id && data.post.status === "open"}
                                     <form
                                         action="?/acceptOffer"
                                         method="POST"
                                         use:enhance
+                                        class="mt-3"
                                     >
                                         <input
                                             type="hidden"
@@ -202,70 +208,141 @@
                                         />
                                         <button
                                             type="submit"
-                                            class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm"
+                                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                                         >
                                             Accept Offer
                                         </button>
                                     </form>
-                                </div>
+                                {/if}
+                            </div>
+                        {/each}
+                    </div>
+                {:else}
+                    <p class="text-gray-500 dark:text-gray-400 mb-8 italic">
+                        No offers yet.
+                    </p>
+                {/if}
+
+                <!-- Status Actions -->
+                {#if data.post.status === "in_progress"}
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8"
+                    >
+                        <h3
+                            class="text-lg font-medium text-blue-900 dark:text-blue-100"
+                        >
+                            Repair in Progress
+                        </h3>
+                        <p
+                            class="mt-2 text-sm text-blue-700 dark:text-blue-300"
+                        >
+                            The repair is currently underway. Once the job is
+                            done, mark it as fixed.
+                        </p>
+
+                        <div class="mt-4 flex gap-4">
+                            {#if data.currentUser && data.post.userId === data.currentUser.id}
+                                <!-- Mark as Fixed -->
+                                <form
+                                    action="?/markFixed"
+                                    method="POST"
+                                    use:enhance
+                                >
+                                    <button
+                                        type="submit"
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                    >
+                                        Mark as Fixed
+                                    </button>
+                                </form>
+
+                                <!-- Unassign Fixer -->
+                                <form
+                                    action="?/unassign"
+                                    method="POST"
+                                    use:enhance
+                                >
+                                    <button
+                                        type="submit"
+                                        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                        on:click={(e) => {
+                                            if (
+                                                !confirm(
+                                                    "Are you sure you want to unassign this fixer? The post will be reopened.",
+                                                )
+                                            ) {
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                    >
+                                        Unassign Fixer
+                                    </button>
+                                </form>
                             {/if}
                         </div>
-                    {/each}
+                    </div>
+                {:else if data.post.status === "fixed"}
+                    <!-- Fixed status UI (omitted for brevity, assume existing) -->
+                {/if}
+
+                <!-- Make Offer Form -->
+                {#if data.currentUser && data.currentUser.maker && data.post.status === "open" && data.currentUser.id !== data.post.userId}
+                    <div
+                        class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
+                    >
+                        <h3
+                            class="text-lg font-medium text-gray-900 dark:text-white mb-4"
+                        >
+                            {data.myOffer
+                                ? "Update Your Offer"
+                                : "Make an Offer"}
+                        </h3>
+                        <form action="?/offer" method="POST" use:enhance>
+                            <div class="mb-4">
+                                <label
+                                    for="message"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                    >Message</label
+                                >
+                                <textarea
+                                    id="message"
+                                    name="message"
+                                    rows="3"
+                                    class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                                    placeholder="Describe how you can help..."
+                                    value={data.myOffer
+                                        ? data.myOffer.message
+                                        : ""}
+                                ></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label
+                                    for="price"
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                                    >Price (€)</label
+                                >
+                                <input
+                                    type="number"
+                                    id="price"
+                                    name="price"
+                                    step="0.01"
+                                    class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+                                    placeholder="Optional amount"
+                                    value={data.myOffer && data.myOffer.price
+                                        ? data.myOffer.price
+                                        : ""}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors w-full sm:w-auto"
+                            >
+                                {data.myOffer ? "Update Offer" : "Submit Offer"}
+                            </button>
+                        </form>
+                    </div>
                 {/if}
             </div>
-
-            <!-- Offer Form for Repairers -->
-            {#if isRepairer && !isOwner && post.status === "open"}
-                <div
-                    class="mt-8 bg-indigo-50 dark:bg-indigo-900/40 p-6 rounded-lg border border-indigo-100 dark:border-indigo-800"
-                >
-                    <h4
-                        class="text-base font-medium text-indigo-900 dark:text-indigo-100"
-                    >
-                        Make an Offer
-                    </h4>
-                    <form
-                        action="?/offer"
-                        method="POST"
-                        use:enhance
-                        class="mt-4 space-y-4"
-                    >
-                        <div>
-                            <label
-                                for="message"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                >Message</label
-                            >
-                            <textarea
-                                name="message"
-                                id="message"
-                                rows="3"
-                                required
-                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                            ></textarea>
-                        </div>
-                        <div>
-                            <label
-                                for="price"
-                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                                >Price (€)</label
-                            >
-                            <input
-                                type="number"
-                                name="price"
-                                id="price"
-                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white w-32"
-                            />
-                        </div>
-                        <button
-                            type="submit"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        >
-                            Submit Offer
-                        </button>
-                    </form>
-                </div>
-            {/if}
 
             <!-- Post Workflow Actions for Owner -->
             {#if isOwner}

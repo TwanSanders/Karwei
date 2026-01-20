@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { PostRepository } from '$lib/server/repositories/postRepository';
+import { SkillRepository } from '$lib/server/repositories/skillRepository';
 import { uploadToR2 } from '$lib/server/s3';
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
@@ -9,7 +10,11 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
     if (!userId) {
         throw redirect(303, '/login');
     }
-    return {};
+    
+    // Load active skills for the category dropdown
+    const skills = await SkillRepository.getActive();
+    
+    return { skills };
 };
 
 export const actions = {

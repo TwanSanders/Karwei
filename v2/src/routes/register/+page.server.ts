@@ -65,21 +65,25 @@ export const actions = {
         image: imageUrl, // Add image url
         // Default values for other fields
         bio: '',
-        skills: ''
+        skills: '' // Skills can be added later in profile
     });
 
     if (!newUser) {
-        return fail(500, { message: 'Could not create user' });
+        return fail(500, { error: true });
     }
 
-    // Set cookie
     cookies.set('session_id', newUser.id, {
       path: '/',
       httpOnly: true,
       sameSite: 'strict',
       maxAge: 60 * 60 * 24 * 7
     });
-
-    throw redirect(303, '/');
+    
+    // Smart redirect: Makers to profile to set skills, requesters to home
+    if (isMaker) {
+        throw redirect(303, '/profile?welcome=maker');
+    } else {
+        throw redirect(303, '/');
+    }
   }
 } satisfies Actions;

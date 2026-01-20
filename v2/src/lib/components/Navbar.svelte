@@ -20,15 +20,18 @@
             // Optimistically clear the unread count
             const currentUnreadCount = unreadCount;
             unreadCount = 0;
+            $page.data.unreadCount = 0;
 
             try {
                 const response = await fetch("/api/notifications/read", {
                     method: "POST",
+                    keepalive: true,
                 });
 
                 if (response.ok) {
                     // Refresh data to ensure server sync, but strictly speaking we just updated UI
-                    invalidateAll();
+                    // disable invalidateAll so list doesn't clear instantly
+                    // invalidateAll();
                 } else {
                     // Revert if failed (optional, but good UX)
                     unreadCount = currentUnreadCount;
@@ -71,14 +74,6 @@
                         >Karwei</a
                     >
                 </div>
-                <div class="hidden md:ml-6 md:flex md:space-x-8">
-                    <a
-                        href="/map"
-                        class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border-b-2 border-transparent hover:border-indigo-500 dark:hover:border-indigo-400"
-                    >
-                        Map
-                    </a>
-                </div>
             </div>
             <div class="ml-4 flex items-center gap-4">
                 <div class="flex-shrink-0">
@@ -92,40 +87,46 @@
                 <!-- Theme Toggle -->
                 <button
                     on:click={toggleTheme}
-                    class="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none"
+                    class="relative p-2 h-10 w-10 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none transition-colors duration-500 ease-in-out"
                     aria-label="Toggle Dark Mode"
                 >
-                    {#if $theme === "dark"}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                            />
-                        </svg>
-                    {:else}
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                            />
-                        </svg>
-                    {/if}
+                    <!-- Moon Icon (Dark Mode) -->
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 transition-all duration-500 ease-in-out transform {$theme ===
+                        'dark'
+                            ? 'opacity-100 rotate-0 scale-100'
+                            : 'opacity-0 -rotate-90 scale-0'}"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                        />
+                    </svg>
+
+                    <!-- Sun Icon (Light Mode) -->
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-6 w-6 transition-all duration-500 ease-in-out transform {$theme ===
+                        'dark'
+                            ? 'opacity-0 rotate-90 scale-0'
+                            : 'opacity-100 rotate-0 scale-100'}"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                        />
+                    </svg>
                 </button>
 
                 {#if $page.data.user}
@@ -185,19 +186,11 @@
                                 {#if $page.data.notifications && $page.data.notifications.length > 0}
                                     {#each $page.data.notifications as notification}
                                         <a
-                                            href={notification.type ===
-                                            "contact_request"
-                                                ? `/profile#request-${notification.relatedId}`
-                                                : `/post/${notification.postId}`}
+                                            href={`/notifications/${notification.id}`}
                                             class="block px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-0 transition-colors"
                                             on:click={() => {
                                                 showNotifications = false;
-                                                $page.data.notifications =
-                                                    $page.data.notifications.filter(
-                                                        (n) =>
-                                                            n.id !==
-                                                            notification.id,
-                                                    );
+                                                // Browser simply follows the link, server handles delete & redirect
                                             }}
                                         >
                                             <p
@@ -208,7 +201,17 @@
                                                 {:else if notification.type === "accept"}
                                                     Offer Accepted
                                                 {:else if notification.type === "contact_request"}
-                                                    Contact Request Update
+                                                    {#if notification.contactRequesterId === $page.data.user.id}
+                                                        {notification.targetName}
+                                                        has given you their credentials
+                                                    {:else}
+                                                        {notification.requesterName}
+                                                        has requested your contact
+                                                        data
+                                                    {/if}
+                                                {:else if notification.type === "unassign"}
+                                                    You have been unassigned
+                                                    from the job
                                                 {/if}
                                             </p>
                                             <p

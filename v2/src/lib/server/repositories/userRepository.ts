@@ -1,7 +1,8 @@
 import { db } from '../db';
-import { usersTable } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { usersTable, postsTable, reviewsTable } from '../db/schema';
+import { eq, sql, and, or, ilike, count } from 'drizzle-orm';
 import type { User } from '$lib/domain/types';
+import { ReviewRepository } from './reviewRepository';
 
 export class UserRepository {
   static async findByEmail(email: string): Promise<User | null> {
@@ -10,6 +11,9 @@ export class UserRepository {
     if (result.length === 0) return null;
     
     const row = result[0];
+    const completedRepairs = await UserRepository.countCompletedRepairs(row.id);
+    const level = UserRepository.calculateLevel(completedRepairs);
+
     return {
       id: row.id,
       name: row.name,
@@ -22,6 +26,8 @@ export class UserRepository {
       maker: row.maker || false,
       createdAt: row.createdAt || new Date(),
       phoneNumber: row.phoneNumber,
+      completedRepairs,
+      level
     };
   }
   
@@ -31,6 +37,9 @@ export class UserRepository {
     if (result.length === 0) return null;
     
     const row = result[0];
+    const completedRepairs = await UserRepository.countCompletedRepairs(row.id);
+    const level = UserRepository.calculateLevel(completedRepairs);
+    
     return {
       id: row.id,
       name: row.name,
@@ -43,6 +52,8 @@ export class UserRepository {
       maker: row.maker || false,
       createdAt: row.createdAt || new Date(),
       phoneNumber: row.phoneNumber,
+      completedRepairs,
+      level
     };
   }
 
@@ -108,53 +119,149 @@ export class UserRepository {
     
     return { user, passwordHash: row.passwordHash };
   }
-  static async getMakers(userLat?: number, userLong?: number, maxDistanceKm?: number): Promise<User[]> {
-     let query = db.select().from(usersTable).where(eq(usersTable.maker, true));
-     
-     // Note: In a real app we would replicate the SQL distance sort here.
-     // For this prototype, we'll fetch all makers and filter/sort in memory to reuse logic easily or duplicate sql.
-     // Let's use memory filter for simplicity as number of users is small.
-     
-     const results = await query;
-     
-     let makers = results.map(row => ({
-        id: row.id,
-        name: row.name,
-        email: row.email,
-        image: row.image,
-        skills: row.skills,
-        lat: row.lat ? parseFloat(row.lat) : null,
-        long: row.long ? parseFloat(row.long) : null,
-        bio: row.bio,
-        maker: row.maker || false,
-        createdAt: row.createdAt || new Date(),
-        phoneNumber: row.phoneNumber,
-     }));
-
+  static async getMakers(userLat?: number, userLong?: number, maxDistanceKm?: number, skillsFilter?: string[], searchQuery?: string): Promise<User[]> {
      if (userLat && userLong) {
-        makers = makers.filter(maker => {
-            if (!maxDistanceKm || !maker.lat || !maker.long) return true;
-            const R = 6371; // km
-            const dLat = (maker.lat - userLat) * Math.PI / 180;
-            const dLon = (maker.long - userLong) * Math.PI / 180;
-            const lat1 = userLat * Math.PI / 180;
-            const lat2 = maker.lat * Math.PI / 180;
-            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                    Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-            const d = R * c;
-            return d <= maxDistanceKm;
-        }).sort((a, b) => {
-             if (!a.lat || !a.long) return 1;
-             if (!b.lat || !b.long) return -1;
-             
-             // Simple distance calc for sort
-             const distA = Math.pow(a.lat - userLat, 2) + Math.pow(a.long - userLong, 2);
-             const distB = Math.pow(b.lat - userLat, 2) + Math.pow(b.long - userLong, 2);
-             return distA - distB;
-        });
+        let whereConditions = eq(usersTable.maker, true);
+        
+        let distanceExpr = sql<number>`
+            (6371 * acos(
+                cos(radians(${userLat})) * cos(radians(cast(${usersTable.lat} as double precision))) *
+                cos(radians(cast(${usersTable.long} as double precision)) - radians(${userLong})) +
+                sin(radians(${userLat})) * sin(radians(cast(${usersTable.lat} as double precision)))
+            ))`;
+            
+        let distanceClause = undefined;
+        if (maxDistanceKm) {
+             distanceClause = sql`(
+                6371 * acos(
+                    cos(radians(${userLat})) * cos(radians(cast(${usersTable.lat} as double precision))) *
+                    cos(radians(cast(${usersTable.long} as double precision)) - radians(${userLong})) +
+                    sin(radians(${userLat})) * sin(radians(cast(${usersTable.lat} as double precision)))
+                )
+            ) <= ${maxDistanceKm}`;
+        }
+
+        const baseQuery = db.select({
+            user: usersTable,
+            distance: distanceExpr.as('distance')
+        }).from(usersTable);
+
+        // Combine where conditions
+        let finalWhere: any = whereConditions;
+        if (distanceClause) {
+            finalWhere = and(whereConditions, distanceClause);
+        }
+
+        if (searchQuery) {
+            finalWhere = and(finalWhere, or(
+                ilike(usersTable.name, `%${searchQuery}%`),
+                ilike(usersTable.email, `%${searchQuery}%`)
+            ));
+        }
+
+        const results = await baseQuery.where(finalWhere).orderBy(sql`distance ASC`).limit(50);
+
+        let makers = results.map(row => ({
+            id: row.user.id,
+            name: row.user.name,
+            email: row.user.email,
+            image: row.user.image,
+            skills: row.user.skills,
+            lat: row.user.lat ? parseFloat(row.user.lat) : null,
+            long: row.user.long ? parseFloat(row.user.long) : null,
+            bio: row.user.bio,
+            maker: row.user.maker || false,
+            createdAt: row.user.createdAt || new Date(),
+            phoneNumber: row.user.phoneNumber,
+            // @ts-ignore
+            distance: row.distance
+        }));
+
+        // Enhance with levels and ratings
+        const makersWithExtras = await Promise.all(makers.map(async maker => {
+            const completedRepairs = await UserRepository.countCompletedRepairs(maker.id);
+            const level = UserRepository.calculateLevel(completedRepairs);
+            const averageRating = await ReviewRepository.getAverageRating(maker.id);
+            return { ...maker, completedRepairs, level, averageRating };
+        }));
+        
+        makers = makersWithExtras;
+
+        // Filter by skills if provided (still in memory for now as skills are comma-separated string)
+        if (skillsFilter && skillsFilter.length > 0) {
+            makers = makers.filter(maker => {
+                if (!maker.skills) return false;
+                const makerSkills = maker.skills.split(',').map(s => s.trim().toLowerCase());
+                return skillsFilter.some(skill => makerSkills.includes(skill.toLowerCase()));
+            });
+        }
+        
+        return makers;
      }
      
+     // Fallback if no location provided
+     let where = eq(usersTable.maker, true);
+     
+     if (searchQuery) {
+        // @ts-ignore
+         where = and(where, or(
+             ilike(usersTable.name, `%${searchQuery}%`),
+             ilike(usersTable.email, `%${searchQuery}%`)
+         ));
+     }
+     
+     const results = await db.select().from(usersTable).where(where);
+     
+     // Enhance with levels and ratings
+     const makersWithExtras = await Promise.all(results.map(async row => {
+        const completedRepairs = await UserRepository.countCompletedRepairs(row.id);
+        const level = UserRepository.calculateLevel(completedRepairs);
+        const averageRating = await ReviewRepository.getAverageRating(row.id);
+        return {
+            id: row.id,
+            name: row.name,
+            email: row.email,
+            image: row.image,
+            skills: row.skills,
+            lat: row.lat ? parseFloat(row.lat) : null,
+            long: row.long ? parseFloat(row.long) : null,
+            bio: row.bio,
+            maker: row.maker || false,
+            createdAt: row.createdAt || new Date(),
+            phoneNumber: row.phoneNumber,
+            completedRepairs,
+            level,
+            averageRating
+        };
+     }));
+     
+     let makers = makersWithExtras;
+
+
+        // Filter by skills if provided (still in memory for now as skills are comma-separated string)
+        if (skillsFilter && skillsFilter.length > 0) {
+            makers = makers.filter(maker => {
+                if (!maker.skills) return false;
+                const makerSkills = maker.skills.split(',').map(s => s.trim().toLowerCase());
+                return skillsFilter.some(skill => makerSkills.includes(skill.toLowerCase()));
+            });
+        }
+     
      return makers;
+  }
+
+  static async countCompletedRepairs(userId: string): Promise<number> {
+      // Count reviews received by the user (as a maker)
+      // This is more reliable than counting 'fixed' posts since reviews indicate actual completed work
+      const result = await db.select({ count: count() })
+        .from(reviewsTable)
+        .where(eq(reviewsTable.targetUserId, userId));
+      return result[0].count;
+  }
+
+  static calculateLevel(completedRepairs: number): 'novice' | 'handyman' | 'master' {
+      if (completedRepairs >= 21) return 'master';
+      if (completedRepairs >= 6) return 'handyman';
+      return 'novice';
   }
 }
