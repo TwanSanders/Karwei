@@ -69,3 +69,21 @@ export interface Skill {
   active: boolean;
   createdAt: Date;
 }
+
+export interface Conversation {
+  id: string;
+  userAId: string;
+  userBId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  content: string;
+  type: 'text' | 'system_event' | 'image';
+  relatedEntityId?: string | null;
+  createdAt: Date;
+}

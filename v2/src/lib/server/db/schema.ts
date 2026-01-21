@@ -94,3 +94,26 @@ export const skillsTable = karweiSchema.table("skill", {
 	createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const conversationsTable = karweiSchema.table("conversation", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	userAId: text("user_a_id").notNull().references(() => usersTable.id),
+	userBId: text("user_b_id").notNull().references(() => usersTable.id),
+	userALastReadAt: timestamp("user_a_last_read_at").defaultNow().notNull(),
+	userBLastReadAt: timestamp("user_b_last_read_at").defaultNow().notNull(),
+	createdAt: timestamp("created_at").defaultNow(),
+	updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+	// Unique constraint ensuring only one conversation per user-pair (order-independent)
+	uniqueUserPair: sql`UNIQUE (LEAST(${table.userAId}, ${table.userBId}), GREATEST(${table.userAId}, ${table.userBId}))`
+}));
+
+export const messagesTable = karweiSchema.table("message", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	conversationId: text("conversation_id").notNull().references(() => conversationsTable.id),
+	senderId: text("sender_id").notNull().references(() => usersTable.id),
+	content: text("content").notNull(),
+	type: text("type", { enum: ["text", "system_event", "image"] }).default("text").notNull(),
+	relatedEntityId: text("related_entity_id"), // Nullable - stores Post ID for system events
+	createdAt: timestamp("created_at").defaultNow(),
+});
+

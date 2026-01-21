@@ -145,8 +145,20 @@ export const actions = {
       if (!post) throw error(404, 'Post not found');
       if (post.userId !== userId) return fail(403, { unauthorized: true });
 
+      // Assign maker to post
       await PostRepository.assignMaker(postId, makerId);
-      return { success: true };
+
+      // Create/get conversation and inject system message
+      const { ChatRepository } = await import('$lib/server/repositories/chatRepository');
+      const conversationId = await ChatRepository.getOrCreateConversation(userId, makerId);
+      await ChatRepository.injectSystemMessage(
+          conversationId,
+          postId,
+          `Offer accepted! Let's discuss the details for: ${post.title}`
+      );
+
+      // Redirect to chat with the maker
+      throw redirect(303, `/chat/${makerId}`);
   },
 
   unassign: async ({ cookies, params }) => {

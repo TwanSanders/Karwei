@@ -28,8 +28,13 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 
     if (notification.type === 'contact_request') {
         if (notification.contactRequesterId === locals.user.id) {
-             // If I am the requester (I asked), and it's an update (accepted), go to the User's profile
-             targetUrl = `/user/${notification.contactTargetUserId}`;
+             // If I am the requester (I asked), and it's an update (accepted), go to chat with them
+             if (notification.contactStatus === 'accepted') {
+                 targetUrl = `/chat/${notification.contactTargetUserId}`;
+             } else {
+                 // Otherwise go to their profile
+                 targetUrl = `/user/${notification.contactTargetUserId}`;
+             }
         } else {
              // If I am the target (someone asked me), go to my profile to approve/deny
              targetUrl = `/profile#request-${notification.relatedId}`;

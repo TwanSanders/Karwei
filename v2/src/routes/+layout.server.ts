@@ -6,16 +6,20 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     if (locals.user) {
         const unreadCount = await NotificationRepository.getUnreadCount(locals.user.id);
         const notifications = await NotificationRepository.getByUser(locals.user.id, true);
+        const { ChatRepository } = await import('$lib/server/repositories/chatRepository');
+        const unreadMessagesCount = await ChatRepository.getUnreadMessageCount(locals.user.id);
         return {
             user: locals.user,
             unreadCount,
-            notifications
+            notifications,
+            unreadMessagesCount
         };
     }
     
     return {
         user: null,
         unreadCount: 0,
-        notifications: []
+        notifications: [],
+        unreadMessagesCount: 0
     };
 };
