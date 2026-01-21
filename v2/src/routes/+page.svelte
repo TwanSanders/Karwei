@@ -165,10 +165,10 @@
             <h1
                 class="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl"
             >
-                Community Repair Platform
+                Europe gave you the right to repair. Use it.
             </h1>
             <p class="mt-4 max-w-2xl mx-auto text-xl text-indigo-100">
-                Connect with skilled repairers to fix your broken items. Reduce
+                Connect with local makers to fix your broken items. Reduce
                 waste, save money, and build community.
             </p>
             <div class="mt-8">
