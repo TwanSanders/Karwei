@@ -333,12 +333,22 @@
                                         : ""}
                                 />
                             </div>
-                            <button
-                                type="submit"
-                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors w-full sm:w-auto"
-                            >
-                                {data.myOffer ? "Update Offer" : "Submit Offer"}
-                            </button>
+                            <div class="flex items-center gap-4">
+                                <button
+                                    type="submit"
+                                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors w-full sm:w-auto"
+                                >
+                                    {data.myOffer
+                                        ? "Update Offer"
+                                        : "Submit Offer"}
+                                </button>
+                                <a
+                                    href="/chat/{post.userId}?ref=post&id={post.id}"
+                                    class="text-indigo-600 dark:text-indigo-400 hover:underline text-sm font-medium"
+                                >
+                                    Ask Question
+                                </a>
+                            </div>
                         </form>
                     </div>
                 {/if}

@@ -2,9 +2,12 @@
     import { Send, Image, X } from "lucide-svelte";
     import { enhance } from "$app/forms";
 
-    let { conversationId }: { conversationId: string } = $props();
+    let {
+        conversationId,
+        initialMessage = "",
+    }: { conversationId: string; initialMessage?: string } = $props();
 
-    let messageContent = $state("");
+    let messageContent = $state(initialMessage);
     let textarea: HTMLTextAreaElement;
     let fileInput: HTMLInputElement;
     let isSubmitting = $state(false);
@@ -34,7 +37,15 @@
     function handleFileSelect(e: Event) {
         const input = e.target as HTMLInputElement;
         if (input.files && input.files[0]) {
-            selectedFile = input.files[0];
+            const file = input.files[0];
+            // 5MB limit
+            if (file.size > 5 * 1024 * 1024) {
+                alert("File is too large. Maximum size is 5MB.");
+                input.value = "";
+                selectedFile = null;
+                return;
+            }
+            selectedFile = file;
             previewUrl = URL.createObjectURL(selectedFile);
         }
     }

@@ -4,8 +4,23 @@
     import MessageStream from "$lib/components/MessageStream.svelte";
     import ChatInput from "$lib/components/ChatInput.svelte";
     import { ChevronLeft } from "lucide-svelte";
+    import { onMount } from "svelte";
+    import { invalidateAll } from "$app/navigation";
+    import { page } from "$app/stores";
 
     let { data }: { data: PageData } = $props();
+
+    let initialMessage = "";
+    if ($page.url.searchParams.get("ref") === "post") {
+        initialMessage = "Hi, I have a question about your post...";
+    }
+
+    onMount(() => {
+        const interval = setInterval(() => {
+            invalidateAll();
+        }, 3000);
+        return () => clearInterval(interval);
+    });
 </script>
 
 <svelte:head>
@@ -45,6 +60,6 @@
     <div
         class="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white dark:bg-gray-900"
     >
-        <ChatInput conversationId={data.conversationId} />
+        <ChatInput conversationId={data.conversationId} {initialMessage} />
     </div>
 </div>

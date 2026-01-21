@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { conversationsTable, messagesTable, usersTable, postsTable } from '$lib/server/db/schema';
-import { eq, desc, and, or, sql } from 'drizzle-orm';
+import { conversationsTable, messagesTable, usersTable, postsTable, contactRequestsTable } from '$lib/server/db/schema';
+import { eq, desc, and, or, sql, inArray } from 'drizzle-orm';
 import type { Conversation, Message, User, Post } from '$lib/domain/types';
 
 export const ChatRepository = {
@@ -28,15 +28,33 @@ export const ChatRepository = {
     }
 
     // Create new conversation
-    const result = await db
-      .insert(conversationsTable)
-      .values({
-        userAId: userA,
-        userBId: userB,
-      })
-      .returning();
+    try {
+      const result = await db
+        .insert(conversationsTable)
+        .values({
+          userAId: userA,
+          userBId: userB,
+        })
+        .returning();
 
-    return result[0].id;
+      return result[0].id;
+    } catch (error: any) {
+      // Handle unique constraint violation (Race condition)
+      if (error.code === '23505') {
+        const existingAgain = await db
+          .select()
+          .from(conversationsTable)
+          .where(
+            and(eq(conversationsTable.userAId, userA), eq(conversationsTable.userBId, userB))
+          )
+          .limit(1);
+          
+        if (existingAgain.length > 0) {
+          return existingAgain[0].id;
+        }
+      }
+      throw error;
+    }
   },
 
   /**
@@ -109,10 +127,10 @@ export const ChatRepository = {
       .from(messagesTable)
       .leftJoin(usersTable, eq(messagesTable.senderId, usersTable.id))
       .where(eq(messagesTable.conversationId, conversationId))
-      .orderBy(messagesTable.createdAt)
+      .orderBy(desc(messagesTable.createdAt))
       .limit(limit);
 
-    return results.map(row => ({
+    return results.reverse().map(row => ({
       id: row.id,
       conversationId: row.conversationId,
       senderId: row.senderId,
@@ -216,19 +234,36 @@ export const ChatRepository = {
 
     const result = [];
 
+    if (conversations.length === 0) return [];
+
+    const conversationIds = conversations.map(c => c.id);
+    const partnerIds = conversations.map(c => c.userAId === userId ? c.userBId : c.userAId);
+
+    // 2. Get all partners
+    const partners = await db
+      .select()
+      .from(usersTable)
+      .where(inArray(usersTable.id, partnerIds));
+    
+    const partnerMap = new Map(partners.map(p => [p.id, p]));
+
+    // 3. Get last messages for these conversations (Postgres DISTINCT ON)
+    const lastMessages = await db
+      .selectDistinctOn([messagesTable.conversationId])
+      .from(messagesTable)
+      .where(inArray(messagesTable.conversationId, conversationIds))
+      .orderBy(messagesTable.conversationId, desc(messagesTable.createdAt));
+
+    const messageMap = new Map(lastMessages.map(m => [m.conversationId, m]));
+
     for (const conv of conversations) {
       // Determine partner ID
       const partnerId = conv.userAId === userId ? conv.userBId : conv.userAId;
 
-      // Get partner details
-      const partnerResults = await db
-        .select()
-        .from(usersTable)
-        .where(eq(usersTable.id, partnerId));
+      const partnerRow = partnerMap.get(partnerId);
 
-      if (partnerResults.length === 0) continue;
+      if (!partnerRow) continue;
 
-      const partnerRow = partnerResults[0];
       const partner: User = {
         id: partnerRow.id,
         name: partnerRow.name,
@@ -243,22 +278,16 @@ export const ChatRepository = {
         createdAt: partnerRow.createdAt || new Date(),
       };
 
-      // Get last message
-      const lastMessages = await db
-        .select()
-        .from(messagesTable)
-        .where(eq(messagesTable.conversationId, conv.id))
-        .orderBy(desc(messagesTable.createdAt))
-        .limit(1);
+      const msgRow = messageMap.get(conv.id);
 
-      const lastMessage = lastMessages.length > 0 ? {
-        id: lastMessages[0].id,
-        conversationId: lastMessages[0].conversationId,
-        senderId: lastMessages[0].senderId,
-        content: lastMessages[0].content,
-        type: lastMessages[0].type as 'text' | 'system_event' | 'image',
-        relatedEntityId: lastMessages[0].relatedEntityId,
-        createdAt: lastMessages[0].createdAt || new Date(),
+      const lastMessage = msgRow ? {
+        id: msgRow.id,
+        conversationId: msgRow.conversationId,
+        senderId: msgRow.senderId,
+        content: msgRow.content,
+        type: msgRow.type as 'text' | 'system_event' | 'image',
+        relatedEntityId: msgRow.relatedEntityId,
+        createdAt: msgRow.createdAt || new Date(),
       } : undefined;
 
       result.push({
@@ -315,6 +344,27 @@ export const ChatRepository = {
       score: row.score ? parseFloat(row.score) : null,
       createdAt: row.createdAt || new Date(),
     }));
+  },
+
+  /**
+   * Check if there is an accepted contact request between two users
+   */
+  async hasAcceptedContactRequest(userId1: string, userId2: string): Promise<boolean> {
+    const result = await db
+      .select()
+      .from(contactRequestsTable)
+      .where(
+        and(
+          or(
+            and(eq(contactRequestsTable.requesterId, userId1), eq(contactRequestsTable.targetUserId, userId2)),
+            and(eq(contactRequestsTable.requesterId, userId2), eq(contactRequestsTable.targetUserId, userId1))
+          ),
+          eq(contactRequestsTable.status, 'accepted')
+        )
+      )
+      .limit(1);
+
+    return result.length > 0;
   },
 
   /**

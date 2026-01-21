@@ -28,6 +28,13 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 
 	// Query active jobs between these users
 	const activeJobs = await ChatRepository.getActiveJobsBetweenUsers(userId, partnerId);
+    
+    // Check permissions: Must have accepted contact request OR active/fixed job
+    const hasContact = await ChatRepository.hasAcceptedContactRequest(userId, partnerId);
+    
+    if (!hasContact && activeJobs.length === 0) {
+        throw error(403, 'You must have an accepted contact request or active job to chat.');
+    }
 
 	// Get current user details
 	const currentUser = await UserRepository.getById(userId);
