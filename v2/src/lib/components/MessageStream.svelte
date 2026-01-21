@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { tick } from "svelte";
     import type { Message, User } from "$lib/domain/types";
     import { Handshake, ExternalLink } from "lucide-svelte";
 
@@ -11,19 +12,37 @@
     } = $props();
 
     let messagesContainer: HTMLDivElement;
+    let isNearBottom = true; // Default to true so initial load scrolls down
+    let lastConversationId = "";
 
     // Auto-scroll to bottom when messages change (Svelte 5 runes mode)
     $effect(() => {
         // Access messages to track dependency
         messages;
 
+        // Reset auto-scroll if conversation changes
+        if (messages.length > 0) {
+            const currentConvId = messages[0].conversationId;
+            if (currentConvId !== lastConversationId) {
+                isNearBottom = true;
+                lastConversationId = currentConvId;
+            }
+        }
+
         // Scroll on next tick
-        setTimeout(() => {
-            if (messagesContainer) {
+        tick().then(() => {
+            if (messagesContainer && isNearBottom) {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
-        }, 0);
+        });
     });
+
+    function handleScroll() {
+        if (!messagesContainer) return;
+        const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+        // Check if user is near the bottom (within 100px)
+        isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    }
 
     function isOwnMessage(senderId: string): boolean {
         return senderId === currentUserId;
@@ -40,6 +59,7 @@
 
 <div
     bind:this={messagesContainer}
+    onscroll={handleScroll}
     class="h-full overflow-y-auto p-4 flex flex-col"
 >
     {#if messages.length === 0}
@@ -126,11 +146,11 @@
                                     {:else}
                                         <div
                                             class="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 mb-1"
-                                        />
+                                        ></div>
                                     {/if}
                                 {:else}
                                     <!-- Invisible spacer for alignment in sequence -->
-                                    <div class="w-8 h-8 flex-shrink-0" />
+                                    <div class="w-8 h-8 flex-shrink-0"></div>
                                 {/if}
                             {/if}
 
@@ -192,7 +212,7 @@
 
                             {#if isOwnMessage(message.senderId)}
                                 <!-- Own Invisible Avatar Spacer -->
-                                <div class="w-8 h-8 flex-shrink-0" />
+                                <div class="w-8 h-8 flex-shrink-0"></div>
                             {/if}
                         </div>
                     </div>

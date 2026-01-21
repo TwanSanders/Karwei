@@ -80,15 +80,24 @@ export const actions = {
          return fail(400, { message: 'This post is no longer accepting offers' });
      }
 
-     // Check for existing offer
-     const existingOffer = await OfferRepository.getByUserAndPost(userId, postId);
+     // Check for existing offer(s)
+     const existingOffers = await OfferRepository.getAllByUserAndPost(userId, postId);
 
-     if (existingOffer) {
-        // Update existing offer
-        await OfferRepository.update(existingOffer.id, {
+     if (existingOffers.length > 0) {
+        const firstOffer = existingOffers[0];
+        
+        // Update first offer
+        await OfferRepository.update(firstOffer.id, {
             message,
             price: price ? price.toString() : undefined
         });
+
+        // Delete duplicates if any
+        if (existingOffers.length > 1) {
+            for (let i = 1; i < existingOffers.length; i++) {
+                await OfferRepository.delete(existingOffers[i].id);
+            }
+        }
      } else {
         // Create new
         await OfferRepository.create({

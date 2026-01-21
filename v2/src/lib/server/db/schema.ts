@@ -54,7 +54,9 @@ export const offersTable = karweiSchema.table("offer", {
 	message: text("message").notNull(),
 	price: decimal("price", { precision: 10, scale: 2 }),
 	createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+	uniqueOffer: sql`UNIQUE (${table.makerId}, ${table.postId})`
+}));
 
 export const reviewsTable = karweiSchema.table("review", {
 	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),

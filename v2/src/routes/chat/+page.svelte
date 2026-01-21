@@ -39,14 +39,9 @@
         <div
             class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-6 sticky top-0 z-10"
         >
-            <div class="flex items-center gap-3">
-                <MessageCircle
-                    class="w-6 h-6 text-blue-600 dark:text-blue-400"
-                />
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    Messages
-                </h1>
-            </div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Messages
+            </h1>
         </div>
 
         <!-- Conversation List -->

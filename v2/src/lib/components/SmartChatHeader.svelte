@@ -14,7 +14,7 @@
 </script>
 
 <header
-    class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+    class="relative z-20 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
 >
     {#if activeJobs.length === 0}
         <!-- No Active Jobs: Show Partner Profile -->
@@ -140,7 +140,7 @@
     <!-- Jobs Drawer/Modal (Mobile) -->
     {#if showJobsDrawer && activeJobs.length > 0}
         <div
-            class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"
+            class="absolute left-0 right-0 top-full z-50 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 shadow-lg"
         >
             <div class="max-h-[40vh] overflow-y-auto p-4 space-y-3">
                 {#each activeJobs as job}

@@ -61,6 +61,21 @@ export class OfferRepository {
     }));
   }
 
+  static async getAllByUserAndPost(makerId: string, postId: string): Promise<Offer[]> {
+    const results = await db.select().from(offersTable)
+        .where(and(eq(offersTable.makerId, makerId), eq(offersTable.postId, postId)));
+    
+    return results.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      postId: row.postId,
+      makerId: row.makerId,
+      message: row.message,
+      price: row.price ? parseFloat(row.price) : null,
+      createdAt: row.createdAt || new Date(),
+    }));
+  }
+
   static async getByUserAndPost(makerId: string, postId: string): Promise<Offer | null> {
     const results = await db.select().from(offersTable)
         .where(and(eq(offersTable.makerId, makerId), eq(offersTable.postId, postId)));

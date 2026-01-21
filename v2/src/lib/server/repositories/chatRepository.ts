@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
-import { conversationsTable, messagesTable, usersTable, postsTable, contactRequestsTable } from '$lib/server/db/schema';
-import { eq, desc, and, or, sql, inArray } from 'drizzle-orm';
+import { conversationsTable, messagesTable, usersTable, postsTable, contactRequestsTable, offersTable } from '$lib/server/db/schema';
+import { eq, desc, and, or, sql, inArray, gt } from 'drizzle-orm';
 import type { Conversation, Message, User, Post } from '$lib/domain/types';
 
 export const ChatRepository = {
@@ -311,7 +311,8 @@ export const ChatRepository = {
    * Get active jobs between two users
    */
   async getActiveJobsBetweenUsers(userId1: string, userId2: string): Promise<Post[]> {
-    const results = await db
+    // 1. Get assigned jobs (in_progress or fixed)
+    const assignedJobs = await db
       .select()
       .from(postsTable)
       .where(
@@ -325,10 +326,50 @@ export const ChatRepository = {
             eq(postsTable.status, 'fixed')
           )
         )
-      )
-      .orderBy(desc(postsTable.createdAt));
+      );
 
-    return results.map(row => ({
+    // 2. Get jobs where an offer exists (pending/open context)
+    // Find offers between these two users
+    const offers = await db
+      .select({ postId: offersTable.postId })
+      .from(offersTable)
+      .where(
+        or(
+          and(eq(offersTable.makerId, userId1), eq(offersTable.userId, userId2)),
+          and(eq(offersTable.makerId, userId2), eq(offersTable.userId, userId1))
+        )
+      );
+    
+    const offerPostIds = offers.map(o => o.postId);
+    
+    let offeredJobs: typeof assignedJobs = [];
+    if (offerPostIds.length > 0) {
+        offeredJobs = await db
+            .select()
+            .from(postsTable)
+            .where(
+                and(
+                    inArray(postsTable.id, offerPostIds),
+                    eq(postsTable.status, 'open') // Only include if still open? Or any status?
+                    // If it's closed/fixed but not assigned to this user, maybe we shouldn't show it?
+                    // But if I made an offer, I want to see it until it's irrelevant.
+                    // For now, let's include 'open' status.
+                )
+            );
+    }
+
+    // Merge and deduplicate
+    const allJobs = [...assignedJobs, ...offeredJobs];
+    const uniqueJobs = Array.from(new Map(allJobs.map(job => [job.id, job])).values());
+    
+    // Sort by creation date
+    uniqueJobs.sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+    });
+
+    return uniqueJobs.map(row => ({
       id: row.id,
       userId: row.userId,
       title: row.title,
@@ -423,7 +464,7 @@ export const ChatRepository = {
             and(
               eq(messagesTable.conversationId, conv.id),
               eq(messagesTable.senderId, partnerId),
-              sql`${messagesTable.createdAt} > ${lastReadAt || new Date(0)}`
+              gt(messagesTable.createdAt, lastReadAt || new Date(0))
             )
           );
 
