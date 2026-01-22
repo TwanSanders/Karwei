@@ -16,7 +16,8 @@ export const lucia = new Lucia(adapter, {
 		return {
 			email: attributes.email,
 			name: attributes.name,
-            maker: attributes.maker
+            maker: attributes.maker,
+            image: attributes.image
 		};
 	}
 });
@@ -32,4 +33,5 @@ interface DatabaseUserAttributes {
 	email: string;
 	name: string;
     maker: boolean;
+    image: string | null;
 }

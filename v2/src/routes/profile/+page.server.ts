@@ -97,18 +97,36 @@ export const actions = {
         const image = data.get('image') as File;
 
         if (image && image.size > 0) {
+            
+            // Server-side validation
+            if (!image.type.startsWith('image/')) {
+                return fail(400, { message: 'Invalid file type. Only images are allowed.' });
+            }
+
+            const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+            if (image.size > MAX_SIZE) {
+                return fail(400, { message: 'File size exceeds 5MB limit.' });
+            }
+
+            console.log('Processing image upload:', image.name, image.size);
             try {
                 // Dynamic import to avoid circular dependencies or load only when needed
                 const { uploadToR2 } = await import('$lib/server/s3');
+                
+                console.log('Uploading to R2...');
                 const imageUrl = await uploadToR2(image);
+                console.log('Upload success, URL:', imageUrl);
                 
                 await UserRepository.update(userId, {
                     image: imageUrl
                 });
+                console.log('User profile updated with new image');
             } catch (err) {
                 console.error('Update profile image failed', err);
                 return fail(500, { message: 'Upload failed' });
             }
+        } else {
+            console.log('No image file provided or empty file');
         }
         
         return { success: true };

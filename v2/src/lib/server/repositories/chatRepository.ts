@@ -328,6 +328,24 @@ export const ChatRepository = {
         )
       );
 
+    // Enhance assigned jobs with the accepted offer price
+    const assignedJobsWithOfferPrice = await Promise.all(assignedJobs.map(async (job) => {
+        if (!job.makerId) return job;
+        
+        // Find the accepted offer (the offer from the maker for this post)
+        // Since the maker is assigned, their offer is the "accepted" one.
+        const offers = await db.select()
+            .from(offersTable)
+            .where(and(eq(offersTable.postId, job.id), eq(offersTable.makerId, job.makerId)))
+            .limit(1);
+            
+        if (offers.length > 0 && offers[0].price) {
+            // Override targetPrice with the agreed offer price
+            return { ...job, targetPrice: offers[0].price };
+        }
+        return job;
+    }));
+
     // 2. Get jobs where an offer exists (pending/open context)
     // Find offers between these two users
     const offers = await db
@@ -350,16 +368,14 @@ export const ChatRepository = {
             .where(
                 and(
                     inArray(postsTable.id, offerPostIds),
-                    eq(postsTable.status, 'open') // Only include if still open? Or any status?
-                    // If it's closed/fixed but not assigned to this user, maybe we shouldn't show it?
-                    // But if I made an offer, I want to see it until it's irrelevant.
-                    // For now, let's include 'open' status.
+                    eq(postsTable.status, 'open')
                 )
             );
     }
 
-    // Merge and deduplicate
-    const allJobs = [...assignedJobs, ...offeredJobs];
+    // Merge and deduplicate (prefer assigned/active versions if duplicates exist, though status check should prevent overlap usually)
+    // Actually, offers on 'open' posts vs assigned jobs on 'in_progress' are mutually exclusive sets of posts normally.
+    const allJobs = [...assignedJobsWithOfferPrice, ...offeredJobs];
     const uniqueJobs = Array.from(new Map(allJobs.map(job => [job.id, job])).values());
     
     // Sort by creation date

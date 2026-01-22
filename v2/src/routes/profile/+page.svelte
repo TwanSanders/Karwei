@@ -48,8 +48,34 @@
     let currentImageFile: FileList | null = null;
     function handleImageChange(event: Event) {
         const input = event.target as HTMLInputElement;
-        currentImageFile = input.files;
-        imageChanged = currentImageFile !== null && currentImageFile.length > 0;
+        const file = input.files?.[0];
+
+        if (file) {
+            // Validate Type
+            if (!file.type.startsWith("image/")) {
+                alert("Please select an image file.");
+                input.value = ""; // Reset
+                currentImageFile = null;
+                imageChanged = false;
+                return;
+            }
+
+            // Validate Size (Max 5MB)
+            const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+            if (file.size > MAX_SIZE) {
+                alert("File size must be less than 5MB.");
+                input.value = ""; // Reset
+                currentImageFile = null;
+                imageChanged = false;
+                return;
+            }
+
+            currentImageFile = input.files;
+            imageChanged = true;
+        } else {
+            currentImageFile = null;
+            imageChanged = false;
+        }
     }
 </script>
 
@@ -129,9 +155,11 @@
                                 >
                                     <div class="flex items-center space-x-2">
                                         <input
+                                            type="file"
                                             name="image"
                                             accept="image/*"
                                             class="text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/60"
+                                            onchange={handleImageChange}
                                         />
                                         <button
                                             type="submit"
