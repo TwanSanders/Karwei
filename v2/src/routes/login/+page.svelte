@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { ActionData } from "./$types";
     import { enhance } from "$app/forms";
+    import PasswordInput from "$lib/components/PasswordInput.svelte";
 
     export let form: ActionData;
 </script>
@@ -49,22 +50,13 @@
                 </div>
 
                 <div>
-                    <label
-                        for="password"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                        Password
-                    </label>
-                    <div class="mt-1">
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autocomplete="current-password"
-                            required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        />
-                    </div>
+                    <PasswordInput
+                        id="password"
+                        name="password"
+                        label="Password"
+                        required
+                        autocomplete="current-password"
+                    />
                 </div>
 
                 {#if form?.incorrect}

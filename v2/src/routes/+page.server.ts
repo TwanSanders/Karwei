@@ -3,7 +3,7 @@ import { PostRepository } from '$lib/server/repositories/postRepository';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 import { SkillRepository } from '$lib/server/repositories/skillRepository';
 
-export const load: PageServerLoad = async ({ url, cookies }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
     let lat = url.searchParams.get('lat') ? parseFloat(url.searchParams.get('lat')!) : undefined;
     let long = url.searchParams.get('long') ? parseFloat(url.searchParams.get('long')!) : undefined;
     const distance = url.searchParams.get('distance') ? parseFloat(url.searchParams.get('distance')!) : undefined;
@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
     const skillsFilter = skillsParam ? skillsParam.split(',').map(s => s.trim()).filter(Boolean) : undefined;
     const searchQuery = url.searchParams.get('q') || undefined;
 
-    const userId = cookies.get('session_id');
+    const userId = locals.user?.id;
     if (userId && (!lat || !long)) {
         const user = await UserRepository.getById(userId);
         if (user && user.lat && user.long) {

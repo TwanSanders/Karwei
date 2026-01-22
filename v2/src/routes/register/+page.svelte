@@ -2,6 +2,7 @@
     import type { ActionData } from "./$types";
     import InfoTooltip from "$lib/components/InfoTooltip.svelte";
     import LocationPicker from "$lib/components/LocationPicker.svelte";
+    import PasswordInput from "$lib/components/PasswordInput.svelte";
 
     export let form: ActionData;
 </script>
@@ -114,22 +115,23 @@
                 </div>
 
                 <div>
-                    <label
-                        for="password"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                    >
-                        Password
-                    </label>
-                    <div class="mt-1">
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autocomplete="new-password"
-                            required
-                            class="appearance-none block w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm placeholder-gray-400 dark:placeholder-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all sm:text-sm"
-                        />
-                    </div>
+                    <PasswordInput
+                        id="password"
+                        name="password"
+                        label="Password"
+                        required
+                        autocomplete="new-password"
+                    />
+                </div>
+
+                <div>
+                    <PasswordInput
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        label="Confirm Password"
+                        required
+                        autocomplete="new-password"
+                    />
                 </div>
 
                 <div>
@@ -213,6 +215,22 @@
                                     class="text-sm font-medium text-red-800 dark:text-red-300"
                                 >
                                     User already exists with this email
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                {/if}
+
+                {#if form?.passwordMismatch}
+                    <div
+                        class="rounded-lg bg-red-50 dark:bg-red-900/20 p-4 border border-red-200 dark:border-red-800"
+                    >
+                        <div class="flex">
+                            <div class="ml-3">
+                                <h3
+                                    class="text-sm font-medium text-red-800 dark:text-red-300"
+                                >
+                                    Passwords do not match
                                 </h3>
                             </div>
                         </div>

@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { lucia } from "$lib/server/auth";
 import type { Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 import { AuthService } from '$lib/server/services/authService';
@@ -10,12 +11,17 @@ export const actions = {
     const email = data.get('email') as string;
     const phoneNumber = data.get('phoneNumber') as string;
     const password = data.get('password') as string;
+    const confirmPassword = data.get('confirmPassword') as string;
     const isMaker = data.get('role_maker') === 'on';
     const lat = data.get('lat') ? parseFloat(data.get('lat') as string) : null;
     const long = data.get('long') ? parseFloat(data.get('long') as string) : null;
 
     if (!name || !email || !password || !phoneNumber) {
       return fail(400, { name, email, phoneNumber, missing: true });
+    }
+
+    if (password !== confirmPassword) {
+        return fail(400, { name, email, phoneNumber, passwordMismatch: true });
     }
 
     const existingUser = await UserRepository.findByEmail(email);
@@ -72,11 +78,14 @@ export const actions = {
         return fail(500, { error: true });
     }
 
-    cookies.set('session_id', newUser.id, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7
+    // Create session
+    const session = await lucia.createSession(newUser.id, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    
+    // Set cookie
+    cookies.set(sessionCookie.name, sessionCookie.value, {
+      path: ".",
+      ...sessionCookie.attributes
     });
     
     // Smart redirect: Makers to profile to set skills, requesters to home

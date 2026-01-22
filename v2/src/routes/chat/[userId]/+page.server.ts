@@ -3,9 +3,10 @@ import type { PageServerLoad, Actions } from './$types';
 import { ChatRepository } from '$lib/server/repositories/chatRepository';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
-	const userId = cookies.get('session_id');
-	if (!userId) throw redirect(303, '/login');
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const user = locals.user;
+	if (!user) throw redirect(303, '/login');
+	const userId = user.id;
 
 	const partnerId = params.userId;
 
@@ -52,9 +53,10 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 };
 
 export const actions = {
-	sendMessage: async ({ request, cookies, params }) => {
-		const userId = cookies.get('session_id');
-		if (!userId) throw redirect(303, '/login');
+	sendMessage: async ({ request, locals, params }) => {
+		const user = locals.user;
+		if (!user) throw redirect(303, '/login');
+		const userId = user.id;
 
 		const data = await request.formData();
 		const content = data.get('content') as string;

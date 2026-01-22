@@ -6,7 +6,7 @@ import { UserRepository } from '$lib/server/repositories/userRepository';
 import { CommentRepository } from '$lib/server/repositories/commentRepository';
 import { ReviewRepository } from '$lib/server/repositories/reviewRepository';
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
     const postId = params.id;
     const post = await PostRepository.getById(postId);
     
@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
         return { ...comment, userName: user?.name, userImage: user?.image };
     }));
 
-    const userId = cookies.get('session_id');
+    const userId = locals.user?.id;
     const currentUser = userId ? await UserRepository.getById(userId) : null;
     
     // Check for my existing offer
@@ -48,11 +48,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 };
 
 export const actions = {
-  offer: async ({ request, cookies, params }) => {
-     const userId = cookies.get('session_id');
-     if (!userId) {
+  offer: async ({ request, locals, params }) => {
+     if (!locals.user) {
          throw redirect(303, '/login');
      }
+     const userId = locals.user.id;
 
      const user = await UserRepository.getById(userId);
      if (!user?.maker) {
@@ -112,11 +112,11 @@ export const actions = {
      return { success: true };
   },
 
-  comment: async ({ request, cookies, params }) => {
-     const userId = cookies.get('session_id');
-     if (!userId) {
+  comment: async ({ request, locals, params }) => {
+     if (!locals.user) {
          throw redirect(303, '/login');
      }
+     const userId = locals.user.id;
 
      const data = await request.formData();
      const message = data.get('message') as string;
@@ -138,9 +138,9 @@ export const actions = {
      return { success: true };
   },
 
-  acceptOffer: async ({ request, cookies, params }) => {
-      const userId = cookies.get('session_id');
-      if (!userId) throw redirect(303, '/login');
+  acceptOffer: async ({ request, locals, params }) => {
+      if (!locals.user) throw redirect(303, '/login');
+      const userId = locals.user.id;
 
       const data = await request.formData();
       const offerId = data.get('offerId') as string;
@@ -170,9 +170,9 @@ export const actions = {
       throw redirect(303, `/chat/${makerId}`);
   },
 
-  unassign: async ({ cookies, params }) => {
-      const userId = cookies.get('session_id');
-      if (!userId) throw redirect(303, '/login');
+  unassign: async ({ locals, params }) => {
+      if (!locals.user) throw redirect(303, '/login');
+      const userId = locals.user.id;
 
       const postId = params.id;
       const post = await PostRepository.getById(postId);
@@ -229,9 +229,9 @@ export const actions = {
       return { success: true };
   },
 
-  markFixed: async ({ cookies, params }) => {
-      const userId = cookies.get('session_id');
-      if (!userId) throw redirect(303, '/login');
+  markFixed: async ({ locals, params }) => {
+      if (!locals.user) throw redirect(303, '/login');
+      const userId = locals.user.id;
 
       const postId = params.id;
       const post = await PostRepository.getById(postId);
@@ -243,9 +243,9 @@ export const actions = {
       return { success: true };
   },
 
-  submitReview: async ({ request, cookies, params }) => {
-      const userId = cookies.get('session_id');
-      if (!userId) throw redirect(303, '/login');
+  submitReview: async ({ request, locals, params }) => {
+      if (!locals.user) throw redirect(303, '/login');
+      const userId = locals.user.id;
 
       const data = await request.formData();
       const ratingStr = data.get('rating') as string;

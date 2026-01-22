@@ -1,0 +1,17 @@
+﻿DATABASE_URL not found in env, trying hardcoded...
+Connecting to DB...
+URL: postgres://user:****@localhost:5432/postgres
+Checking karwei schema tables...
+Tables in karwei: [
+  'skill',
+  'post',
+  'offer',
+  'comment',
+  'notification',
+  'user',
+  'review',
+  'conversation',
+  'contact_request',
+  'message'
+]
+Session columns: Result(0) []

@@ -20,6 +20,17 @@ export const usersTable = karweiSchema.table("user", {
 	updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const sessionsTable = karweiSchema.table("session", {
+	id: text("id").primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => usersTable.id),
+	expiresAt: timestamp("expires_at", {
+		withTimezone: true,
+		mode: "date"
+	}).notNull()
+});
+
 export const postsTable = karweiSchema.table("post", {
 	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
 	userId: text("user_id").notNull().references(() => usersTable.id),

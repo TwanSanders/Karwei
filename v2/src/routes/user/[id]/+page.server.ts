@@ -4,8 +4,8 @@ import { UserRepository } from '$lib/server/repositories/userRepository';
 import { ContactRequestRepository } from '$lib/server/repositories/contactRequestRepository';
 import { ReviewRepository } from '$lib/server/repositories/reviewRepository';
 
-export const load: PageServerLoad = async ({ params, cookies }) => {
-    const userId = cookies.get('session_id');
+export const load: PageServerLoad = async ({ params, locals }) => {
+    const userId = locals.user?.id;
     const targetUserId = params.id;
     
     // User cannot view their own public profile in this flow (optional restriction, or redirect to /profile)
@@ -62,11 +62,11 @@ export const load: PageServerLoad = async ({ params, cookies }) => {
 };
 
 export const actions = {
-  requestContact: async ({ cookies, params }) => {
-     const requesterId = cookies.get('session_id');
-     if (!requesterId) {
+  requestContact: async ({ locals, params }) => {
+     if (!locals.user) {
          throw redirect(303, '/login');
      }
+     const requesterId = locals.user.id;
 
      const targetUserId = params.id;
      

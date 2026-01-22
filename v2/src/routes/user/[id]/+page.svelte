@@ -289,9 +289,9 @@
                                         <div
                                             class="text-gray-500 dark:text-gray-400 text-xs"
                                         >
-                                            {new Date(
+                                            {review.createdAt ? new Date(
                                                 review.createdAt,
-                                            ).toLocaleDateString()}
+                                            ).toLocaleDateString() : 'Unknown'}
                                         </div>
                                     </div>
                                 </div>

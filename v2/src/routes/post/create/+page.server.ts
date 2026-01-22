@@ -4,12 +4,12 @@ import { PostRepository } from '$lib/server/repositories/postRepository';
 import { SkillRepository } from '$lib/server/repositories/skillRepository';
 import { uploadToR2 } from '$lib/server/s3';
 
-export const load: PageServerLoad = async ({ locals, cookies }) => {
+export const load: PageServerLoad = async ({ locals }) => {
     // Check auth
-    const userId = cookies.get('session_id');
-    if (!userId) {
+    if (!locals.user) {
         throw redirect(303, '/login');
     }
+    const userId = locals.user.id;
     
     // Load active skills for the category dropdown
     const skills = await SkillRepository.getActive();
@@ -18,11 +18,11 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
 };
 
 export const actions = {
-  create: async ({ request, cookies }) => {
-     const userId = cookies.get('session_id');
-     if (!userId) {
+  create: async ({ request, locals }) => {
+     if (!locals.user) {
          throw redirect(303, '/login');
      }
+     const userId = locals.user.id;
 
      const data = await request.formData();
      const title = data.get('title') as string;

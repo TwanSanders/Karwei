@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { lucia } from "$lib/server/auth";
 import type { PageServerLoad, Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 import { ContactRequestRepository } from '$lib/server/repositories/contactRequestRepository';
@@ -7,11 +8,11 @@ import { OfferRepository } from '$lib/server/repositories/offerRepository';
 import { SkillRepository } from '$lib/server/repositories/skillRepository';
 import { ReviewRepository } from '$lib/server/repositories/reviewRepository';
 
-export const load: PageServerLoad = async ({ cookies }) => {
-    const userId = cookies.get('session_id');
-    if (!userId) {
+export const load: PageServerLoad = async ({ locals }) => {
+    if (!locals.user) {
         throw redirect(303, '/login');
     }
+    const userId = locals.user.id;
 
     const user = await UserRepository.getById(userId);
     if (!user) {
@@ -56,11 +57,11 @@ export const load: PageServerLoad = async ({ cookies }) => {
 
 
 export const actions = {
-    toggleMaker: async ({ cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) {
+    toggleMaker: async ({ locals }) => {
+        if (!locals.user) {
             throw redirect(303, '/login');
         }
+        const userId = locals.user.id;
 
         const user = await UserRepository.getById(userId);
         if (!user) {
@@ -73,9 +74,9 @@ export const actions = {
 
         return { success: true };
     },
-    updateLocation: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    updateLocation: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const data = await request.formData();
         const lat = data.get('lat') ? parseFloat(data.get('lat') as string) : null;
@@ -88,9 +89,9 @@ export const actions = {
 
         return { success: true };
     },
-    updateImage: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    updateImage: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const data = await request.formData();
         const image = data.get('image') as File;
@@ -112,9 +113,9 @@ export const actions = {
         
         return { success: true };
     },
-    respondRequest: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    respondRequest: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const requestId = formData.get('requestId') as string;
@@ -128,9 +129,9 @@ export const actions = {
         await ContactRequestRepository.updateStatus(requestId, status);
         return { success: true };
     },
-    deletePost: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    deletePost: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const postId = formData.get('postId') as string;
@@ -145,9 +146,9 @@ export const actions = {
         await PostRepository.delete(postId);
         return { success: true };
     },
-    cancelPost: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    cancelPost: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const postId = formData.get('postId') as string;
@@ -162,9 +163,9 @@ export const actions = {
         await PostRepository.updateStatus(postId, 'closed');
         return { success: true };
     },
-    unassignMaker: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    unassignMaker: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const postId = formData.get('postId') as string;
@@ -179,9 +180,9 @@ export const actions = {
         await PostRepository.unassignMaker(postId);
         return { success: true };
     },
-    markFixed: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    markFixed: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const postId = formData.get('postId') as string;
@@ -196,9 +197,9 @@ export const actions = {
         await PostRepository.updateStatus(postId, 'fixed');
         return { success: true };
     },
-    cancelOffer: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    cancelOffer: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const offerId = formData.get('offerId') as string;
@@ -214,9 +215,9 @@ export const actions = {
         await OfferRepository.delete(offerId);
         return { success: true };
     },
-    updateSkills: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    updateSkills: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const skills = formData.get('skills') as string || '';
@@ -227,9 +228,9 @@ export const actions = {
 
         return { success: true };
     },
-    updateBio: async ({ request, cookies }) => {
-        const userId = cookies.get('session_id');
-        if (!userId) throw redirect(303, '/login');
+    updateBio: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
 
         const formData = await request.formData();
         const bio = formData.get('bio') as string || '';
@@ -240,8 +241,14 @@ export const actions = {
 
         return { success: true };
     },
-    logout: async ({ cookies }) => {
-        cookies.delete('session_id', { path: '/' });
+    logout: async ({ locals, cookies }) => {
+        if (!locals.session) return fail(401);
+        await lucia.invalidateSession(locals.session.id);
+        const sessionCookie = lucia.createBlankSessionCookie();
+        cookies.set(sessionCookie.name, sessionCookie.value, {
+            path: ".",
+            ...sessionCookie.attributes
+        });
         throw redirect(303, '/');
     }
 } satisfies Actions;

@@ -154,7 +154,7 @@
         let timeout: any;
         return function (...args: any[]) {
             clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(this, args), wait);
+            timeout = setTimeout(() => func.apply(this as any, args), wait);
         };
     }
 </script>

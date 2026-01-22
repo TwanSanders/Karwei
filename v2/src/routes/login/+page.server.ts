@@ -1,4 +1,5 @@
 import { fail, redirect } from '@sveltejs/kit';
+import { lucia } from "$lib/server/auth";
 import type { Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 import { AuthService } from '$lib/server/services/authService';
@@ -26,19 +27,27 @@ export const actions = {
       return fail(400, { email, incorrect: true });
     }
 
+    // Create session
+    const session = await lucia.createSession(user.id, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    
     // Set cookie
-    cookies.set('session_id', user.id, {
-      path: '/',
-      httpOnly: true,
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7 // 1 week
+    cookies.set(sessionCookie.name, sessionCookie.value, {
+      path: ".",
+      ...sessionCookie.attributes
     });
 
     throw redirect(303, '/');
   },
   
-  logout: async ({ cookies }) => {
-      cookies.delete('session_id', { path: '/' });
-      throw redirect(303, '/login');
+  logout: async ({ locals, cookies }) => {
+    if (!locals.session) return fail(401);
+    await lucia.invalidateSession(locals.session.id);
+    const sessionCookie = lucia.createBlankSessionCookie();
+    cookies.set(sessionCookie.name, sessionCookie.value, {
+      path: ".",
+      ...sessionCookie.attributes
+    });
+    throw redirect(303, '/login');
   }
 } satisfies Actions;
