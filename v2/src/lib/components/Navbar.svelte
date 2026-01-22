@@ -2,12 +2,17 @@
     import { page } from "$app/stores";
     import { enhance } from "$app/forms";
     import { theme } from "$lib/stores/theme"; // <--- IMPORT STORE
+    import { viewMode } from "$lib/stores/viewMode"; // <--- IMPORT VIEW MODE STORE
     import { invalidateAll } from "$app/navigation";
     import { MessageSquare } from "lucide-svelte";
 
     // Function to toggle
     function toggleTheme() {
         $theme = $theme === "dark" ? "light" : "dark";
+    }
+
+    function toggleViewMode() {
+        $viewMode = $viewMode === "poster" ? "maker" : "poster";
     }
 
     let showNotifications = false;
@@ -67,7 +72,7 @@
 <nav class="bg-white dark:bg-gray-800 shadow transition-colors duration-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
-            <div class="flex">
+            <div class="flex items-center gap-6">
                 <div class="flex-shrink-0 flex items-center">
                     <a
                         href="/"
@@ -75,6 +80,40 @@
                         >Karwei</a
                     >
                 </div>
+
+                {#if $page.data.user?.maker}
+                    <!-- Poster/Maker Toggle -->
+                    <button
+                        on:click={toggleViewMode}
+                        class="relative flex items-center bg-gray-700 dark:bg-gray-600 rounded-full p-1 w-40 h-10 cursor-pointer transition-colors"
+                    >
+                        <!-- Sliding indicator -->
+                        <div
+                            class="absolute h-8 w-20 bg-white dark:bg-gray-800 rounded-full shadow-md transition-transform duration-200 ease-in-out {$viewMode ===
+                            'maker'
+                                ? 'translate-x-[4.5rem]'
+                                : 'translate-x-0'}"
+                        ></div>
+
+                        <!-- Labels -->
+                        <span
+                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
+                            'poster'
+                                ? 'text-gray-900 dark:text-white'
+                                : 'text-gray-300 dark:text-gray-400'}"
+                        >
+                            Poster
+                        </span>
+                        <span
+                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
+                            'maker'
+                                ? 'text-gray-900 dark:text-white'
+                                : 'text-gray-300 dark:text-gray-400'}"
+                        >
+                            Maker
+                        </span>
+                    </button>
+                {/if}
             </div>
             <div class="ml-4 flex items-center gap-4">
                 <div class="flex-shrink-0">

@@ -259,6 +259,37 @@ export class UserRepository {
       return result[0].count;
   }
 
+  static async getTopMakers(limit: number = 500): Promise<User[]> {
+      // Get top makers ordered by average rating and number of reviews
+      const makers = await db.select({
+          user: usersTable,
+          avgRating: sql<number>`AVG(CAST(${reviewsTable.rating} AS DECIMAL))`.as('avg_rating'),
+          reviewCount: count(reviewsTable.id).as('review_count')
+      })
+      .from(usersTable)
+      .leftJoin(reviewsTable, eq(usersTable.id, reviewsTable.targetUserId))
+      .where(eq(usersTable.maker, true))
+      .groupBy(usersTable.id)
+      .orderBy(sql`avg_rating DESC NULLS LAST, review_count DESC`)
+      .limit(limit);
+
+      return makers.map(row => ({
+          id: row.user.id,
+          name: row.user.name,
+          email: row.user.email,
+          emailVerified: row.user.emailVerified,
+          image: row.user.image,
+          phoneNumber: row.user.phoneNumber,
+          skills: row.user.skills,
+          lat: row.user.lat ? parseFloat(row.user.lat) : null,
+          long: row.user.long ? parseFloat(row.user.long) : null,
+          bio: row.user.bio,
+          maker: row.user.maker || false,
+          createdAt: row.user.createdAt || new Date(),
+          updatedAt: row.user.updatedAt || new Date(),
+      }));
+  }
+
   static calculateLevel(completedRepairs: number): 'novice' | 'handyman' | 'master' {
       if (completedRepairs >= 21) return 'master';
       if (completedRepairs >= 6) return 'handyman';

@@ -171,6 +171,53 @@ export class PostRepository {
     }));
   }
 
+  static async findByMakerId(makerId: string): Promise<Post[]> {
+    const results = await db.select().from(postsTable)
+      .where(eq(postsTable.makerId, makerId))
+      .orderBy(desc(postsTable.createdAt));
+    
+    return results.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      title: row.title,
+      imageUrl: row.imageUrl,
+      description: row.description,
+      purchasedAt: row.purchasedAt,
+      type: row.type,
+      targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
+      makerId: row.makerId,
+      status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
+      score: row.score ? parseFloat(row.score) : null,
+      lat: row.lat ? parseFloat(row.lat) : null,
+      long: row.long ? parseFloat(row.long) : null,
+      createdAt: row.createdAt || new Date(),
+    }));
+  }
+
+  static async getLatest(limit: number = 5): Promise<Post[]> {
+    const results = await db.select().from(postsTable)
+      .where(sql`${postsTable.status} != 'closed'`)
+      .orderBy(desc(postsTable.createdAt))
+      .limit(limit);
+    
+    return results.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      title: row.title,
+      imageUrl: row.imageUrl,
+      description: row.description,
+      purchasedAt: row.purchasedAt,
+      type: row.type,
+      targetPrice: row.targetPrice ? parseFloat(row.targetPrice) : null,
+      makerId: row.makerId,
+      status: row.status as 'open' | 'in_progress' | 'fixed' | 'closed',
+      score: row.score ? parseFloat(row.score) : null,
+      lat: row.lat ? parseFloat(row.lat) : null,
+      long: row.long ? parseFloat(row.long) : null,
+      createdAt: row.createdAt || new Date(),
+    }));
+  }
+
   static async delete(id: string): Promise<void> {
     await db.delete(postsTable).where(eq(postsTable.id, id));
   }
