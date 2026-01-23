@@ -7,30 +7,7 @@
 
     export let data: PageData;
 
-    // Skills filtering for guest view
-    let selectedSkills: string[] = [];
-
-    $: displayedMakers = data.topMakers
-        ? selectedSkills.length > 0
-            ? data.topMakers.filter((maker: any) => {
-                  if (!maker.skills) return false;
-                  const makerSkills = maker.skills
-                      .split(",")
-                      .map((s: string) => s.trim().toLowerCase());
-                  return selectedSkills.some((skill) =>
-                      makerSkills.includes(skill.toLowerCase()),
-                  );
-              })
-            : data.topMakers
-        : [];
-
-    function toggleSkill(skill: string) {
-        if (selectedSkills.includes(skill)) {
-            selectedSkills = selectedSkills.filter((s) => s !== skill);
-        } else {
-            selectedSkills = [...selectedSkills, skill];
-        }
-    }
+    $: displayedMakers = data.topMakers || [];
 
     // Reactive variables for Maker view filters (find projects section)
     let searchQuery = "";
@@ -52,23 +29,32 @@
             .map((s: string) => s.trim());
     }
 
-    async function getMakerLocation() {
-        if (!navigator.geolocation) {
-            alert("Geolocation is not supported");
-            return;
-        }
+    async function setLocationMode(mode: "home" | "current") {
+        if (mode === "current") {
+            if (!navigator.geolocation) {
+                alert("Geolocation is not supported");
+                return;
+            }
 
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                userLat = position.coords.latitude;
-                userLong = position.coords.longitude;
-                locationStatus = "current";
-                updateMakerFilter();
-            },
-            () => {
-                alert("Permission Denied");
-            },
-        );
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLat = position.coords.latitude;
+                    userLong = position.coords.longitude;
+                    locationStatus = "current";
+                    updateMakerFilter();
+                },
+                () => {
+                    alert("Permission Denied");
+                    // Stay on home or revert if needed (though UI state is driven by locationStatus)
+                    locationStatus = "home";
+                },
+            );
+        } else {
+            userLat = data.user?.lat || null;
+            userLong = data.user?.long || null;
+            locationStatus = "home";
+            updateMakerFilter();
+        }
     }
 
     function updateMakerFilter() {
@@ -85,6 +71,14 @@
             params.set("q", searchQuery);
         }
         goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+    }
+
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    function debouncedUpdate() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            updateMakerFilter();
+        }, 300);
     }
 
     function toggleMakerSkill(skill: string) {
@@ -126,27 +120,6 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Skill Pills -->
-        <div class="mb-6">
-            <h2
-                class="text-lg font-semibold text-gray-900 dark:text-white mb-3"
-            >
-                Filter by skill
-            </h2>
-            <div class="flex flex-wrap gap-2">
-                {#each data.skills || [] as skill}
-                    <button
-                        on:click={() => toggleSkill(skill)}
-                        class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 {selectedSkills.includes(
-                            skill,
-                        )
-                            ? 'bg-indigo-600 text-white shadow-md'
-                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}"
-                    >
-                        {skill}
-                    </button>
-                {/each}
-            </div>
-        </div>
 
         <!-- Map of Top Makers -->
         <div class="mb-12">
@@ -166,13 +139,33 @@
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 Are you the maker we're looking for?
             </h2>
-            <p class="text-gray-600 dark:text-gray-400 mb-6">
+            <div
+                class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 border border-gray-100 dark:border-gray-700 p-6 rounded-xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+            >
+                <p class="text-lg text-gray-700 dark:text-gray-300">
+                    Join our community of repair heroes and help others giving
+                    objects a second life.
+                </p>
                 <a
                     href="/login"
-                    class="text-indigo-600 dark:text-indigo-400 font-medium hover:underline"
-                    >Log in here</a
-                > to start fixing
-            </p>
+                    class="whitespace-nowrap inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                >
+                    Log in to start fixing
+                    <svg
+                        class="ml-2 -mr-1 w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                    </svg>
+                </a>
+            </div>
             <div
                 class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
             >
@@ -358,6 +351,85 @@
                 </p>
             {/if}
         </div>
+
+        <!-- Become a Maker Promo -->
+        {#if !data.user.maker}
+            <div
+                class="mt-12 pt-12 border-t border-gray-200 dark:border-gray-700"
+            >
+                <h2
+                    class="text-2xl font-bold text-gray-900 dark:text-white mb-2"
+                >
+                    Are you the maker we're looking for?
+                </h2>
+                <div
+                    class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-800 dark:to-gray-900 border border-gray-100 dark:border-gray-700 p-6 rounded-xl mb-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+                >
+                    <p class="text-lg text-gray-700 dark:text-gray-300">
+                        Join our community of repair heroes and help others
+                        giving objects a second life.
+                    </p>
+                    <a
+                        href="/profile"
+                        class="whitespace-nowrap inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                    >
+                        Upgrade Profile
+                        <svg
+                            class="ml-2 -mr-1 w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                        </svg>
+                    </a>
+                </div>
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6"
+                >
+                    {#each data.latestPosts || [] as post}
+                        <a
+                            href="/post/{post.id}"
+                            class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden"
+                        >
+                            {#if post.imageUrl}
+                                <img
+                                    class="w-full h-48 object-cover"
+                                    src={post.imageUrl}
+                                    alt={post.title}
+                                />
+                            {:else}
+                                <div
+                                    class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+                                >
+                                    <span
+                                        class="text-gray-400 dark:text-gray-500"
+                                        >No image</span
+                                    >
+                                </div>
+                            {/if}
+                            <div class="p-4">
+                                <h3
+                                    class="font-semibold text-gray-900 dark:text-white truncate"
+                                >
+                                    {post.title}
+                                </h3>
+                                <p
+                                    class="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2"
+                                >
+                                    {post.description || "No description"}
+                                </p>
+                            </div>
+                        </a>
+                    {/each}
+                </div>
+            </div>
+        {/if}
     </div>
 
     <!-- MAKER VIEW -->
@@ -447,44 +519,76 @@
                 >
                     <!-- Location -->
                     <div>
-                        <label
+                        <span
                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                            >Location</label
+                            >Location</span
                         >
-                        <button
-                            on:click={getMakerLocation}
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm {locationStatus ===
-                            'current'
-                                ? 'bg-indigo-50 dark:bg-indigo-900 border-indigo-400'
-                                : 'bg-white dark:bg-gray-700'} text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                        <div
+                            class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 relative"
                         >
-                            {locationStatus === "current"
-                                ? "📍 Current Location"
-                                : "🏠 Home Location"}
-                        </button>
+                            <button
+                                on:click={() => setLocationMode("home")}
+                                class="flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 z-10 {locationStatus ===
+                                'home'
+                                    ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-black/5'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}"
+                            >
+                                <span
+                                    class="flex items-center justify-center gap-2"
+                                >
+                                    <span>🏠</span> Home
+                                </span>
+                            </button>
+                            <button
+                                on:click={() => setLocationMode("current")}
+                                class="flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 z-10 {locationStatus ===
+                                'current'
+                                    ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-black/5'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}"
+                            >
+                                <span
+                                    class="flex items-center justify-center gap-2"
+                                >
+                                    <span>📍</span> Current
+                                </span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Distance -->
                     <div>
-                        <label
-                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                            >Max Distance (km)</label
-                        >
+                        <div class="flex justify-between mb-1">
+                            <label
+                                for="distance-filter"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                >Max Distance</label
+                            >
+                            <span
+                                class="text-sm text-gray-500 dark:text-gray-400"
+                                >{maxDistance} km</span
+                            >
+                        </div>
                         <input
-                            type="number"
+                            id="distance-filter"
+                            type="range"
+                            min="5"
+                            max="200"
+                            step="5"
                             bind:value={maxDistance}
-                            on:change={updateMakerFilter}
-                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                            on:input={debouncedUpdate}
+                            class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
                         />
                     </div>
 
                     <!-- Search -->
                     <div>
                         <label
+                            for="search-filter"
                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                             >Search</label
                         >
                         <input
+                            id="search-filter"
                             type="text"
                             bind:value={searchQuery}
                             on:input={() => setTimeout(updateMakerFilter, 500)}
@@ -495,9 +599,9 @@
 
                     <!-- Display Toggle -->
                     <div>
-                        <label
+                        <span
                             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                            >Display</label
+                            >Display</span
                         >
                         <div
                             class="flex bg-gray-100 dark:bg-gray-700 rounded-md p-1"
@@ -526,9 +630,9 @@
 
                 <!-- Skills Pills -->
                 <div>
-                    <label
+                    <span
                         class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                        >Skills</label
+                        >Skills</span
                     >
                     <div class="flex flex-wrap gap-2">
                         {#each data.skills || [] as skill}

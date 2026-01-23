@@ -163,7 +163,7 @@
 ></div>
 
 <style>
-    .leaflet-container {
+    :global(.leaflet-container) {
         z-index: 0;
     }
 </style>

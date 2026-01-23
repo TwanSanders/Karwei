@@ -237,7 +237,11 @@ export const actions = {
       const post = await PostRepository.getById(postId);
 
       if (!post) throw error(404, 'Post not found');
-      if (post.userId !== userId) return fail(403, { unauthorized: true });
+      
+      // Authorization change: Only the assigned MAKER can mark as fixed
+      if (post.makerId !== userId) {
+          return fail(403, { unauthorized: true, message: "Only the assigned repairer can mark this as fixed." });
+      }
 
       await PostRepository.updateStatus(postId, 'fixed');
       return { success: true };

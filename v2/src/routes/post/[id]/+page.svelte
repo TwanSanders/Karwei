@@ -8,6 +8,10 @@
     $: comments = data.comments;
     $: isOwner = data.currentUser?.id === post.userId;
     $: isRepairer = data.currentUser?.maker;
+    $: shouldHideOffers =
+        post.status === "in_progress" && data.currentUser?.id === post.makerId;
+
+    import RepairAgentChat from "$lib/components/RepairAgentChat.svelte";
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -113,114 +117,120 @@
 
     <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white">
-                Offers
-            </h3>
+            {#if data.currentUser?.maker}
+                <div class="mb-8">
+                    <RepairAgentChat {post} />
+                </div>
+            {/if}
 
             <div
                 class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8"
             >
-                <h2
-                    class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4"
-                >
-                    Offers
-                </h2>
+                {#if !shouldHideOffers}
+                    <h2
+                        class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4"
+                    >
+                        Offers
+                    </h2>
 
-                {#if data.offers.length > 0}
-                    <div class="space-y-4 mb-8">
-                        {#each data.offers as offer}
-                            <!-- Existing Offer UI -->
-                            <div
-                                class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm"
-                            >
+                    {#if data.offers.length > 0}
+                        <div class="space-y-4 mb-8">
+                            {#each data.offers as offer}
+                                <!-- Existing Offer UI -->
                                 <div
-                                    class="flex items-center justify-between mb-2"
+                                    class="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 shadow-sm"
                                 >
-                                    <a
-                                        href="/user/{offer.makerId}"
-                                        class="flex items-center space-x-3 group"
+                                    <div
+                                        class="flex items-center justify-between mb-2"
                                     >
-                                        {#if offer.makerImage}
-                                            <img
-                                                class="h-8 w-8 rounded-full"
-                                                src={offer.makerImage}
-                                                alt={offer.makerName}
-                                            />
-                                        {:else}
-                                            <span
-                                                class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600"
-                                            >
-                                                <svg
-                                                    class="h-full w-full text-gray-300"
-                                                    fill="currentColor"
-                                                    viewBox="0 0 24 24"
+                                        <a
+                                            href="/user/{offer.makerId}"
+                                            class="flex items-center space-x-3 group"
+                                        >
+                                            {#if offer.makerImage}
+                                                <img
+                                                    class="h-8 w-8 rounded-full"
+                                                    src={offer.makerImage}
+                                                    alt={offer.makerName}
+                                                />
+                                            {:else}
+                                                <span
+                                                    class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600"
                                                 >
-                                                    <path
-                                                        d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
-                                                    />
-                                                </svg>
-                                            </span>
-                                        {/if}
+                                                    <svg
+                                                        class="h-full w-full text-gray-300"
+                                                        fill="currentColor"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <path
+                                                            d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
+                                                        />
+                                                    </svg>
+                                                </span>
+                                            {/if}
+                                            <span
+                                                class="text-sm font-medium text-gray-900 dark:text-white group-hover:underline"
+                                                >{offer.makerName ||
+                                                    "Unknown Maker"}</span
+                                            >
+                                        </a>
                                         <span
-                                            class="text-sm font-medium text-gray-900 dark:text-white group-hover:underline"
-                                            >{offer.makerName ||
-                                                "Unknown Maker"}</span
+                                            class="text-xs text-gray-500 dark:text-gray-400"
                                         >
-                                    </a>
-                                    <span
-                                        class="text-xs text-gray-500 dark:text-gray-400"
-                                    >
-                                        {new Date(
-                                            offer.createdAt,
-                                        ).toLocaleString()}
-                                    </span>
-                                </div>
-                                <p
-                                    class="text-gray-700 dark:text-gray-300 mb-2"
-                                >
-                                    {offer.message}
-                                </p>
-                                {#if offer.price}
+                                            {new Date(
+                                                offer.createdAt,
+                                            ).toLocaleString()}
+                                        </span>
+                                    </div>
                                     <p
-                                        class="text-green-600 dark:text-green-500 font-medium text-sm"
+                                        class="text-gray-700 dark:text-gray-300 mb-2"
                                     >
-                                        Offered Price: €{offer.price.toFixed(2)}
+                                        {offer.message}
                                     </p>
-                                {/if}
-
-                                <!-- Accept Button (Owner Only) -->
-                                {#if data.currentUser && data.post.userId === data.currentUser.id && data.post.status === "open"}
-                                    <form
-                                        action="?/acceptOffer"
-                                        method="POST"
-                                        use:enhance
-                                        class="mt-3"
-                                    >
-                                        <input
-                                            type="hidden"
-                                            name="offerId"
-                                            value={offer.id}
-                                        />
-                                        <input
-                                            type="hidden"
-                                            name="makerId"
-                                            value={offer.makerId}
-                                        />
-                                        <button
-                                            type="submit"
-                                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                    {#if offer.price}
+                                        <p
+                                            class="text-green-600 dark:text-green-500 font-medium text-sm"
                                         >
-                                            Accept Offer
-                                        </button>
-                                    </form>
-                                {/if}
-                            </div>
-                        {/each}
-                    </div>
-                {:else}
-                    <p class="text-gray-500 dark:text-gray-400 mb-8 italic">
-                        No offers yet.
-                    </p>
+                                            Offered Price: €{offer.price.toFixed(
+                                                2,
+                                            )}
+                                        </p>
+                                    {/if}
+
+                                    <!-- Accept Button (Owner Only) -->
+                                    {#if data.currentUser && data.post.userId === data.currentUser.id && data.post.status === "open"}
+                                        <form
+                                            action="?/acceptOffer"
+                                            method="POST"
+                                            use:enhance
+                                            class="mt-3"
+                                        >
+                                            <input
+                                                type="hidden"
+                                                name="offerId"
+                                                value={offer.id}
+                                            />
+                                            <input
+                                                type="hidden"
+                                                name="makerId"
+                                                value={offer.makerId}
+                                            />
+                                            <button
+                                                type="submit"
+                                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                            >
+                                                Accept Offer
+                                            </button>
+                                        </form>
+                                    {/if}
+                                </div>
+                            {/each}
+                        </div>
+                    {:else}
+                        <p class="text-gray-500 dark:text-gray-400 mb-8 italic">
+                            No offers yet.
+                        </p>
+                    {/if}
                 {/if}
 
                 <!-- Status Actions -->
@@ -241,8 +251,8 @@
                         </p>
 
                         <div class="mt-4 flex gap-4">
-                            {#if data.currentUser && data.post.userId === data.currentUser.id}
-                                <!-- Mark as Fixed -->
+                            <!-- Mark as Fixed (MAKER ONLY) -->
+                            {#if data.currentUser && data.post.makerId === data.currentUser.id}
                                 <form
                                     action="?/markFixed"
                                     method="POST"
@@ -255,8 +265,10 @@
                                         Mark as Fixed
                                     </button>
                                 </form>
+                            {/if}
 
-                                <!-- Unassign Fixer -->
+                            <!-- Unassign Fixer (OWNER ONLY) -->
+                            {#if data.currentUser && data.post.userId === data.currentUser.id}
                                 <form
                                     action="?/unassign"
                                     method="POST"

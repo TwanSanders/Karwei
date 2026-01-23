@@ -93,10 +93,12 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     const userPosts = await PostRepository.findByUserId(userId);
     const assignedPosts = userPosts.filter(p => p.status === 'in_progress');
     const unassignedPosts = userPosts.filter(p => p.status === 'open');
+    const latestPosts = await PostRepository.getLatest(5);
 
     return {
         assignedPosts: assignedPosts.map(p => ({...p, lat: p.lat?.toString(), long: p.long?.toString()})),
         unassignedPosts: unassignedPosts.map(p => ({...p, lat: p.lat?.toString(), long: p.long?.toString()})),
+        latestPosts: latestPosts.map(p => ({...p, lat: p.lat?.toString(), long: p.long?.toString()})),
         user: userData,
         skills: skills.map(s => s.name)
     };
