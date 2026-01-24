@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = "AIzaSyDx1Hlnvwy8rZ8oVQ3RXKnN4C286FAfq3c";
+import 'dotenv/config'; // Make sure to npm install dotenv if running this standalone
+const apiKey = process.env.GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey);
 
 async function testImageAndGrounding() {

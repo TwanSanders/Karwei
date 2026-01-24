@@ -130,3 +130,20 @@ export const messagesTable = karweiSchema.table("message", {
 	createdAt: timestamp("created_at").defaultNow(),
 });
 
+
+export const aiConversationsTable = karweiSchema.table("ai_conversation", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	userId: text("user_id").notNull().references(() => usersTable.id),
+	postId: text("post_id").notNull().references(() => postsTable.id),
+	title: text("title").notNull().default("New Chat"),
+	createdAt: timestamp("created_at").defaultNow(),
+	updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const aiMessagesTable = karweiSchema.table("ai_message", {
+	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	conversationId: text("conversation_id").notNull().references(() => aiConversationsTable.id),
+	role: text("role", { enum: ["user", "assistant"] }).notNull(),
+	content: text("content").notNull(),
+	createdAt: timestamp("created_at").defaultNow(),
+});
