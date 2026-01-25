@@ -4,6 +4,7 @@
 
     export let lat: number | null = null;
     export let long: number | null = null;
+    export let readonly: boolean = false;
 
     let mapElement: HTMLElement;
     let map: any;
@@ -26,7 +27,17 @@
             const initialLng = long || 5.2913;
             const zoomLevel = lat ? 15 : 7; // Zoom in closer if we have a location
 
-            map = L.map(mapElement).setView(
+            const mapOptions = {
+                dragging: !readonly,
+                zoomControl: !readonly,
+                scrollWheelZoom: !readonly,
+                doubleClickZoom: !readonly,
+                touchZoom: !readonly,
+                boxZoom: !readonly,
+                keyboard: !readonly,
+            };
+
+            map = L.map(mapElement, mapOptions).setView(
                 [initialLat, initialLng],
                 zoomLevel,
             );
@@ -46,18 +57,20 @@
                 // Let's update on move.
             }
 
-            map.on("move", () => {
-                // Optional: Do something while moving
-            });
+            if (!readonly) {
+                map.on("move", () => {
+                    // Optional: Do something while moving
+                });
 
-            map.on("moveend", () => {
-                const center = map.getCenter();
-                lat = center.lat;
-                long = center.lng;
-            });
+                map.on("moveend", () => {
+                    const center = map.getCenter();
+                    lat = center.lat;
+                    long = center.lng;
+                });
+            }
 
             // Trigger initial update to set internal state if needed, or if map starts at default
-            if (!lat) {
+            if (!lat && !readonly) {
                 const center = map.getCenter();
                 lat = center.lat;
                 long = center.lng;
@@ -72,6 +85,8 @@
     });
 
     function locateMe() {
+        if (readonly) return;
+
         if (!browser || !navigator.geolocation) {
             alert("Geolocation is not supported by your browser");
             return;
@@ -121,37 +136,39 @@
         </div>
     </div>
 
-    <p class="text-xs text-gray-500 text-center">
-        Move the map to position the pin at your home location.
-    </p>
+    {#if !readonly}
+        <p class="text-xs text-gray-500 text-center">
+            Move the map to position the pin at your home location.
+        </p>
 
-    <button
-        type="button"
-        on:click={locateMe}
-        class="align-middle self-start inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:ring-offset-gray-800 focus:ring-indigo-500 transition-colors"
-    >
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="-ml-0.5 mr-2 h-4 w-4 text-gray-500 dark:text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <button
+            type="button"
+            on:click={locateMe}
+            class="align-middle self-start inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:ring-offset-gray-800 focus:ring-indigo-500 transition-colors"
         >
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-        </svg>
-        Locate Me
-    </button>
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="-ml-0.5 mr-2 h-4 w-4 text-gray-500 dark:text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+            </svg>
+            Locate Me
+        </button>
+    {/if}
     <input type="hidden" name="lat" value={lat ?? ""} />
     <input type="hidden" name="long" value={long ?? ""} />
 </div>

@@ -15,6 +15,7 @@ export const usersTable = karweiSchema.table("user", {
 	lat: decimal("lat", { precision: 12, scale: 8 }),
 	long: decimal("long", { precision: 12, scale: 8 }),
 	bio: text("bio"),
+	makerBio: text("maker_bio"),
 	maker: boolean("maker").default(false),
 	createdAt: timestamp("created_at").defaultNow(),
 	updatedAt: timestamp("updated_at").defaultNow(),

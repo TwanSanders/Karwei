@@ -32,4 +32,21 @@ export class ReviewRepository {
         
         return result[0]?.average ? parseFloat(result[0].average) : null;
     }
+
+    static async getByPostId(postId: string) {
+        return await db.select({
+            id: reviewsTable.id,
+            rating: reviewsTable.rating,
+            comment: reviewsTable.comment,
+            createdAt: reviewsTable.createdAt,
+            reviewerName: usersTable.name,
+            reviewerImage: usersTable.image,
+            reviewerId: usersTable.id,
+            targetUserId: reviewsTable.targetUserId
+        })
+        .from(reviewsTable)
+        .leftJoin(usersTable, eq(reviewsTable.reviewerId, usersTable.id))
+        .where(eq(reviewsTable.postId, postId))
+        .orderBy(desc(reviewsTable.createdAt));
+    }
 }

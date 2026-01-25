@@ -172,7 +172,7 @@ ${postContext.imageUrl ? "**Image**: Provided (analyze it if new)" : ""}
                     // We do this inside the stream completion or after the loop
                     if (fullResponse) {
                         try {
-                             await AIConversationRepository.addMessage(conversationId, 'assistant', fullResponse);
+                             await AIConversationRepository.addMessage(conversationId, 'assistant', cleanAIResponse(fullResponse));
                              
                              // Auto-title trigger check (e.g., if message count == 4 (2 turns))
                              // We can spawn this async
@@ -292,3 +292,10 @@ export const DELETE: RequestHandler = async ({ url, locals }) => {
         return json({ error: 'Delete failed' }, { status: 500 });
     }
 };
+
+function cleanAIResponse(text: string): string {
+    let cleaned = text;
+    cleaned = cleaned.replace(/tool_code[\s\S]*?(?=thought)/g, "");
+    cleaned = cleaned.replace(/thought[\s\S]*?(\n\n|$)/g, "");
+    return cleaned.trim();
+}

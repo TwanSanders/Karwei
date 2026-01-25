@@ -85,6 +85,20 @@
         }
     }
 
+    function cleanAIResponse(text: string): string {
+        // Remove internal tool logging and thoughts exposed by Gemini
+        let cleaned = text;
+
+        // Remove tool_code blocks
+        cleaned = cleaned.replace(/tool_code[\s\S]*?(?=thought)/g, "");
+
+        // Remove thought blocks (usually terminate with a double newline or when actual response starts)
+        // We match "thought" followed by content until a double newline or end of string
+        cleaned = cleaned.replace(/thought[\s\S]*?(\n\n|$)/g, "");
+
+        return cleaned.trim();
+    }
+
     async function sendMessage() {
         if (!newMessage.trim()) return;
 
@@ -138,7 +152,7 @@
                 const chunk = decoder.decode(value);
                 fullText += chunk;
 
-                messages[assistantMsgIndex].content = fullText;
+                messages[assistantMsgIndex].content = cleanAIResponse(fullText);
                 messages = messages;
             }
         } catch (e: any) {

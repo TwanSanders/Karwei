@@ -3,6 +3,7 @@
     import { goto } from "$app/navigation";
     import { invalidateAll } from "$app/navigation";
     import type { PageData } from "./$types";
+    import { viewMode } from "$lib/stores/viewMode";
     import InfoTooltip from "$lib/components/InfoTooltip.svelte";
     import LocationPicker from "$lib/components/LocationPicker.svelte";
     import SkillSelector from "$lib/components/SkillSelector.svelte";
@@ -10,40 +11,73 @@
     import MakerBadge from "$lib/components/MakerBadge.svelte";
 
     export let data: PageData;
-    $: ({ user, userPosts, userOffers, skills, averageRating, reviews } = data);
+    $: ({ user, archivedPosts, completedProjects, skills, averageRating } =
+        data);
+
     $: incomingRequests = data.incomingRequests.filter(
         (r) => r.status === "pending",
     );
 
-    // Change tracking - use data.user for initial values
-    let bioChanged = false;
-    let currentBio = data.user.bio || "";
-    $: bioChanged = currentBio !== (data.user.bio || "");
+    // Edit mode states
+    let isPosterEditMode = false;
+    let isMakerEditMode = false;
+    let hasUnsavedChanges = false;
 
     // Helper to round coordinates to 8 decimal places (about 1mm precision)
     const roundCoord = (val: number | null) =>
         val !== null ? Math.round(val * 100000000) / 100000000 : null;
 
-    // Location tracking - convert decimals to numbers and round for comparison
-    let locationChanged = false;
-    let currentLocationLat: number | null = data.user.lat
+    // Poster profile state
+    let currentBio = data.user.bio || "";
+    let bioChanged = false;
+    $: bioChanged = currentBio !== (data.user.bio || "");
+
+    let posterLocationLat: number | null = data.user.lat
         ? Number(data.user.lat)
         : null;
-    let currentLocationLong: number | null = data.user.long
+    let posterLocationLong: number | null = data.user.long
         ? Number(data.user.long)
         : null;
+    let posterLocationChanged = false;
     $: {
         const originalLat = data.user.lat ? Number(data.user.lat) : null;
         const originalLong = data.user.long ? Number(data.user.long) : null;
-        locationChanged =
-            roundCoord(currentLocationLat) !== roundCoord(originalLat) ||
-            roundCoord(currentLocationLong) !== roundCoord(originalLong);
+        posterLocationChanged =
+            roundCoord(posterLocationLat) !== roundCoord(originalLat) ||
+            roundCoord(posterLocationLong) !== roundCoord(originalLong);
     }
 
-    let skillsChanged = false;
+    // Maker profile state
+    let currentMakerBio = data.user.makerBio || "";
+    let makerBioChanged = false;
+    $: makerBioChanged = currentMakerBio !== (data.user.makerBio || "");
+
+    let makerLocationLat: number | null = data.user.lat
+        ? Number(data.user.lat)
+        : null;
+    let makerLocationLong: number | null = data.user.long
+        ? Number(data.user.long)
+        : null;
+    let makerLocationChanged = false;
+    $: {
+        const originalLat = data.user.lat ? Number(data.user.lat) : null;
+        const originalLong = data.user.long ? Number(data.user.long) : null;
+        makerLocationChanged =
+            roundCoord(makerLocationLat) !== roundCoord(originalLat) ||
+            roundCoord(makerLocationLong) !== roundCoord(originalLong);
+    }
+
     let currentSkills = data.user.skills || "";
+    let skillsChanged = false;
     $: skillsChanged = currentSkills !== (data.user.skills || "");
 
+    // Check for unsaved changes
+    $: hasUnsavedChanges =
+        (isPosterEditMode && (bioChanged || posterLocationChanged)) ||
+        (isMakerEditMode &&
+            (makerBioChanged || makerLocationChanged || skillsChanged));
+
+    // Profile picture handling
     let imageChanged = false;
     let currentImageFile: FileList | null = null;
     function handleImageChange(event: Event) {
@@ -51,20 +85,18 @@
         const file = input.files?.[0];
 
         if (file) {
-            // Validate Type
             if (!file.type.startsWith("image/")) {
                 alert("Please select an image file.");
-                input.value = ""; // Reset
+                input.value = "";
                 currentImageFile = null;
                 imageChanged = false;
                 return;
             }
 
-            // Validate Size (Max 5MB)
             const MAX_SIZE = 5 * 1024 * 1024; // 5MB
             if (file.size > MAX_SIZE) {
                 alert("File size must be less than 5MB.");
-                input.value = ""; // Reset
+                input.value = "";
                 currentImageFile = null;
                 imageChanged = false;
                 return;
@@ -77,184 +109,207 @@
             imageChanged = false;
         }
     }
+
+    // Toggle functions with unsaved changes check
+    function toggleViewMode() {
+        if (hasUnsavedChanges) {
+            const confirmed = confirm(
+                "You have unsaved changes. Do you want to discard them and switch profiles?",
+            );
+            if (!confirmed) return;
+
+            // Reset edit modes and changes
+            isPosterEditMode = false;
+            isMakerEditMode = false;
+            resetPosterChanges();
+            resetMakerChanges();
+        }
+        $viewMode = $viewMode === "poster" ? "maker" : "poster";
+    }
+
+    function togglePosterEditMode() {
+        if (!isPosterEditMode) {
+            isPosterEditMode = true;
+        }
+    }
+
+    function cancelPosterEdit() {
+        isPosterEditMode = false;
+        resetPosterChanges();
+    }
+
+    function resetPosterChanges() {
+        currentBio = data.user.bio || "";
+        posterLocationLat = data.user.lat ? Number(data.user.lat) : null;
+        posterLocationLong = data.user.long ? Number(data.user.long) : null;
+    }
+
+    function toggleMakerEditMode() {
+        if (!isMakerEditMode) {
+            isMakerEditMode = true;
+        }
+    }
+
+    function cancelMakerEdit() {
+        isMakerEditMode = false;
+        resetMakerChanges();
+    }
+
+    function resetMakerChanges() {
+        currentMakerBio = data.user.makerBio || "";
+        currentSkills = data.user.skills || "";
+        makerLocationLat = data.user.lat ? Number(data.user.lat) : null;
+        makerLocationLong = data.user.long ? Number(data.user.long) : null;
+    }
 </script>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-4xl mx-auto">
+        <!-- Profile Header (Always Visible) -->
         <div
-            class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg"
+            class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-6"
         >
-            <div class="px-4 py-5 sm:px-6">
-                <h3
-                    class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
-                >
-                    User Profile
-                </h3>
-                <p
-                    class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
-                >
-                    Personal details and preferences.
-                </p>
-            </div>
-            <div
-                class="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-0"
-            >
-                <dl class="sm:divide-y sm:divide-gray-200 dark:divide-gray-700">
-                    <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
-                    >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                        >
-                            Full name
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
+            <div class="px-4 py-5 sm:px-6 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <!-- Profile Picture -->
+                    <div>
+                        {#if user.image}
+                            <img
+                                src={user.image}
+                                alt=""
+                                class="h-20 w-20 rounded-full object-cover ring-4 ring-indigo-100 dark:ring-indigo-900"
+                            />
+                        {:else}
+                            <span
+                                class="inline-block h-20 w-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 ring-4 ring-gray-200 dark:ring-gray-600"
+                            >
+                                <svg
+                                    class="h-full w-full text-gray-300 dark:text-gray-500"
+                                    fill="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
+                                    />
+                                </svg>
+                            </span>
+                        {/if}
+                    </div>
+
+                    <div>
+                        <h1
+                            class="text-2xl font-bold text-gray-900 dark:text-white"
                         >
                             {user.name}
-                        </dd>
-                    </div>
-                    <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
-                    >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                        >
-                            Profile Picture
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
-                        >
-                            <div class="flex items-center space-x-4">
-                                {#if user.image}
-                                    <img
-                                        src={user.image}
-                                        alt=""
-                                        class="h-12 w-12 rounded-full object-cover"
-                                    />
-                                {:else}
-                                    <span
-                                        class="inline-block h-12 w-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700"
-                                    >
-                                        <svg
-                                            class="h-full w-full text-gray-300 dark:text-gray-500"
-                                            fill="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
-                                            />
-                                        </svg>
-                                    </span>
-                                {/if}
-                                <form
-                                    action="?/updateImage"
-                                    method="POST"
-                                    enctype="multipart/form-data"
-                                    use:enhance
-                                >
-                                    <div class="flex items-center space-x-2">
-                                        <input
-                                            type="file"
-                                            name="image"
-                                            accept="image/*"
-                                            class="text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/60"
-                                            onchange={handleImageChange}
-                                        />
-                                        <button
-                                            type="submit"
-                                            class="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
-                                        >
-                                            Update
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </dd>
-                    </div>
-                    <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
-                    >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                        >
-                            Email address
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
+                        </h1>
+                        <p
+                            class="text-sm text-gray-500 dark:text-gray-400 mt-1"
                         >
                             {user.email}
-                        </dd>
-                    </div>
-                    <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
-                    >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        </p>
+
+                        <!-- Update Profile Picture -->
+                        <form
+                            action="?/updateImage"
+                            method="POST"
+                            enctype="multipart/form-data"
+                            use:enhance
+                            class="mt-2"
                         >
-                            Location
-                            <InfoTooltip
-                                text="Used to show you repairs/makers in your neighborhood. We calculate distance but never reveal your exact home address."
-                            />
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
-                        >
-                            <form
-                                action="?/updateLocation"
-                                method="POST"
-                                use:enhance={() => {
-                                    return async ({ result }) => {
-                                        if (result.type === "success") {
-                                            // Reload data from server to get database values as source of truth
-                                            await invalidateAll();
-                                            // Sync local state with the fresh data from server to ensure button resets
-                                            currentLocationLat = data.user.lat
-                                                ? Number(data.user.lat)
-                                                : null;
-                                            currentLocationLong = data.user.long
-                                                ? Number(data.user.long)
-                                                : null;
-                                        }
-                                    };
-                                }}
-                            >
-                                <LocationPicker
-                                    bind:lat={currentLocationLat}
-                                    bind:long={currentLocationLong}
+                            <div class="flex items-center gap-2">
+                                <input
+                                    type="file"
+                                    name="image"
+                                    accept="image/*"
+                                    class="text-xs text-gray-500 dark:text-gray-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/60"
+                                    onchange={handleImageChange}
                                 />
-                                <div class="mt-2 flex justify-end">
-                                    <button
-                                        type="submit"
-                                        disabled={!locationChanged}
-                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white transition-all {locationChanged
-                                            ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-                                            : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
-                                    >
-                                        Update Location
-                                    </button>
-                                </div>
-                            </form>
-                        </dd>
+                                <button
+                                    type="submit"
+                                    class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
+                                >
+                                    Update
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                </div>
+
+                <!-- Poster/Maker Toggle (if user is maker) -->
+                {#if user.maker}
+                    <button
+                        onclick={toggleViewMode}
+                        class="relative flex items-center bg-gray-700 dark:bg-gray-600 rounded-full p-1 w-40 h-10 cursor-pointer transition-colors"
                     >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        <!-- Sliding indicator -->
+                        <div
+                            class="absolute h-8 w-20 bg-white dark:bg-gray-800 rounded-full shadow-md transition-transform duration-200 ease-in-out {$viewMode ===
+                            'maker'
+                                ? 'translate-x-[4.5rem]'
+                                : 'translate-x-0'}"
+                        ></div>
+
+                        <!-- Labels -->
+                        <span
+                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
+                            'poster'
+                                ? 'text-gray-900 dark:text-white'
+                                : 'text-gray-300 dark:text-gray-400'}"
+                        >
+                            Poster
+                        </span>
+                        <span
+                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
+                            'maker'
+                                ? 'text-gray-900 dark:text-white'
+                                : 'text-gray-300 dark:text-gray-400'}"
+                        >
+                            Maker
+                        </span>
+                    </button>
+                {/if}
+            </div>
+        </div>
+
+        <!-- POSTER PROFILE VIEW -->
+        {#if !user.maker || $viewMode === "poster"}
+            <!-- Edit Mode Toggle -->
+            <div
+                class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mb-6"
+            >
+                <div
+                    class="px-4 py-3 sm:px-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between"
+                >
+                    <h2
+                        class="text-lg font-medium text-gray-900 dark:text-white"
+                    >
+                        Personal Information
+                    </h2>
+                    {#if !isPosterEditMode}
+                        <button
+                            onclick={togglePosterEditMode}
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            Edit Profile
+                        </button>
+                    {/if}
+                </div>
+
+                <div class="px-4 py-5 sm:p-6 space-y-6">
+                    <!-- Biography -->
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
                         >
                             Biography
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
-                        >
+                        </label>
+                        {#if isPosterEditMode}
                             <form
                                 action="?/updateBio"
                                 method="POST"
                                 use:enhance={() => {
                                     return async ({ result, update }) => {
                                         if (result.type === "success") {
-                                            // Update the user bio in data to reflect the change
                                             data.user.bio = currentBio;
                                         }
                                         await update({ reset: false });
@@ -266,8 +321,8 @@
                                     bind:value={currentBio}
                                     rows="4"
                                     maxlength="500"
-                                    placeholder="Tell others about yourself and your repair experience..."
-                                    class="block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    placeholder="Tell others about yourself..."
+                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 ></textarea>
                                 <div
                                     class="mt-2 flex items-center justify-between"
@@ -277,289 +332,504 @@
                                     >
                                         {currentBio.length}/500 characters
                                     </span>
-                                    <button
-                                        type="submit"
-                                        disabled={!bioChanged}
-                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white transition-all {bioChanged
-                                            ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-                                            : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
-                                    >
-                                        Update Biography
-                                    </button>
                                 </div>
                             </form>
-                        </dd>
-                    </div>
-                    <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
-                    >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
-                        >
-                            Roles
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
-                        >
-                            <div class="flex flex-col space-y-2">
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 w-fit"
-                                >
-                                    Customer
-                                </span>
-                                {#if user.maker}
-                                    <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200 w-fit"
-                                    >
-                                        Repairer
-                                    </span>
-                                {/if}
-                            </div>
-                        </dd>
-                    </div>
-                    {#if user.maker}
-                        <div
-                            class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
-                        >
-                            <dt
-                                class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        {:else}
+                            <p
+                                class="mt-1 text-sm text-gray-600 dark:text-gray-300"
                             >
-                                Maker Stats
-                            </dt>
-                            <dd
-                                class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
-                            >
-                                <div class="flex flex-col space-y-3">
-                                    <div class="flex items-center gap-2">
-                                        <MakerBadge
-                                            level={user.level}
-                                            showRepairer={false}
-                                        />
-                                        <InfoTooltip>
-                                            <p class="font-semibold mb-2">
-                                                Maker Levels
-                                            </p>
-                                            <ul class="text-xs space-y-1 mb-2">
-                                                <li
-                                                    class={user.level ===
-                                                    "novice"
-                                                        ? "font-semibold text-green-300"
-                                                        : ""}
-                                                >
-                                                    🟢 Novice: 0-5 reviews
-                                                </li>
-                                                <li
-                                                    class={user.level ===
-                                                    "handyman"
-                                                        ? "font-semibold text-blue-300"
-                                                        : ""}
-                                                >
-                                                    🔵 Handyman: 6-20 reviews
-                                                </li>
-                                                <li
-                                                    class={user.level ===
-                                                    "master"
-                                                        ? "font-semibold text-purple-300"
-                                                        : ""}
-                                                >
-                                                    🟣 Master: 21+ reviews
-                                                </li>
-                                            </ul>
-                                            {#if user.completedRepairs !== undefined}
-                                                <p
-                                                    class="text-xs pt-2 border-t border-gray-600"
-                                                >
-                                                    {#if user.level === "novice"}
-                                                        <strong
-                                                            >{6 -
-                                                                user.completedRepairs}</strong
-                                                        >
-                                                        more review{6 -
-                                                            user.completedRepairs !==
-                                                        1
-                                                            ? "s"
-                                                            : ""} to reach Handyman
-                                                    {:else if user.level === "handyman"}
-                                                        <strong
-                                                            >{21 -
-                                                                user.completedRepairs}</strong
-                                                        >
-                                                        more review{21 -
-                                                            user.completedRepairs !==
-                                                        1
-                                                            ? "s"
-                                                            : ""} to reach Master
-                                                    {:else}
-                                                        You've reached the
-                                                        highest level! 🎉
-                                                    {/if}
-                                                </p>
-                                            {/if}
-                                        </InfoTooltip>
-                                    </div>
-                                    {#if averageRating}
-                                        <div class="text-sm">
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200"
-                                            >
-                                                ★ {averageRating.toFixed(1)}
-                                                {#if user.completedRepairs !== undefined}
-                                                    ({user.completedRepairs})
-                                                {/if}
-                                            </span>
-                                        </div>
-                                    {/if}
-                                    {#if reviews && reviews.length > 0}
-                                        <div
-                                            class="text-xs text-gray-600 dark:text-gray-400"
-                                        >
-                                            <p class="font-medium mb-1">
-                                                Recent Reviews:
-                                            </p>
-                                            <ul class="space-y-1">
-                                                {#each reviews.slice(0, 3) as review}
-                                                    <li>
-                                                        ★ {review.rating} - {review.comment ||
-                                                            "No comment"}
-                                                    </li>
-                                                {/each}
-                                            </ul>
-                                        </div>
-                                    {:else}
-                                        <div
-                                            class="text-xs text-gray-500 dark:text-gray-400 italic"
-                                        >
-                                            No reviews yet. Complete repairs to
-                                            earn your first review!
-                                        </div>
-                                    {/if}
-                                </div>
-                            </dd>
-                        </div>
-                    {/if}
-                    <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
-                    >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                                {user.bio || "No biography added yet."}
+                            </p>
+                        {/if}
+                    </div>
+
+                    <!-- Location -->
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2"
                         >
-                            Skills
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
-                        >
-                            <SkillBadges skills={user.skills} />
+                            Home Location
+                            <InfoTooltip
+                                text="Used to show you repairs in your neighborhood. We calculate distance but never reveal your exact home address."
+                            />
+                        </label>
+                        {#if isPosterEditMode}
                             <form
-                                action="?/updateSkills"
+                                action="?/updateLocation"
                                 method="POST"
-                                use:enhance
-                                class="mt-4"
+                                use:enhance={() => {
+                                    return async ({ result }) => {
+                                        if (result.type === "success") {
+                                            await invalidateAll();
+                                            posterLocationLat = data.user.lat
+                                                ? Number(data.user.lat)
+                                                : null;
+                                            posterLocationLong = data.user.long
+                                                ? Number(data.user.long)
+                                                : null;
+                                        }
+                                    };
+                                }}
+                                class="mt-2"
                             >
-                                <SkillSelector
-                                    bind:selectedSkills={currentSkills}
-                                    availableSkills={data.skills.map(
-                                        (s) => s.name,
-                                    )}
+                                <LocationPicker
+                                    bind:lat={posterLocationLat}
+                                    bind:long={posterLocationLong}
                                 />
-                                <div class="mt-2 flex justify-end">
-                                    <button
-                                        type="submit"
-                                        disabled={!skillsChanged}
-                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white transition-all {skillsChanged
-                                            ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-                                            : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
-                                    >
-                                        Update Skills
-                                    </button>
-                                </div>
                             </form>
-                        </dd>
+                        {:else}
+                            <p
+                                class="mt-1 text-sm text-gray-600 dark:text-gray-300"
+                            >
+                                {#if user.lat && user.long}
+                                    Location set
+                                {:else}
+                                    No location set
+                                {/if}
+                            </p>
+                        {/if}
                     </div>
+
+                    <!-- Settings -->
                     <div
-                        class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
+                        class="pt-4 border-t border-gray-200 dark:border-gray-700"
                     >
-                        <dt
-                            class="text-sm font-medium text-gray-500 dark:text-gray-400"
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
                         >
-                            Settings
-                        </dt>
-                        <dd
-                            class="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2"
+                            Account Settings
+                        </label>
+                        <form action="?/toggleMaker" method="POST" use:enhance>
+                            <button
+                                type="submit"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                                {user.maker
+                                    ? "Stop offering repair services"
+                                    : "I want to offer repair services"}
+                            </button>
+                            <p
+                                class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+                            >
+                                {user.maker
+                                    ? "You will no longer be listed as a repairer, but you can still post items."
+                                    : "Enabling this will allow you to make offers on posts."}
+                            </p>
+                        </form>
+                    </div>
+
+                    <!-- Save/Cancel Buttons -->
+                    {#if isPosterEditMode}
+                        <div
+                            class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700"
                         >
+                            <button
+                                onclick={cancelPosterEdit}
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+
+                            <!-- Save Bio Button -->
                             <form
-                                action="?/toggleMaker"
+                                action="?/updateBio"
                                 method="POST"
-                                use:enhance
+                                use:enhance={() => {
+                                    return async ({ result, update }) => {
+                                        if (result.type === "success") {
+                                            data.user.bio = currentBio;
+                                            isPosterEditMode = false;
+                                        }
+                                        await update({ reset: false });
+                                    };
+                                }}
+                                class="inline"
                             >
                                 <button
                                     type="submit"
-                                    class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    disabled={!bioChanged &&
+                                        !posterLocationChanged}
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white transition-all {bioChanged ||
+                                    posterLocationChanged
+                                        ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                        : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
                                 >
-                                    {user.maker
-                                        ? "Stop offering repair services"
-                                        : "I want to offer repair services"}
+                                    Save Changes
                                 </button>
-                                <p
-                                    class="mt-2 text-xs text-gray-500 dark:text-gray-400"
-                                >
-                                    {user.maker
-                                        ? "You will no longer be listed as a repairer, but you can still post items."
-                                        : "Enabling this will allow you to make offers on posts."}
-                                </p>
                             </form>
-                        </dd>
-                    </div>
-                </dl>
+                        </div>
+                    {/if}
+                </div>
             </div>
-        </div>
 
-        <div
-            class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mt-8"
-        >
-            <div class="px-4 py-5 sm:px-6">
-                <h3
-                    class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+            <!-- Archive Section -->
+            {#if archivedPosts && archivedPosts.length > 0}
+                <div
+                    class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg"
                 >
-                    My Posts
-                </h3>
-                <p
-                    class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
-                >
-                    Manage your repair requests.
-                </p>
-            </div>
-            <div class="border-t border-gray-200">
-                {#if userPosts.length === 0}
-                    <div
-                        class="px-4 py-5 sm:px-6 text-center text-gray-500 dark:text-gray-400 italic"
-                    >
-                        You haven't posted anything yet.
+                    <div class="px-4 py-5 sm:px-6">
+                        <h3
+                            class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                        >
+                            Archive
+                        </h3>
+                        <p
+                            class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
+                        >
+                            Your completed repair requests.
+                        </p>
                     </div>
-                {:else}
-                    <ul
-                        role="list"
-                        class="divide-y divide-gray-200 dark:divide-gray-700"
+                    <div class="border-t border-gray-200 dark:border-gray-700">
+                        <ul
+                            role="list"
+                            class="divide-y divide-gray-200 dark:divide-gray-700"
+                        >
+                            {#each archivedPosts as post}
+                                <li
+                                    class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                    onclick={() => goto(`/post/${post.id}`)}
+                                >
+                                    <div
+                                        class="flex items-center justify-between"
+                                    >
+                                        <div class="flex items-center flex-1">
+                                            <div
+                                                class="flex-shrink-0 h-10 w-10"
+                                            >
+                                                {#if post.imageUrl}
+                                                    <img
+                                                        class="h-10 w-10 rounded-full object-cover"
+                                                        src={post.imageUrl}
+                                                        alt=""
+                                                    />
+                                                {:else}
+                                                    <div
+                                                        class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                                                    >
+                                                        <svg
+                                                            class="h-6 w-6 text-gray-400 dark:text-gray-500"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                            <div class="ml-4 flex-1">
+                                                <div
+                                                    class="flex items-center justify-between"
+                                                >
+                                                    <div>
+                                                        <div
+                                                            class="text-sm font-medium text-gray-900 dark:text-white"
+                                                        >
+                                                            {post.title}
+                                                        </div>
+                                                        <div
+                                                            class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                                        >
+                                                            {#if post.makerName}
+                                                                Repaired by {post.makerName}
+                                                            {:else}
+                                                                Status: {post.status}
+                                                            {/if}
+                                                            • {new Date(
+                                                                post.createdAt,
+                                                            ).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <span
+                                                        class="px-2 py-1 text-xs font-medium rounded-full {post.status ===
+                                                        'fixed'
+                                                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}"
+                                                    >
+                                                        {post.status === "fixed"
+                                                            ? "Fixed"
+                                                            : "Closed"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            {/each}
+                        </ul>
+                    </div>
+                </div>
+            {/if}
+
+            <!-- MAKER PROFILE VIEW -->
+        {:else if user.maker && $viewMode === "maker"}
+            <!-- Maker Info Section -->
+            <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg mb-6">
+                <div
+                    class="px-4 py-3 sm:px-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between"
+                >
+                    <h2
+                        class="text-lg font-medium text-gray-900 dark:text-white"
                     >
-                        {#each userPosts as post}
-                            <li
-                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                                onclick={() => goto(`/post/${post.id}`)}
+                        Maker Information
+                    </h2>
+                    {#if !isMakerEditMode}
+                        <button
+                            onclick={toggleMakerEditMode}
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                            Edit Profile
+                        </button>
+                    {/if}
+                </div>
+
+                <div class="px-4 py-5 sm:p-6 space-y-6">
+                    <!-- Maker Stats (Read-only) -->
+                    <div
+                        class="flex items-center gap-6 pb-6 border-b border-gray-200 dark:border-gray-700"
+                    >
+                        <div class="flex items-center">
+                            <MakerBadge level={user.level} />
+                            <InfoTooltip
+                                text="Levels: Novice (0-5 repairs), Handyman (6-20 repairs), Master (21+ repairs)"
+                            />
+                        </div>
+                        <div class="flex-1 grid grid-cols-2 gap-4">
+                            <div>
+                                <p
+                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                >
+                                    Completed Repairs
+                                </p>
+                                <p
+                                    class="text-2xl font-bold text-gray-900 dark:text-white"
+                                >
+                                    {user.completedRepairs || 0}
+                                </p>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-sm text-gray-500 dark:text-gray-400"
+                                >
+                                    Average Rating
+                                </p>
+                                <p
+                                    class="text-2xl font-bold text-gray-900 dark:text-white"
+                                >
+                                    {#if averageRating}
+                                        ⭐ {averageRating.toFixed(1)}
+                                    {:else}
+                                        No ratings yet
+                                    {/if}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Maker Biography -->
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                            Maker Biography
+                        </label>
+                        {#if isMakerEditMode}
+                            <textarea
+                                name="makerBio"
+                                bind:value={currentMakerBio}
+                                rows="4"
+                                maxlength="500"
+                                placeholder="Tell others about your repair skills and services..."
+                                class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            ></textarea>
+                            <div class="mt-2 flex items-center justify-between">
+                                <span
+                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                >
+                                    {currentMakerBio.length}/500 characters
+                                </span>
+                            </div>
+                        {:else}
+                            <p
+                                class="mt-1 text-sm text-gray-600 dark:text-gray-300"
                             >
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center">
-                                        <div class="flex-shrink-0 h-10 w-10">
-                                            {#if post.imageUrl}
+                                {user.makerBio ||
+                                    "No maker biography added yet."}
+                            </p>
+                        {/if}
+                    </div>
+
+                    <!-- Skills -->
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                        >
+                            Skills
+                        </label>
+                        {#if isMakerEditMode}
+                            <SkillSelector
+                                availableSkills={skills}
+                                bind:selectedSkills={currentSkills}
+                            />
+                        {:else if user.skills}
+                            <SkillBadges skills={user.skills} />
+                        {:else}
+                            <p
+                                class="text-sm text-gray-500 dark:text-gray-400 italic"
+                            >
+                                No skills added yet.
+                            </p>
+                        {/if}
+                    </div>
+
+                    <!-- Location -->
+                    <div>
+                        <label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                        >
+                            Location
+                            <InfoTooltip
+                                text="Your base location. This is used to match you with nearby repair requests."
+                            />
+                        </label>
+                        {#if isMakerEditMode}
+                            <div class="mt-2">
+                                <LocationPicker
+                                    bind:lat={makerLocationLat}
+                                    bind:long={makerLocationLong}
+                                />
+                            </div>
+                        {:else if user.lat && user.long}
+                            <div class="mt-2">
+                                <LocationPicker
+                                    lat={user.lat}
+                                    long={user.long}
+                                    readonly={true}
+                                />
+                            </div>
+                        {:else}
+                            <p
+                                class="mt-1 text-sm text-gray-600 dark:text-gray-300"
+                            >
+                                No location set
+                            </p>
+                        {/if}
+                    </div>
+
+                    <!-- Save/Cancel Buttons -->
+                    {#if isMakerEditMode}
+                        <div
+                            class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700"
+                        >
+                            <button
+                                onclick={cancelMakerEdit}
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+
+                            <!-- Combined Save Button -->
+                            <form
+                                action="?/updateMakerBio"
+                                method="POST"
+                                use:enhance={({ formData }) => {
+                                    // Add all maker fields to form data
+                                    formData.set("makerBio", currentMakerBio);
+                                    if (skillsChanged) {
+                                        formData.set("skills", currentSkills);
+                                    }
+                                    if (makerLocationChanged) {
+                                        formData.set(
+                                            "lat",
+                                            makerLocationLat?.toString() || "",
+                                        );
+                                        formData.set(
+                                            "long",
+                                            makerLocationLong?.toString() || "",
+                                        );
+                                    }
+
+                                    return async ({ result, update }) => {
+                                        if (result.type === "success") {
+                                            // Update all fields
+                                            data.user.makerBio =
+                                                currentMakerBio;
+                                            if (skillsChanged)
+                                                data.user.skills =
+                                                    currentSkills;
+                                            await invalidateAll();
+                                            isMakerEditMode = false;
+                                        }
+                                        await update({ reset: false });
+                                    };
+                                }}
+                                class="inline"
+                            >
+                                <button
+                                    type="submit"
+                                    disabled={!makerBioChanged &&
+                                        !skillsChanged &&
+                                        !makerLocationChanged}
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white transition-all {makerBioChanged ||
+                                    skillsChanged ||
+                                    makerLocationChanged
+                                        ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                        : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
+                                >
+                                    Save Changes
+                                </button>
+                            </form>
+                        </div>
+                    {/if}
+                </div>
+            </div>
+
+            <!-- Completed Projects Archive -->
+            {#if completedProjects && completedProjects.length > 0}
+                <div
+                    class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg"
+                >
+                    <div class="px-4 py-5 sm:px-6">
+                        <h3
+                            class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                        >
+                            Completed Projects & Reviews
+                        </h3>
+                        <p
+                            class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
+                        >
+                            Your repair history and reviews.
+                        </p>
+                    </div>
+                    <div class="border-t border-gray-200 dark:border-gray-700">
+                        <ul
+                            role="list"
+                            class="divide-y divide-gray-200 dark:divide-gray-700"
+                        >
+                            {#each completedProjects as project}
+                                <li
+                                    class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                    onclick={() => goto(`/post/${project.id}`)}
+                                >
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 h-16 w-16">
+                                            {#if project.imageUrl}
                                                 <img
-                                                    class="h-10 w-10 rounded-full object-cover"
-                                                    src={post.imageUrl}
+                                                    class="h-16 w-16 rounded-lg object-cover"
+                                                    src={project.imageUrl}
                                                     alt=""
                                                 />
                                             {:else}
                                                 <div
-                                                    class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                                                    class="h-16 w-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
                                                 >
                                                     <svg
-                                                        class="h-6 w-6 text-gray-400 dark:text-gray-500"
+                                                        class="h-8 w-8 text-gray-400 dark:text-gray-500"
                                                         fill="none"
                                                         viewBox="0 0 24 24"
                                                         stroke="currentColor"
@@ -574,321 +844,97 @@
                                                 </div>
                                             {/if}
                                         </div>
-                                        <div class="ml-4">
+                                        <div class="flex-1 min-w-0">
                                             <div
-                                                class="text-sm font-medium text-indigo-600 dark:text-indigo-400 truncate max-w-xs sm:max-w-sm"
+                                                class="flex items-start justify-between"
                                             >
-                                                <a
-                                                    href="/post/{post.id}"
-                                                    class="hover:underline"
+                                                <div class="flex-1">
+                                                    <p
+                                                        class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                                                    >
+                                                        {project.title}
+                                                    </p>
+                                                    <p
+                                                        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        For {project.posterName}
+                                                        • {new Date(
+                                                            project.createdAt,
+                                                        ).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
                                                 >
-                                                    {post.title}
-                                                </a>
+                                                    {project.status === "fixed"
+                                                        ? "Fixed"
+                                                        : "Completed"}
+                                                </span>
                                             </div>
-                                            <div
-                                                class="text-xs text-gray-500 dark:text-gray-400"
-                                            >
-                                                {new Date(
-                                                    post.createdAt,
-                                                ).toLocaleDateString()}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="flex items-center space-x-2 sm:space-x-4"
-                                    >
-                                        <div
-                                            class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block capitalize"
-                                        >
-                                            {post.status.replace("_", " ")}
-                                        </div>
 
-                                        {#if post.status === "open"}
-                                            <form
-                                                action="?/cancelPost"
-                                                method="POST"
-                                                use:enhance
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="postId"
-                                                    value={post.id}
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                    onclick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (
-                                                            !confirm(
-                                                                "Are you sure you want to cancel this post? It will be closed.",
-                                                            )
-                                                        )
-                                                            e.preventDefault();
-                                                    }}
+                                            {#if project.review}
+                                                <div
+                                                    class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
                                                 >
-                                                    Cancel
-                                                </button>
-                                            </form>
-                                        {:else if post.status === "in_progress"}
-                                            <form
-                                                action="?/markFixed"
-                                                method="POST"
-                                                use:enhance
-                                                class="inline-flex"
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="postId"
-                                                    value={post.id}
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    class="inline-flex items-center px-2 py-1.5 border border-transparent text-xs font-medium rounded text-green-700 bg-green-100 hover:bg-green-200"
-                                                    onclick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (
-                                                            !confirm(
-                                                                "Mark as fixed?",
-                                                            )
-                                                        )
-                                                            e.preventDefault();
-                                                    }}
+                                                    <div
+                                                        class="flex items-center gap-2"
+                                                    >
+                                                        <span
+                                                            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                                                        >
+                                                            Review:
+                                                        </span>
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <span
+                                                                class="text-yellow-400"
+                                                            >
+                                                                {"⭐".repeat(
+                                                                    Math.round(
+                                                                        Number(
+                                                                            project
+                                                                                .review
+                                                                                .rating,
+                                                                        ),
+                                                                    ),
+                                                                )}
+                                                            </span>
+                                                            <span
+                                                                class="ml-1 text-sm text-gray-600 dark:text-gray-400"
+                                                            >
+                                                                {Number(
+                                                                    project
+                                                                        .review
+                                                                        .rating,
+                                                                ).toFixed(1)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {#if project.review.comment}
+                                                        <p
+                                                            class="mt-2 text-sm text-gray-600 dark:text-gray-300"
+                                                        >
+                                                            "{project.review
+                                                                .comment}"
+                                                        </p>
+                                                    {/if}
+                                                </div>
+                                            {:else}
+                                                <p
+                                                    class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic"
                                                 >
-                                                    Fixed
-                                                </button>
-                                            </form>
-                                            <form
-                                                action="?/unassignMaker"
-                                                method="POST"
-                                                use:enhance
-                                                class="inline-flex"
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="postId"
-                                                    value={post.id}
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    class="inline-flex items-center px-2 py-1.5 border border-transparent text-xs font-medium rounded text-orange-700 bg-orange-100 hover:bg-orange-200"
-                                                    onclick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (
-                                                            !confirm(
-                                                                "Unassign maker? This will reopen the post.",
-                                                            )
-                                                        )
-                                                            e.preventDefault();
-                                                    }}
-                                                >
-                                                    Unassign
-                                                </button>
-                                            </form>
-                                        {:else if post.status === "fixed"}
-                                            <a
-                                                href="/post/{post.id}#review"
-                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-                                            >
-                                                Review
-                                            </a>
-                                        {/if}
-                                    </div>
-                                </div>
-                            </li>
-                        {/each}
-                    </ul>
-                {/if}
-            </div>
-        </div>
-
-        {#if user.maker && userOffers && userOffers.length > 0}
-            <div
-                class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mt-8"
-            >
-                <div class="px-4 py-5 sm:px-6">
-                    <h3
-                        class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
-                    >
-                        My Offers
-                    </h3>
-                    <p
-                        class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
-                    >
-                        Offers you have made on repair requests.
-                    </p>
-                </div>
-                <div class="border-t border-gray-200 dark:border-gray-700">
-                    <ul
-                        role="list"
-                        class="divide-y divide-gray-200 dark:divide-gray-700"
-                    >
-                        {#each userOffers as offer}
-                            <li
-                                class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <div class="flex items-center justify-between">
-                                    <div class="flex flex-col">
-                                        <div
-                                            class="text-sm font-medium text-indigo-600 dark:text-indigo-400 truncate max-w-xs sm:max-w-sm"
-                                        >
-                                            <a
-                                                href="/post/{offer.postId}"
-                                                class="hover:underline"
-                                            >
-                                                {offer.postTitle ||
-                                                    "Unknown Post"}
-                                            </a>
-                                        </div>
-                                        <div
-                                            class="text-xs text-gray-500 dark:text-gray-400"
-                                        >
-                                            Offer: €{offer.price}
-                                        </div>
-                                        <div
-                                            class="text-xs text-gray-400 dark:text-gray-500"
-                                        >
-                                            Status: {offer.postStatus}
+                                                    No review yet
+                                                </p>
+                                            {/if}
                                         </div>
                                     </div>
-                                    <div>
-                                        {#if offer.postStatus === "open"}
-                                            <form
-                                                action="?/cancelOffer"
-                                                method="POST"
-                                                use:enhance
-                                            >
-                                                <input
-                                                    type="hidden"
-                                                    name="offerId"
-                                                    value={offer.id}
-                                                />
-                                                <button
-                                                    type="submit"
-                                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                                    onclick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (
-                                                            !confirm(
-                                                                "Withdraw this offer?",
-                                                            )
-                                                        )
-                                                            e.preventDefault();
-                                                    }}
-                                                >
-                                                    Withdraw
-                                                </button>
-                                            </form>
-                                        {:else if offer.postStatus === "fixed"}
-                                            <a
-                                                href="/post/{offer.postId}#review"
-                                                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
-                                            >
-                                                Review
-                                            </a>
-                                        {:else}
-                                            <span
-                                                class="text-xs text-gray-400 italic"
-                                                >Cannot withdraw</span
-                                            >
-                                        {/if}
-                                    </div>
-                                </div>
-                            </li>
-                        {/each}
-                    </ul>
+                                </li>
+                            {/each}
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        {/if}
-
-        {#if incomingRequests.length > 0}
-            <div
-                class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg mt-8"
-            >
-                <div class="px-4 py-5 sm:px-6">
-                    <h3
-                        class="text-lg leading-6 font-medium text-gray-900 dark:text-white"
-                    >
-                        Incoming Contact Requests
-                    </h3>
-                    <p
-                        class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400"
-                    >
-                        Other users want to see your contact details.
-                    </p>
-                </div>
-                <div class="border-t border-gray-200 dark:border-gray-700">
-                    <ul
-                        role="list"
-                        class="divide-y divide-gray-200 dark:divide-gray-700"
-                    >
-                        {#each incomingRequests as req}
-                            <li class="px-4 py-4 sm:px-6" id="request-{req.id}">
-                                <div class="flex items-center justify-between">
-                                    <div
-                                        class="text-sm font-medium text-indigo-600 dark:text-indigo-400 truncate"
-                                    >
-                                        <a
-                                            href={`/user/${req.requesterId}`}
-                                            class="hover:underline"
-                                        >
-                                            {req.requesterName}
-                                        </a>
-                                    </div>
-                                    <div
-                                        class="ml-2 flex-shrink-0 flex space-x-2"
-                                    >
-                                        <form
-                                            action="?/respondRequest"
-                                            method="POST"
-                                            use:enhance
-                                        >
-                                            <input
-                                                type="hidden"
-                                                name="requestId"
-                                                value={req.id}
-                                            />
-                                            <input
-                                                type="hidden"
-                                                name="status"
-                                                value="accepted"
-                                            />
-                                            <button
-                                                type="submit"
-                                                class="px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                            >
-                                                Accept
-                                            </button>
-                                        </form>
-                                        <form
-                                            action="?/respondRequest"
-                                            method="POST"
-                                            use:enhance
-                                        >
-                                            <input
-                                                type="hidden"
-                                                name="requestId"
-                                                value={req.id}
-                                            />
-                                            <input
-                                                type="hidden"
-                                                name="status"
-                                                value="denied"
-                                            />
-                                            <button
-                                                type="submit"
-                                                class="px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                                            >
-                                                Deny
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </li>
-                        {/each}
-                    </ul>
-                </div>
-            </div>
+            {/if}
         {/if}
     </div>
 </div>

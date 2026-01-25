@@ -25,33 +25,58 @@ export const load: PageServerLoad = async ({ locals }) => {
         return { ...req, requesterName: requester?.name };
     }));
 
+    // Fetch all user posts
     const userPosts = await PostRepository.findByUserId(userId);
     
-    let userOffers: any[] = [];
+    // Filter archived posts
+    const archivedPosts = userPosts.filter(p => p.status === 'fixed' || p.status === 'closed');
+    
+    // Fetch archived posts with maker information
+    const archivedPostsWithMaker = await Promise.all(archivedPosts.map(async (post) => {
+        if (post.makerId) {
+            const maker = await UserRepository.getById(post.makerId);
+            return { ...post, makerName: maker?.name, makerImage: maker?.image };
+        }
+        return post;
+    }));
+
+    let activeOffers: any[] = [];
+    let completedProjects: any[] = [];
+    
     if (user.maker) {
-        const offers = await OfferRepository.getByMakerId(userId);
-        userOffers = await Promise.all(offers.map(async (offer) => {
-            const post = await PostRepository.getById(offer.postId);
-            return { ...offer, postTitle: post?.title, postStatus: post?.status };
+        // Get completed projects (where user was the assigned maker)
+        const completedProjectPosts = await PostRepository.findByMakerId(userId);
+        const completedFiltered = completedProjectPosts.filter(p => p.status === 'fixed' || p.status === 'closed');
+        
+        // Fetch review for each completed project
+        completedProjects = await Promise.all(completedFiltered.map(async (post) => {
+            const review = await ReviewRepository.getByPostId(post.id);
+            const poster = await UserRepository.getById(post.userId);
+            return { 
+                ...post, 
+                review: review ? review[0] : null,
+                posterName: poster?.name,
+                posterImage: poster?.image
+            };
         }));
     }
 
-    const skills = await SkillRepository.getActive();
+    const activeSkills = await SkillRepository.getActive();
+    const skills = activeSkills.map(s => s.name);
 
     // Calculate level and reviews for maker
     const completedRepairs = await UserRepository.countCompletedRepairs(userId);
     const level = UserRepository.calculateLevel(completedRepairs);
     const averageRating = await ReviewRepository.getAverageRating(userId);
-    const reviews = await ReviewRepository.getByTargetUserId(userId);
+    // reviews list removed as it is shown in completedProjects
 
     return {
         user: { ...user, completedRepairs, level },
         incomingRequests: requestsWithUsers,
-        userPosts,
-        userOffers,
+        archivedPosts: archivedPostsWithMaker,
+        completedProjects,
         skills,
-        averageRating,
-        reviews
+        averageRating
     };
 };
 
@@ -255,6 +280,19 @@ export const actions = {
 
         await UserRepository.update(userId, {
             bio: bio.trim().substring(0, 500) // Limit to 500 chars
+        });
+
+        return { success: true };
+    },
+    updateMakerBio: async ({ request, locals }) => {
+        if (!locals.user) throw redirect(303, '/login');
+        const userId = locals.user.id;
+
+        const formData = await request.formData();
+        const makerBio = formData.get('makerBio') as string || '';
+
+        await UserRepository.update(userId, {
+            makerBio: makerBio.trim().substring(0, 500) // Limit to 500 chars
         });
 
         return { success: true };

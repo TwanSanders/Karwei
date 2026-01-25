@@ -117,7 +117,7 @@
 
     <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
-            {#if data.currentUser?.maker}
+            {#if data.currentUser?.maker && !isOwner}
                 <div class="mb-8">
                     <RepairAgentChat {post} />
                 </div>
