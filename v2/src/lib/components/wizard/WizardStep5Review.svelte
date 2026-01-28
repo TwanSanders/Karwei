@@ -1,6 +1,9 @@
 <script lang="ts">
     import LocationPicker from "$lib/components/LocationPicker.svelte";
 
+    import type { Skill } from "$lib/domain/types";
+
+    export let availableSkills: Skill[] = [];
     export let formData: {
         category: string;
         title: string;
@@ -11,6 +14,10 @@
         long: number | null;
     };
     export let onEdit: (step: number) => void;
+
+    $: categoryName =
+        availableSkills.find((s) => s.id === formData.category)?.name ||
+        formData.category;
 </script>
 
 <div class="space-y-6">
@@ -35,7 +42,7 @@
                     Category
                 </h3>
                 <p class="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formData.category}
+                    {categoryName}
                 </p>
             </div>
             <button

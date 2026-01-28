@@ -67,9 +67,17 @@
             roundCoord(makerLocationLong) !== roundCoord(originalLong);
     }
 
-    let currentSkills = data.user.skills || "";
+    let currentSkillIds: string[] = data.user.skills?.map((s) => s.id) || [];
     let skillsChanged = false;
-    $: skillsChanged = currentSkills !== (data.user.skills || "");
+    $: {
+        const originalIds =
+            data.user.skills
+                ?.map((s) => s.id)
+                .sort()
+                .join(",") || "";
+        const newIds = [...currentSkillIds].sort().join(",");
+        skillsChanged = originalIds !== newIds;
+    }
 
     // Check for unsaved changes
     $: hasUnsavedChanges =
@@ -157,7 +165,7 @@
 
     function resetMakerChanges() {
         currentMakerBio = data.user.makerBio || "";
-        currentSkills = data.user.skills || "";
+        currentSkillIds = data.user.skills?.map((s) => s.id) || [];
         makerLocationLat = data.user.lat ? Number(data.user.lat) : null;
         makerLocationLong = data.user.long ? Number(data.user.long) : null;
     }
@@ -674,9 +682,9 @@
                         {#if isMakerEditMode}
                             <SkillSelector
                                 availableSkills={skills}
-                                bind:selectedSkills={currentSkills}
+                                bind:selectedSkills={currentSkillIds}
                             />
-                        {:else if user.skills}
+                        {:else if user.skills && user.skills.length > 0}
                             <SkillBadges skills={user.skills} />
                         {:else}
                             <p
@@ -741,7 +749,10 @@
                                     // Add all maker fields to form data
                                     formData.set("makerBio", currentMakerBio);
                                     if (skillsChanged) {
-                                        formData.set("skills", currentSkills);
+                                        formData.set(
+                                            "skillIds",
+                                            currentSkillIds.join(","),
+                                        );
                                     }
                                     if (makerLocationChanged) {
                                         formData.set(
@@ -759,9 +770,7 @@
                                             // Update all fields
                                             data.user.makerBio =
                                                 currentMakerBio;
-                                            if (skillsChanged)
-                                                data.user.skills =
-                                                    currentSkills;
+
                                             await invalidateAll();
                                             isMakerEditMode = false;
                                         }

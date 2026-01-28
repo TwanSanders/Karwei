@@ -2,16 +2,21 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  emailVerified?: Date | null;
   phoneNumber?: string | null;
   image?: string | null;
-  skills?: string | null; // Comma separated
+  skills?: Skill[]; // Changed from string | null to Skill[]
   lat?: number | null; // Converted from decimal
   long?: number | null;
   bio?: string | null;
+  makerBio?: string | null;
   maker: boolean;
   createdAt: Date;
+  updatedAt?: Date;
   level?: 'novice' | 'handyman' | 'master';
   completedRepairs?: number;
+  averageRating?: number | null;
+  distance?: number; // For location-based queries
 }
 
 export interface Post {

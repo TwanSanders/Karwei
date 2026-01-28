@@ -35,6 +35,12 @@ Key relationships:
   - `userId`: The Requester (Owner).
   - `makerId`: The assigned Repairer (nullable until assigned).
   - `status`: `open` | `in_progress` | `fixed` | `closed`.
+- **Skill**: Available repair categories and expertise areas.
+  - Each skill has an `icon` for visual display.
+  - Skills are normalized into their own table.
+- **Users-to-Skills**: Junction table for many-to-many relationship.
+  - Links users (makers) to their skills via `userId` and `skillId`.
+  - Enables efficient skill-based filtering and querying.
 - **Offer**: 
   - Connects `makerId` -> `postId`.
   - Represents a bid. One Post can have multiple Offers.
@@ -67,6 +73,8 @@ Key relationships:
   - `PostRepository`: Handles post lifecycle mutations and location-based fetching.
   - `ReviewRepository`: Handles review creation and rating aggregation.
   - `NotificationRepository`: Handles creation and retrieval of user notifications.
+  - `SkillRepository`: Manages skill catalog (list active skills).
+  - `UserSkillRepository`: Manages user-skill relationships (batch fetching, atomic updates).
 
 ### Security
 - **Authentication**: Session-based auth using cookies.

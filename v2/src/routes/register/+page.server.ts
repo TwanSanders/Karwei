@@ -2,7 +2,17 @@ import { fail, redirect } from '@sveltejs/kit';
 import { lucia } from "$lib/server/auth";
 import type { Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
+import { UserSkillRepository } from '$lib/server/repositories/userSkillRepository';
 import { AuthService } from '$lib/server/services/authService';
+import { db } from '$lib/server/db';
+import { skillsTable } from '$lib/server/db/schema';
+
+export const load = async () => {
+    const skills = await db.select().from(skillsTable).orderBy(skillsTable.displayOrder);
+    return {
+        skills
+    };
+};
 
 export const actions = {
   default: async ({ request, cookies }: { request: Request, cookies: any }) => {
@@ -15,6 +25,16 @@ export const actions = {
     const isMaker = data.get('role_maker') === 'on';
     const lat = data.get('lat') ? parseFloat(data.get('lat') as string) : null;
     const long = data.get('long') ? parseFloat(data.get('long') as string) : null;
+    const skillIdsJson = data.get('skillIds') as string;
+    let skillIds: string[] = [];
+
+    if (skillIdsJson) {
+        try {
+            skillIds = JSON.parse(skillIdsJson);
+        } catch (e) {
+            console.error("Failed to parse skillIds", e);
+        }
+    }
 
     if (!name || !email || !password || !phoneNumber) {
       return fail(400, { name, email, phoneNumber, missing: true });
@@ -71,8 +91,12 @@ export const actions = {
         image: imageUrl, // Add image url
         // Default values for other fields
         bio: '',
-        skills: '' // Skills can be added later in profile
+        skills: '' // Legacy skills field, we use junction table now
     });
+
+    if (newUser && isMaker && skillIds.length > 0) {
+        await UserSkillRepository.setUserSkills(newUser.id, skillIds);
+    }
 
     if (!newUser) {
         return fail(500, { error: true });

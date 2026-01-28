@@ -24,9 +24,7 @@
         data.user?.skills &&
         makerSkillsFilter.length === 0
     ) {
-        makerSkillsFilter = data.user.skills
-            .split(",")
-            .map((s: string) => s.trim());
+        makerSkillsFilter = data.user.skills.map((s) => s.id);
     }
 
     async function setLocationMode(mode: "home" | "current") {
@@ -81,11 +79,11 @@
         }, 300);
     }
 
-    function toggleMakerSkill(skill: string) {
-        if (makerSkillsFilter.includes(skill)) {
-            makerSkillsFilter = makerSkillsFilter.filter((s) => s !== skill);
+    function toggleMakerSkill(skillId: string) {
+        if (makerSkillsFilter.includes(skillId)) {
+            makerSkillsFilter = makerSkillsFilter.filter((s) => s !== skillId);
         } else {
-            makerSkillsFilter = [...makerSkillsFilter, skill];
+            makerSkillsFilter = [...makerSkillsFilter, skillId];
         }
         updateMakerFilter();
     }
@@ -637,14 +635,17 @@
                     <div class="flex flex-wrap gap-2">
                         {#each data.skills || [] as skill}
                             <button
-                                on:click={() => toggleMakerSkill(skill)}
-                                class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 {makerSkillsFilter.includes(
-                                    skill,
+                                on:click={() => toggleMakerSkill(skill.id)}
+                                class="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 {makerSkillsFilter.includes(
+                                    skill.id,
                                 )
                                     ? 'bg-indigo-600 text-white shadow-md'
                                     : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}"
                             >
-                                {skill}
+                                {#if skill.icon}
+                                    <span>{skill.icon}</span>
+                                {/if}
+                                {skill.name}
                             </button>
                         {/each}
                     </div>

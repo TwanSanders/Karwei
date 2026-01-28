@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, varchar, decimal, integer, pgSchema } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, varchar, decimal, integer, pgSchema, primaryKey, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const karweiSchema = pgSchema("karwei");
@@ -107,6 +107,19 @@ export const skillsTable = karweiSchema.table("skill", {
 	active: boolean("active").default(true),
 	createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const usersToSkillsTable = karweiSchema.table("users_to_skills", {
+	userId: text("user_id")
+		.notNull()
+		.references(() => usersTable.id, { onDelete: 'cascade' }),
+	skillId: text("skill_id")
+		.notNull()
+		.references(() => skillsTable.id, { onDelete: 'cascade' }),
+}, (t) => ({
+	pk: primaryKey({ columns: [t.userId, t.skillId] }),
+	userIdIdx: index("users_to_skills_user_id_idx").on(t.userId),
+	skillIdIdx: index("users_to_skills_skill_id_idx").on(t.skillId),
+}));
 
 export const conversationsTable = karweiSchema.table("conversation", {
 	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),

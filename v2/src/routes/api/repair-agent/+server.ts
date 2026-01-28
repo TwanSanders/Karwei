@@ -3,10 +3,9 @@ import { GEMINI_API_KEY } from "$env/static/private";
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { AIConversationRepository } from "$lib/server/repositories/aiChatRepository";
-
-
-
-import { AIConversationRepository } from "$lib/server/repositories/aiChatRepository";
+import { db } from "$lib/server/db";
+import { skillsTable } from "$lib/server/db/schema";
+import { eq } from "drizzle-orm";
 
 export const GET: RequestHandler = async ({ url, locals }) => {
     const userId = locals.user?.id;
@@ -86,9 +85,23 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         // 2. Save User Message
         await AIConversationRepository.addMessage(conversationId, 'user', message);
 
+        // Resolve Category Name if it's an ID
+        let categoryDisplay = postContext.type || "General";
+        try {
+            if (postContext.type && postContext.type.includes('-')) { // Basic uuid check
+                 const skill = await db.select().from(skillsTable).where(eq(skillsTable.id, postContext.type)).limit(1);
+                 if (skill.length > 0) {
+                     categoryDisplay = skill[0].name;
+                 }
+            }
+        } catch (e) {
+            console.error("Failed to resolve skill name", e);
+        }
+
         // Construct System Prompt
         const systemPrompt = `You are a Repair Diagnostic Assistant helping a skilled maker fix: **${postContext.title}**
         
+**Category**: ${categoryDisplay}
 **Description**: ${postContext.description}
 **Budget**: ${postContext.targetPrice ? `€${postContext.targetPrice}` : "Not specified"}
 ${postContext.imageUrl ? "**Image**: Provided (analyze it if new)" : ""}
@@ -103,8 +116,9 @@ ${postContext.imageUrl ? "**Image**: Provided (analyze it if new)" : ""}
         // 3. Prepare Gemini Context
         const model = genAI.getGenerativeModel({ 
             model: "gemini-2.5-flash",
-            tools: [{ googleSearch: {} }], // Re-enabled for links
+            // tools: [{ googleSearch: {} }], // Disabled due to type issues
             systemInstruction: {
+                role: 'system',
                 parts: [{ text: systemPrompt }]
             }
         });

@@ -3,6 +3,7 @@
     import type { PageData } from "./$types";
     import MakerBadge from "$lib/components/MakerBadge.svelte";
     import InfoTooltip from "$lib/components/InfoTooltip.svelte";
+    import SkillBadges from "$lib/components/SkillBadges.svelte";
 
     export let data: PageData;
     $: user = data.publicUser;
@@ -119,7 +120,7 @@
             class="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-0"
         >
             <dl class="sm:divide-y sm:divide-gray-200 dark:divide-gray-700">
-                {#if user.skills}
+                {#if user.skills && user.skills.length > 0}
                     <div
                         class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6"
                     >
@@ -131,13 +132,7 @@
                         <dd
                             class="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2"
                         >
-                            {#each user.skills.split(",") as skill}
-                                <span
-                                    class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 mr-2 mb-1"
-                                >
-                                    {skill.trim()}
-                                </span>
-                            {/each}
+                            <SkillBadges skills={user.skills} />
                         </dd>
                     </div>
                 {/if}
@@ -289,9 +284,11 @@
                                         <div
                                             class="text-gray-500 dark:text-gray-400 text-xs"
                                         >
-                                            {review.createdAt ? new Date(
-                                                review.createdAt,
-                                            ).toLocaleDateString() : 'Unknown'}
+                                            {review.createdAt
+                                                ? new Date(
+                                                      review.createdAt,
+                                                  ).toLocaleDateString()
+                                                : "Unknown"}
                                         </div>
                                     </div>
                                 </div>

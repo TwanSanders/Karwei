@@ -1,16 +1,39 @@
 import { db } from '../db';
-import { usersTable, postsTable, reviewsTable } from '../db/schema';
-import { eq, sql, and, or, ilike, count } from 'drizzle-orm';
-import type { User } from '$lib/domain/types';
+import { usersTable, postsTable, reviewsTable, usersToSkillsTable, skillsTable } from '../db/schema';
+import { eq, sql, and, or, ilike, count, inArray } from 'drizzle-orm';
+import type { User, Skill } from '$lib/domain/types';
 import { ReviewRepository } from './reviewRepository';
 
 export class UserRepository {
+  
+  // Helper function to fetch user skills from junction table
+  private static async getUserSkills(userId: string): Promise<Skill[]> {
+    const results = await db
+      .select({ skill: skillsTable })
+      .from(usersToSkillsTable)
+      .innerJoin(skillsTable, eq(usersToSkillsTable.skillId, skillsTable.id))
+      .where(eq(usersToSkillsTable.userId, userId))
+      .orderBy(skillsTable.displayOrder);
+    
+    return results.map(r => ({
+      id: r.skill.id,
+      name: r.skill.name,
+      category: r.skill.category,
+      description: r.skill.description,
+      icon: r.skill.icon,
+      displayOrder: r.skill.displayOrder,
+      active: r.skill.active || false,
+      createdAt: r.skill.createdAt || new Date()
+    }));
+  }
+  
   static async findByEmail(email: string): Promise<User | null> {
     const result = await db.select().from(usersTable).where(eq(usersTable.email, email));
     
     if (result.length === 0) return null;
     
     const row = result[0];
+    const skills = await UserRepository.getUserSkills(row.id);
     const completedRepairs = await UserRepository.countCompletedRepairs(row.id);
     const level = UserRepository.calculateLevel(completedRepairs);
 
@@ -19,10 +42,11 @@ export class UserRepository {
       name: row.name,
       email: row.email,
       image: row.image,
-      skills: row.skills,
+      skills,
       lat: row.lat ? parseFloat(row.lat) : null,
       long: row.long ? parseFloat(row.long) : null,
       bio: row.bio,
+      makerBio: row.makerBio,
       maker: row.maker || false,
       createdAt: row.createdAt || new Date(),
       phoneNumber: row.phoneNumber,
@@ -37,6 +61,7 @@ export class UserRepository {
     if (result.length === 0) return null;
     
     const row = result[0];
+    const skills = await UserRepository.getUserSkills(row.id);
     const completedRepairs = await UserRepository.countCompletedRepairs(row.id);
     const level = UserRepository.calculateLevel(completedRepairs);
     
@@ -45,10 +70,11 @@ export class UserRepository {
       name: row.name,
       email: row.email,
       image: row.image,
-      skills: row.skills,
+      skills,
       lat: row.lat ? parseFloat(row.lat) : null,
       long: row.long ? parseFloat(row.long) : null,
       bio: row.bio,
+      makerBio: row.makerBio,
       maker: row.maker || false,
       createdAt: row.createdAt || new Date(),
       phoneNumber: row.phoneNumber,
@@ -60,16 +86,18 @@ export class UserRepository {
   static async create(userData: typeof usersTable.$inferInsert): Promise<User> {
     const result = await db.insert(usersTable).values(userData).returning();
     const row = result[0];
+    // New users have no skills initially
     return {
       id: row.id,
       name: row.name,
       email: row.email,
       phoneNumber: row.phoneNumber,
       image: row.image,
-      skills: row.skills,
+      skills: [],
       lat: row.lat ? parseFloat(row.lat) : null,
       long: row.long ? parseFloat(row.long) : null,
       bio: row.bio,
+      makerBio: row.makerBio,
       maker: row.maker || false,
       createdAt: row.createdAt || new Date(),
     };
@@ -81,15 +109,17 @@ export class UserRepository {
     if (result.length === 0) return null;
 
     const row = result[0];
+    const skills = await UserRepository.getUserSkills(row.id);
     return {
         id: row.id,
         name: row.name,
         email: row.email,
         image: row.image,
-        skills: row.skills,
+        skills,
         lat: row.lat ? parseFloat(row.lat) : null,
         long: row.long ? parseFloat(row.long) : null,
         bio: row.bio,
+        makerBio: row.makerBio,
         maker: row.maker || false,
         createdAt: row.createdAt || new Date(),
         phoneNumber: row.phoneNumber,
@@ -103,15 +133,17 @@ export class UserRepository {
     if (result.length === 0) return null;
     
     const row = result[0];
+    const skills = await UserRepository.getUserSkills(row.id);
     const user: User = {
       id: row.id,
       name: row.name,
       email: row.email,
       image: row.image,
-      skills: row.skills,
+      skills,
       lat: row.lat ? parseFloat(row.lat) : null,
       long: row.long ? parseFloat(row.long) : null,
       bio: row.bio,
+      makerBio: row.makerBio,
       maker: row.maker || false,
       createdAt: row.createdAt || new Date(),
       phoneNumber: row.phoneNumber,
@@ -161,20 +193,53 @@ export class UserRepository {
 
         const results = await baseQuery.where(finalWhere).orderBy(sql`distance ASC`).limit(50);
 
+        // Extract user IDs for batch operations
+        const userIds = results.map(row => row.user.id);
+        
+        // Batch fetch skills for all users
+        const skillsByUserId = new Map<string, Skill[]>();
+        if (userIds.length > 0) {
+            const skillsResults = await db
+                .select({
+                    userId: usersToSkillsTable.userId,
+                    skill: skillsTable
+                })
+                .from(usersToSkillsTable)
+                .innerJoin(skillsTable, eq(usersToSkillsTable.skillId, skillsTable.id))
+                .where(inArray(usersToSkillsTable.userId, userIds))
+                .orderBy(skillsTable.displayOrder);
+            
+            skillsResults.forEach(row => {
+                if (!skillsByUserId.has(row.userId)) {
+                    skillsByUserId.set(row.userId, []);
+                }
+                skillsByUserId.get(row.userId)!.push({
+                    id: row.skill.id,
+                    name: row.skill.name,
+                    category: row.skill.category,
+                    description: row.skill.description,
+                    icon: row.skill.icon,
+                    displayOrder: row.skill.displayOrder,
+                    active: row.skill.active || false,
+                    createdAt: row.skill.createdAt || new Date()
+                });
+            });
+        }
+
         let makers = results.map(row => ({
             id: row.user.id,
             name: row.user.name,
             email: row.user.email,
             image: row.user.image,
-            skills: row.user.skills,
+            skills: skillsByUserId.get(row.user.id) || [],
             lat: row.user.lat ? parseFloat(row.user.lat) : null,
             long: row.user.long ? parseFloat(row.user.long) : null,
             bio: row.user.bio,
+            makerBio: row.user.makerBio,
             maker: row.user.maker || false,
             createdAt: row.user.createdAt || new Date(),
             phoneNumber: row.user.phoneNumber,
-            // @ts-ignore
-            distance: row.distance
+            distance: row.distance as number
         }));
 
         // Enhance with levels and ratings
@@ -187,13 +252,16 @@ export class UserRepository {
         
         makers = makersWithExtras;
 
-        // Filter by skills if provided (still in memory for now as skills are comma-separated string)
+        // Filter by skills if provided (now using skill IDs)
         if (skillsFilter && skillsFilter.length > 0) {
-            makers = makers.filter(maker => {
-                if (!maker.skills) return false;
-                const makerSkills = maker.skills.split(',').map(s => s.trim().toLowerCase());
-                return skillsFilter.some(skill => makerSkills.includes(skill.toLowerCase()));
-            });
+            // Get user IDs that have ANY of the filtered skills
+            const usersWithSkillsResults = await db
+                .selectDistinct({ userId: usersToSkillsTable.userId })
+                .from(usersToSkillsTable)
+                .where(inArray(usersToSkillsTable.skillId, skillsFilter));
+            
+            const userIdsWithSkills = new Set(usersWithSkillsResults.map(u => u.userId));
+            makers = makers.filter(m => userIdsWithSkills.has(m.id));
         }
         
         return makers;
@@ -212,6 +280,39 @@ export class UserRepository {
      
      const results = await db.select().from(usersTable).where(where);
      
+     // Extract user IDs for batch operations
+     const userIds = results.map(row => row.id);
+     
+     // Batch fetch skills for all users
+     const skillsByUserId = new Map<string, Skill[]>();
+     if (userIds.length > 0) {
+         const skillsResults = await db
+             .select({
+                 userId: usersToSkillsTable.userId,
+                 skill: skillsTable
+             })
+             .from(usersToSkillsTable)
+             .innerJoin(skillsTable, eq(usersToSkillsTable.skillId, skillsTable.id))
+             .where(inArray(usersToSkillsTable.userId, userIds))
+             .orderBy(skillsTable.displayOrder);
+         
+         skillsResults.forEach(row => {
+             if (!skillsByUserId.has(row.userId)) {
+                 skillsByUserId.set(row.userId, []);
+             }
+             skillsByUserId.get(row.userId)!.push({
+                 id: row.skill.id,
+                 name: row.skill.name,
+                 category: row.skill.category,
+                 description: row.skill.description,
+                 icon: row.skill.icon,
+                 displayOrder: row.skill.displayOrder,
+                 active: row.skill.active || false,
+                 createdAt: row.skill.createdAt || new Date()
+             });
+         });
+     }
+     
      // Enhance with levels and ratings
      const makersWithExtras = await Promise.all(results.map(async row => {
         const completedRepairs = await UserRepository.countCompletedRepairs(row.id);
@@ -222,10 +323,11 @@ export class UserRepository {
             name: row.name,
             email: row.email,
             image: row.image,
-            skills: row.skills,
+            skills: skillsByUserId.get(row.id) || [],
             lat: row.lat ? parseFloat(row.lat) : null,
             long: row.long ? parseFloat(row.long) : null,
             bio: row.bio,
+            makerBio: row.makerBio,
             maker: row.maker || false,
             createdAt: row.createdAt || new Date(),
             phoneNumber: row.phoneNumber,
@@ -237,15 +339,16 @@ export class UserRepository {
      
      let makers = makersWithExtras;
 
-
-        // Filter by skills if provided (still in memory for now as skills are comma-separated string)
-        if (skillsFilter && skillsFilter.length > 0) {
-            makers = makers.filter(maker => {
-                if (!maker.skills) return false;
-                const makerSkills = maker.skills.split(',').map(s => s.trim().toLowerCase());
-                return skillsFilter.some(skill => makerSkills.includes(skill.toLowerCase()));
-            });
-        }
+     // Filter by skills if provided
+     if (skillsFilter && skillsFilter.length > 0) {
+         const usersWithSkillsResults = await db
+             .selectDistinct({ userId: usersToSkillsTable.userId })
+             .from(usersToSkillsTable)
+             .where(inArray(usersToSkillsTable.skillId, skillsFilter));
+         
+         const userIdsWithSkills = new Set(usersWithSkillsResults.map(u => u.userId));
+         makers = makers.filter(m => userIdsWithSkills.has(m.id));
+     }
      
      return makers;
   }
@@ -273,6 +376,39 @@ export class UserRepository {
       .orderBy(sql`avg_rating DESC NULLS LAST, review_count DESC`)
       .limit(limit);
 
+      // Extract user IDs for batch operations
+      const userIds = makers.map(row => row.user.id);
+      
+      // Batch fetch skills for all users
+      const skillsByUserId = new Map<string, Skill[]>();
+      if (userIds.length > 0) {
+          const skillsResults = await db
+              .select({
+                  userId: usersToSkillsTable.userId,
+                  skill: skillsTable
+              })
+              .from(usersToSkillsTable)
+              .innerJoin(skillsTable, eq(usersToSkillsTable.skillId, skillsTable.id))
+              .where(inArray(usersToSkillsTable.userId, userIds))
+              .orderBy(skillsTable.displayOrder);
+          
+          skillsResults.forEach(row => {
+              if (!skillsByUserId.has(row.userId)) {
+                  skillsByUserId.set(row.userId, []);
+              }
+              skillsByUserId.get(row.userId)!.push({
+                  id: row.skill.id,
+                  name: row.skill.name,
+                  category: row.skill.category,
+                  description: row.skill.description,
+                  icon: row.skill.icon,
+                  displayOrder: row.skill.displayOrder,
+                  active: row.skill.active || false,
+                  createdAt: row.skill.createdAt || new Date()
+              });
+          });
+      }
+
       return makers.map(row => ({
           id: row.user.id,
           name: row.user.name,
@@ -280,10 +416,11 @@ export class UserRepository {
           emailVerified: row.user.emailVerified,
           image: row.user.image,
           phoneNumber: row.user.phoneNumber,
-          skills: row.user.skills,
+          skills: skillsByUserId.get(row.user.id) || [],
           lat: row.user.lat ? parseFloat(row.user.lat) : null,
           long: row.user.long ? parseFloat(row.user.long) : null,
           bio: row.user.bio,
+          makerBio: row.user.makerBio,
           maker: row.user.maker || false,
           createdAt: row.user.createdAt || new Date(),
           updatedAt: row.user.updatedAt || new Date(),

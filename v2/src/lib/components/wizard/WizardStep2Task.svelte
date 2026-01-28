@@ -5,7 +5,37 @@
     export let description: string = "";
     export let price: string = "";
     export let onChange: (field: string, value: string) => void;
+    export let isFromAI: boolean = false;
 </script>
+
+{#if !isFromAI && !title && !description}
+    <a
+        href="/post/ai-assistant"
+        class="flex items-center gap-3 p-4 mb-6 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors group"
+    >
+        <span class="text-2xl">🤖</span>
+        <div class="flex-1">
+            <p class="font-medium text-indigo-900 dark:text-indigo-100">
+                Not sure what to write?
+            </p>
+            <p class="text-sm text-indigo-700 dark:text-indigo-300">
+                Chat with our AI to help describe your problem
+            </p>
+        </div>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-indigo-400 group-hover:translate-x-1 transition-transform"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+        >
+            <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+            />
+        </svg>
+    </a>
+{/if}
 
 <div class="space-y-6">
     <div>

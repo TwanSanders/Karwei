@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 import { lucia } from "$lib/server/auth";
 import type { PageServerLoad, Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
+import { UserSkillRepository } from '$lib/server/repositories/userSkillRepository';
 import { ContactRequestRepository } from '$lib/server/repositories/contactRequestRepository';
 import { PostRepository } from '$lib/server/repositories/postRepository';
 import { OfferRepository } from '$lib/server/repositories/offerRepository';
@@ -61,8 +62,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         }));
     }
 
-    const activeSkills = await SkillRepository.getActive();
-    const skills = activeSkills.map(s => s.name);
+    const skills = await SkillRepository.getActive();
 
     // Calculate level and reviews for maker
     const completedRepairs = await UserRepository.countCompletedRepairs(userId);
@@ -263,11 +263,15 @@ export const actions = {
         const userId = locals.user.id;
 
         const formData = await request.formData();
-        const skills = formData.get('skills') as string || '';
+        const skillIdsStr = formData.get('skillIds') as string || '';
+        
+        // Parse comma-separated skill IDs
+        const skillIds = skillIdsStr
+            .split(',')
+            .map(id => id.trim())
+            .filter(Boolean);
 
-        await UserRepository.update(userId, {
-            skills: skills
-        });
+        await UserSkillRepository.setUserSkills(userId, skillIds);
 
         return { success: true };
     },
@@ -290,10 +294,17 @@ export const actions = {
 
         const formData = await request.formData();
         const makerBio = formData.get('makerBio') as string || '';
+        const skillIdsStr = formData.get('skillIds') as string;
 
         await UserRepository.update(userId, {
             makerBio: makerBio.trim().substring(0, 500) // Limit to 500 chars
         });
+        
+        // Update skills if provided
+        if (skillIdsStr) {
+            const skillIds = skillIdsStr.split(',').map(id => id.trim()).filter(Boolean);
+            await UserSkillRepository.setUserSkills(userId, skillIds);
+        }
 
         return { success: true };
     },

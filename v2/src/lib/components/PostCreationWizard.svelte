@@ -8,8 +8,9 @@
     import WizardStep4Location from "./wizard/WizardStep4Location.svelte";
     import WizardStep5Review from "./wizard/WizardStep5Review.svelte";
     import WizardStep6Register from "./wizard/WizardStep6Register.svelte";
+    import type { Skill } from "$lib/domain/types";
 
-    export let availableSkills: Array<{ id: string; name: string }>;
+    export let availableSkills: Skill[];
     export let user: App.Locals["user"] | null = null;
 
     let currentStep = 1;
@@ -18,6 +19,7 @@
     let isLoaded = false;
     let registerStepRef: any;
     let isAutoSubmitting = false;
+    let isFromAI = false;
 
     // Form data state
     let formData = {
@@ -35,17 +37,32 @@
     onMount(async () => {
         const draft = localStorage.getItem("karwei_post_draft");
         const shouldAutoSubmit = localStorage.getItem("karwei_auto_submit");
+        const isAIDraft = localStorage.getItem("karwei_ai_draft_source");
 
         if (draft) {
             try {
                 const data = JSON.parse(draft);
                 // Basic restore
                 formData.category = data.category || "";
+
+                // If AI draft, map category string to ID if needed (or assume direct match for now)
+                // In a real app we'd need fuzzy matching if AI output isn't perfect ID
+
                 formData.title = data.title || "";
                 formData.description = data.description || "";
                 formData.price = data.price || "";
                 formData.lat = data.lat || null;
                 formData.long = data.long || null;
+
+                // If it's an AI draft, we can skip Step 1 (Category) if category is present
+                // and maybe Step 2 if title/desc are present, but user should review.
+                // Let's jump to Step 2 so they can review the text.
+                if (isAIDraft && formData.category) {
+                    // Clear the AI flag so it doesn't jump every time
+                    localStorage.removeItem("karwei_ai_draft_source");
+                    isFromAI = true; // Track that this came from AI
+                    currentStep = 2; // Jump to details
+                }
 
                 // Restore image if exists
                 if (data.imagePreviewUrl) {
@@ -363,6 +380,7 @@
                         description={formData.description}
                         price={formData.price}
                         onChange={handleTaskChange}
+                        {isFromAI}
                     />
                 </div>
             {:else if currentStep === 3}
@@ -383,7 +401,13 @@
                 </div>
             {:else if currentStep === 5}
                 <div in:fade={{ duration: 200 }}>
-                    <WizardStep5Review {formData} onEdit={goToStep} />
+                    <div in:fade={{ duration: 200 }}>
+                        <WizardStep5Review
+                            {formData}
+                            {availableSkills}
+                            onEdit={goToStep}
+                        />
+                    </div>
                 </div>
             {:else if currentStep === 6}
                 <div in:fade={{ duration: 200 }}>

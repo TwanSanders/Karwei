@@ -14,6 +14,9 @@ The core mission is to:
 - **User Roles**: Users can be "Makers" (repairers) or Requesters.
 - **Profile Management**:
   - Detailed profiles including Name, Bio, Skills (for Makers), and Location.
+  - **Skills**: Normalized many-to-many relationship with dedicated skill catalog.
+    - Each skill has an associated icon for visual identification.
+    - Skills are efficiently queried and displayed across the platform.
   - **Profile Picture**: Users can upload and update their profile picture.
   - Contact details (Phone number) which are privacy-protected.
   - **Makers**: Users can toggle "Maker" status to receive offers.

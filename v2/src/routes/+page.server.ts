@@ -15,7 +15,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         return {
             topMakers: topMakers.map(m => ({...m, lat: m.lat?.toString(), long: m.long?.toString()})),
             latestPosts: latestPosts.map(p => ({...p, lat: p.lat?.toString(), long: p.long?.toString()})),
-            skills: skills.map(s => s.name),
+            skills,
             user: null
         };
     }
@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         return {
             topMakers: [],
             latestPosts: [],
-            skills: skills.map(s => s.name),
+            skills,
             user: null
         };
     }
@@ -85,7 +85,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
             // Common
             searchType: type,
             user: userData,
-            skills: skills.map(s => s.name)
+            skills
         };
     }
 
@@ -100,6 +100,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         unassignedPosts: unassignedPosts.map(p => ({...p, lat: p.lat?.toString(), long: p.long?.toString()})),
         latestPosts: latestPosts.map(p => ({...p, lat: p.lat?.toString(), long: p.long?.toString()})),
         user: userData,
-        skills: skills.map(s => s.name)
+        skills
     };
 };

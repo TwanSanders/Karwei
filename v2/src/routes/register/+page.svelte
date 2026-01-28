@@ -1,10 +1,17 @@
 <script lang="ts">
-    import type { ActionData } from "./$types";
+    import type { ActionData, PageData } from "./$types";
     import InfoTooltip from "$lib/components/InfoTooltip.svelte";
     import LocationPicker from "$lib/components/LocationPicker.svelte";
     import PasswordInput from "$lib/components/PasswordInput.svelte";
+    import SkillSelector from "$lib/components/SkillSelector.svelte";
 
     export let form: ActionData;
+    export let data: PageData;
+
+    let isMaker = false;
+    let selectedSkillIds: string[] = [];
+
+    $: skillIdsJson = JSON.stringify(selectedSkillIds);
 </script>
 
 <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -186,6 +193,7 @@
                                     id="role_maker"
                                     name="role_maker"
                                     type="checkbox"
+                                    bind:checked={isMaker}
                                     class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 dark:text-indigo-500 border-gray-300 dark:border-gray-500 rounded transition-colors cursor-pointer"
                                 />
                             </div>
@@ -202,6 +210,30 @@
                                 </p>
                             </div>
                         </div>
+                        {#if isMaker}
+                            <div
+                                class="mt-4 pl-4 border-l-2 border-indigo-200 dark:border-indigo-800 ml-2"
+                            >
+                                <label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                >
+                                    Your Skills
+                                    <span
+                                        class="text-xs text-gray-500 font-normal ml-1"
+                                        >(Select all that apply)</span
+                                    >
+                                </label>
+                                <SkillSelector
+                                    availableSkills={data.skills}
+                                    bind:selectedSkills={selectedSkillIds}
+                                />
+                                <input
+                                    type="hidden"
+                                    name="skillIds"
+                                    value={skillIdsJson}
+                                />
+                            </div>
+                        {/if}
                     </div>
                 </div>
 

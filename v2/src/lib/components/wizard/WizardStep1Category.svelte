@@ -1,7 +1,9 @@
 <script lang="ts">
     import InfoTooltip from "$lib/components/InfoTooltip.svelte";
+    import type { Skill } from "$lib/domain/types";
+    import { getCategoryIcon } from "$lib/config/categoryIcons";
 
-    export let availableSkills: Array<{ id: string; name: string }>;
+    export let availableSkills: Skill[];
     export let selectedCategory: string = "";
     export let onSelect: (category: string) => void;
 </script>
@@ -22,69 +24,66 @@
     </div>
 
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6">
+        <!-- AI Helper Option -->
+        <a
+            href="/post/ai-assistant"
+            class="relative flex flex-col items-center justify-center p-6 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 hover:border-indigo-400 dark:hover:border-indigo-600 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all select-none col-span-2 sm:col-span-3 mb-2 group"
+        >
+            <span class="text-3xl mb-2">🤖</span>
+            <span
+                class="text-base font-semibold text-indigo-900 dark:text-indigo-100"
+            >
+                Not sure? Use AI Assistant
+            </span>
+            <span
+                class="text-xs text-indigo-700 dark:text-indigo-300 text-center px-4"
+            >
+                Chat with our smart helper to diagnose your issue and create a
+                perfect post.
+            </span>
+            <span
+                class="absolute top-3 right-3 text-indigo-400 dark:text-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                >
+                    <path
+                        fill-rule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clip-rule="evenodd"
+                    />
+                </svg>
+            </span>
+        </a>
+
         {#each availableSkills as skill}
             <button
                 type="button"
                 on:click={() => {
-                    selectedCategory = skill.name;
-                    onSelect(skill.name);
+                    selectedCategory = skill.id;
+                    onSelect(skill.id);
                 }}
                 class="relative flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all select-none
-                    {selectedCategory === skill.name
+                    {selectedCategory === skill.id
                     ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 dark:border-indigo-400 shadow-md scale-105'
                     : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-indigo-300 dark:hover:border-indigo-600 hover:bg-gray-50 dark:hover:bg-gray-750 hover:scale-102'}"
             >
                 <span class="text-4xl mb-3">
-                    {#if skill.name === "Electronics"}
-                        🔌
-                    {:else if skill.name === "Woodwork"}
-                        🪵
-                    {:else if skill.name === "Textile"}
-                        🧵
-                    {:else if skill.name === "Metalwork"}
-                        🔩
-                    {:else if skill.name === "Appliances"}
-                        🔧
-                    {:else if skill.name === "Plumbing"}
-                        🚰
-                    {:else if skill.name === "Electrical"}
-                        ⚡
-                    {:else if skill.name === "Bicycle Repair"}
-                        🚴
-                    {:else if skill.name === "Automotive"}
-                        🚗
-                    {:else if skill.name === "Jewelry"}
-                        💍
-                    {:else if skill.name === "Leather"}
-                        👜
-                    {:else if skill.name === "Musical Instruments"}
-                        🎸
-                    {:else if skill.name === "Ceramics & Glass"}
-                        🏺
-                    {:else if skill.name === "Gardening Tools"}
-                        🌱
-                    {:else if skill.name === "General Handyman"}
-                        🛠️
-                    {:else if skill.name === "Furniture"}
-                        🪑
-                    {:else if skill.name === "Clothing"}
-                        👕
-                    {:else if skill.name === "Bicycles"}
-                        🚲
-                    {:else}
-                        🔧
-                    {/if}
+                    {getCategoryIcon(skill.name)}
                 </span>
                 <span
                     class="text-sm font-medium text-center transition-colors
-                    {selectedCategory === skill.name
+                    {selectedCategory === skill.id
                         ? 'text-indigo-700 dark:text-indigo-300'
                         : 'text-gray-700 dark:text-gray-300'}"
                 >
                     {skill.name}
                 </span>
 
-                {#if selectedCategory === skill.name}
+                {#if selectedCategory === skill.id}
                     <div class="absolute top-2 right-2">
                         <svg
                             class="w-5 h-5 text-indigo-600 dark:text-indigo-400"
