@@ -37,6 +37,14 @@ export const actions = {
       ...sessionCookie.attributes
     });
 
+    // Handle smart redirect
+    const url = new URL(request.url);
+    const redirectTo = url.searchParams.get('redirectTo');
+    
+    if (redirectTo) {
+        throw redirect(303, redirectTo);
+    }
+
     throw redirect(303, '/');
   },
   

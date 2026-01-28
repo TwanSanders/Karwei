@@ -88,7 +88,18 @@ export const actions = {
       ...sessionCookie.attributes
     });
     
-    // Smart redirect: Makers to profile to set skills, requesters to home
+    // Smart redirect: 
+    // 1. If explicit redirectTo is present, go there (for unauth post flow)
+    // 2. Makers default to profile (to set skills)
+    // 3. Requesters default to home
+    
+    const url = new URL(request.url);
+    const redirectTo = url.searchParams.get('redirectTo');
+
+    if (redirectTo) {
+        throw redirect(303, redirectTo);
+    }
+    
     if (isMaker) {
         throw redirect(303, '/profile?welcome=maker');
     } else {

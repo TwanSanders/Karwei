@@ -108,7 +108,7 @@
                 </p>
                 <div class="mt-8">
                     <a
-                        href="/register"
+                        href="/post/create"
                         class="inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50 shadow-xl transition-all duration-200 hover:scale-105"
                     >
                         I have something that needs fixing

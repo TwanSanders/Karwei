@@ -5,11 +5,9 @@ import { SkillRepository } from '$lib/server/repositories/skillRepository';
 import { uploadToR2 } from '$lib/server/s3';
 
 export const load: PageServerLoad = async ({ locals }) => {
-    // Check auth
-    if (!locals.user) {
-        throw redirect(303, '/login');
-    }
-    const userId = locals.user.id;
+    // Check auth - OPTIONAL now for viewing the wizard
+    // We pass the user status to the frontend so the wizard knows whether to show "Post" or "Login"
+    const userId = locals.user?.id;
     
     // Load active skills for the category dropdown
     const skills = await SkillRepository.getActive();
@@ -30,6 +28,12 @@ export const actions = {
      const type = data.get('type') as string;
      const priceStr = data.get('price') as string;
      const price = priceStr ? parseFloat(priceStr) : undefined;
+     
+     // Extract location data
+     const latStr = data.get('lat') as string;
+     const longStr = data.get('long') as string;
+     const lat = latStr && latStr !== '' ? parseFloat(latStr) : undefined;
+     const long = longStr && longStr !== '' ? parseFloat(longStr) : undefined;
      
      const image = data.get('image') as File;
      let imageUrl = null;
@@ -54,6 +58,8 @@ export const actions = {
          type,
          targetPrice: price ? price.toString() : undefined, // Drizzle expects string for decimal or we handle it
          imageUrl,
+         lat: lat ? lat.toString() : undefined,
+         long: long ? long.toString() : undefined,
          purchasedAt: null // Optional
      });
 
