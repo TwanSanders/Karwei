@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GEMINI_API_KEY } from "$env/static/private";
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { SkillRepository } from "$lib/server/repositories/SkillRepository";
+import { SkillRepository } from "$lib/server/repositories/skillRepository";
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 

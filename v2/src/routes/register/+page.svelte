@@ -205,8 +205,8 @@
                                 >
                                 <p class="text-gray-500 dark:text-gray-400">
                                     I want to offer my skills to fix items for
-                                    others. You can set your skills in your
-                                    profile after registration.
+                                    others. Select your skills below to get
+                                    matched immediately.
                                 </p>
                             </div>
                         </div>

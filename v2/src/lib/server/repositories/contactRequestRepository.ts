@@ -1,6 +1,6 @@
 import { db } from '../db';
 import { contactRequestsTable } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 import { NotificationRepository } from './notificationRepository';
 
 export interface ContactRequest {
@@ -81,5 +81,18 @@ export class ContactRequestRepository {
                 // For now, let's stick to simple types. 'contact_request' notification for requester means "Check your requests"
              }
         }
+    }
+    static async getPendingCount(userId: string): Promise<number> {
+        const result = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(contactRequestsTable)
+            .where(
+                and(
+                    eq(contactRequestsTable.targetUserId, userId),
+                    eq(contactRequestsTable.status, 'pending')
+                )
+            );
+            
+        return Number(result[0].count);
     }
 }

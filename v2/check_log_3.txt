@@ -1,0 +1,571 @@
+
+> v2@0.0.1 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: c:\Users\twani\Code\karwei\v2
+Getting Svelte diagnostics...
+
+c:\Users\twani\Code\karwei\v2\[32msrc\lib\components\ChatInput.svelte[39m:10:33
+[33mWarn[39m: This reference only captures the initial value of `initialMessage`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+[36m
+    let messageContent = $state([35minitialMessage[36m);
+    let textarea: HTMLTextAreaElement;[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\lib\components\MessageStream.svelte[39m:168:41
+[33mWarn[39m: Screenreaders already announce `<img>` elements as an image
+https://svelte.dev/e/a11y_img_redundant_alt (svelte)
+[36m                                    >
+                                        [35m<img
+                                            src={message.content}
+                                            alt="Shared image"
+                                            class="max-w-full h-auto max-h-[400px] object-contain bg-black/5 dark:bg-black/20 block"
+                                            loading="lazy"
+                                        />[36m
+                                    </div>[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\lib\components\PasswordInput.svelte[39m:28:14
+[31mError[39m: Type 'string' is not assignable to type 'FullAutoFill | null | undefined'. (ts)
+[36m            type={showPassword ? "text" : "password"}
+            {[35mautocomplete[36m}
+            {required}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\lib\components\RepairAgentChat.svelte[39m:276:57
+[31mError[39m: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'. (ts)
+[36m                            type="button"
+                            on:click={(e) => deleteChat([35mactiveChatId[36m, e)}
+                            class="px-2 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\chat\[userId]\+page.svelte[39m:13:9
+[33mWarn[39m: `initialMessage` is updated, but is not declared with `$state(...)`. Changing its value will not correctly trigger updates
+https://svelte.dev/e/non_reactive_update (svelte)
+[36m
+    let [35minitialMessage[36m = "";
+    if ($page.url.searchParams.get("ref") === "post") {[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\post\ai-assistant\+page.svelte[39m:240:13
+[33mWarn[39m: Buttons and links should either contain text or have an `aria-label`, `aria-labelledby` or `title` attribute
+https://svelte.dev/e/a11y_consider_explicit_label (svelte)
+[36m            />
+            [35m<button
+                type="submit"
+                disabled={isLoading || !newMessage.trim() || isDraftReady}
+                class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                >
+                    <path
+                        d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+                    />
+                </svg>
+            </button>[36m
+        </form>[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\post\create\+page.svelte[39m:5:16
+[33mWarn[39m: Component has unused export property 'form'. If it is for external reference only, please consider using `export const form`
+https://svelte.dev/e/export_let_unused (svelte)
+[36m
+    export let [35mform: ActionData[36m;
+    export let data: PageData;[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:309:25
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m                    <div>
+                        [35m<label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                            Biography
+                        </label>[36m
+                        {#if isPosterEditMode}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:405:25
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m                    >
+                        [35m<label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3"
+                        >
+                            Account Settings
+                        </label>[36m
+                        <form action="?/toggleMaker" method="POST" use:enhance>[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:496:33
+[33mWarn[39m: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+[36m                            {#each archivedPosts as post}
+                                [35m<li
+                                    class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                    onclick={() => goto(`/post/${post.id}`)}
+                                >
+                                    <div
+                                        class="flex items-center justify-between"
+                                    >
+                                        <div class="flex items-center flex-1">
+                                            <div
+                                                class="flex-shrink-0 h-10 w-10"
+                                            >
+                                                {#if post.imageUrl}
+                                                    <img
+                                                        class="h-10 w-10 rounded-full object-cover"
+                                                        src={post.imageUrl}
+                                                        alt=""
+                                                    />
+                                                {:else}
+                                                    <div
+                                                        class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                                                    >
+                                                        <svg
+                                                            class="h-6 w-6 text-gray-400 dark:text-gray-500"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                            <div class="ml-4 flex-1">
+                                                <div
+                                                    class="flex items-center justify-between"
+                                                >
+                                                    <div>
+                                                        <div
+                                                            class="text-sm font-medium text-gray-900 dark:text-white"
+                                                        >
+                                                            {post.title}
+                                                        </div>
+                                                        <div
+                                                            class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                                        >
+                                                            {#if post.makerName}
+                                                                Repaired by {post.makerName}
+                                                            {:else}
+                                                                Status: {post.status}
+                                                            {/if}
+                                                            • {new Date(
+                                                                post.createdAt,
+                                                            ).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <span
+                                                        class="px-2 py-1 text-xs font-medium rounded-full {post.status ===
+                                                        'fixed'
+                                                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}"
+                                                    >
+                                                        {post.status === "fixed"
+                                                            ? "Fixed"
+                                                            : "Closed"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>[36m
+                            {/each}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:496:33
+[33mWarn[39m: Non-interactive element `<li>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions (svelte)
+[36m                            {#each archivedPosts as post}
+                                [35m<li
+                                    class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                    onclick={() => goto(`/post/${post.id}`)}
+                                >
+                                    <div
+                                        class="flex items-center justify-between"
+                                    >
+                                        <div class="flex items-center flex-1">
+                                            <div
+                                                class="flex-shrink-0 h-10 w-10"
+                                            >
+                                                {#if post.imageUrl}
+                                                    <img
+                                                        class="h-10 w-10 rounded-full object-cover"
+                                                        src={post.imageUrl}
+                                                        alt=""
+                                                    />
+                                                {:else}
+                                                    <div
+                                                        class="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                                                    >
+                                                        <svg
+                                                            class="h-6 w-6 text-gray-400 dark:text-gray-500"
+                                                            fill="none"
+                                                            viewBox="0 0 24 24"
+                                                            stroke="currentColor"
+                                                        >
+                                                            <path
+                                                                stroke-linecap="round"
+                                                                stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                            />
+                                                        </svg>
+                                                    </div>
+                                                {/if}
+                                            </div>
+                                            <div class="ml-4 flex-1">
+                                                <div
+                                                    class="flex items-center justify-between"
+                                                >
+                                                    <div>
+                                                        <div
+                                                            class="text-sm font-medium text-gray-900 dark:text-white"
+                                                        >
+                                                            {post.title}
+                                                        </div>
+                                                        <div
+                                                            class="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                                                        >
+                                                            {#if post.makerName}
+                                                                Repaired by {post.makerName}
+                                                            {:else}
+                                                                Status: {post.status}
+                                                            {/if}
+                                                            • {new Date(
+                                                                post.createdAt,
+                                                            ).toLocaleDateString()}
+                                                        </div>
+                                                    </div>
+                                                    <span
+                                                        class="px-2 py-1 text-xs font-medium rounded-full {post.status ===
+                                                        'fixed'
+                                                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}"
+                                                    >
+                                                        {post.status === "fixed"
+                                                            ? "Fixed"
+                                                            : "Closed"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>[36m
+                            {/each}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:644:25
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m                    <div>
+                        [35m<label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                        >
+                            Maker Biography
+                        </label>[36m
+                        {#if isMakerEditMode}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:677:25
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m                    <div>
+                        [35m<label
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                        >
+                            Skills
+                        </label>[36m
+                        {#if isMakerEditMode}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:824:33
+[33mWarn[39m: Visible, non-interactive elements with a click event must be accompanied by a keyboard event handler. Consider whether an interactive element such as `<button type="button">` or `<a>` might be more appropriate
+https://svelte.dev/e/a11y_click_events_have_key_events (svelte)
+[36m                            {#each completedProjects as project}
+                                [35m<li
+                                    class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                    onclick={() => goto(`/post/${project.id}`)}
+                                >
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 h-16 w-16">
+                                            {#if project.imageUrl}
+                                                <img
+                                                    class="h-16 w-16 rounded-lg object-cover"
+                                                    src={project.imageUrl}
+                                                    alt=""
+                                                />
+                                            {:else}
+                                                <div
+                                                    class="h-16 w-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                                                >
+                                                    <svg
+                                                        class="h-8 w-8 text-gray-400 dark:text-gray-500"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                            {/if}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div
+                                                class="flex items-start justify-between"
+                                            >
+                                                <div class="flex-1">
+                                                    <p
+                                                        class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                                                    >
+                                                        {project.title}
+                                                    </p>
+                                                    <p
+                                                        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        For {project.posterName}
+                                                        • {new Date(
+                                                            project.createdAt,
+                                                        ).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                                                >
+                                                    {project.status === "fixed"
+                                                        ? "Fixed"
+                                                        : "Completed"}
+                                                </span>
+                                            </div>
+
+                                            {#if project.review}
+                                                <div
+                                                    class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                                                >
+                                                    <div
+                                                        class="flex items-center gap-2"
+                                                    >
+                                                        <span
+                                                            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                                                        >
+                                                            Review:
+                                                        </span>
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <span
+                                                                class="text-yellow-400"
+                                                            >
+                                                                {"⭐".repeat(
+                                                                    Math.round(
+                                                                        Number(
+                                                                            project
+                                                                                .review
+                                                                                .rating,
+                                                                        ),
+                                                                    ),
+                                                                )}
+                                                            </span>
+                                                            <span
+                                                                class="ml-1 text-sm text-gray-600 dark:text-gray-400"
+                                                            >
+                                                                {Number(
+                                                                    project
+                                                                        .review
+                                                                        .rating,
+                                                                ).toFixed(1)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {#if project.review.comment}
+                                                        <p
+                                                            class="mt-2 text-sm text-gray-600 dark:text-gray-300"
+                                                        >
+                                                            "{project.review
+                                                                .comment}"
+                                                        </p>
+                                                    {/if}
+                                                </div>
+                                            {:else}
+                                                <p
+                                                    class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic"
+                                                >
+                                                    No review yet
+                                                </p>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                </li>[36m
+                            {/each}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:824:33
+[33mWarn[39m: Non-interactive element `<li>` should not be assigned mouse or keyboard event listeners
+https://svelte.dev/e/a11y_no_noninteractive_element_interactions (svelte)
+[36m                            {#each completedProjects as project}
+                                [35m<li
+                                    class="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                                    onclick={() => goto(`/post/${project.id}`)}
+                                >
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 h-16 w-16">
+                                            {#if project.imageUrl}
+                                                <img
+                                                    class="h-16 w-16 rounded-lg object-cover"
+                                                    src={project.imageUrl}
+                                                    alt=""
+                                                />
+                                            {:else}
+                                                <div
+                                                    class="h-16 w-16 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center"
+                                                >
+                                                    <svg
+                                                        class="h-8 w-8 text-gray-400 dark:text-gray-500"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            stroke-linecap="round"
+                                                            stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                                        />
+                                                    </svg>
+                                                </div>
+                                            {/if}
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <div
+                                                class="flex items-start justify-between"
+                                            >
+                                                <div class="flex-1">
+                                                    <p
+                                                        class="text-sm font-medium text-gray-900 dark:text-white truncate"
+                                                    >
+                                                        {project.title}
+                                                    </p>
+                                                    <p
+                                                        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+                                                    >
+                                                        For {project.posterName}
+                                                        • {new Date(
+                                                            project.createdAt,
+                                                        ).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                                <span
+                                                    class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                                                >
+                                                    {project.status === "fixed"
+                                                        ? "Fixed"
+                                                        : "Completed"}
+                                                </span>
+                                            </div>
+
+                                            {#if project.review}
+                                                <div
+                                                    class="mt-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                                                >
+                                                    <div
+                                                        class="flex items-center gap-2"
+                                                    >
+                                                        <span
+                                                            class="text-sm font-medium text-gray-700 dark:text-gray-300"
+                                                        >
+                                                            Review:
+                                                        </span>
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <span
+                                                                class="text-yellow-400"
+                                                            >
+                                                                {"⭐".repeat(
+                                                                    Math.round(
+                                                                        Number(
+                                                                            project
+                                                                                .review
+                                                                                .rating,
+                                                                        ),
+                                                                    ),
+                                                                )}
+                                                            </span>
+                                                            <span
+                                                                class="ml-1 text-sm text-gray-600 dark:text-gray-400"
+                                                            >
+                                                                {Number(
+                                                                    project
+                                                                        .review
+                                                                        .rating,
+                                                                ).toFixed(1)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    {#if project.review.comment}
+                                                        <p
+                                                            class="mt-2 text-sm text-gray-600 dark:text-gray-300"
+                                                        >
+                                                            "{project.review
+                                                                .comment}"
+                                                        </p>
+                                                    {/if}
+                                                </div>
+                                            {:else}
+                                                <p
+                                                    class="mt-2 text-xs text-gray-500 dark:text-gray-400 italic"
+                                                >
+                                                    No review yet
+                                                </p>
+                                            {/if}
+                                        </div>
+                                    </div>
+                                </li>[36m
+                            {/each}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:546:71
+[31mError[39m: Property 'makerName' does not exist on type 'Post | { makerName: string | undefined; makerImage: string | null | undefined; id: string; userId: string; title: string; imageUrl?: string | null | undefined; description?: string | null | undefined; ... 9 more ...; createdAt: Date; }'.
+  Property 'makerName' does not exist on type 'Post'. (ts)
+[36m                                                        >
+                                                            {#if post.[35mmakerName[36m}
+                                                                Repaired by {post.makerName}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:547:83
+[31mError[39m: Property 'makerName' does not exist on type 'Post | { makerName: string | undefined; makerImage: string | null | undefined; id: string; userId: string; title: string; imageUrl?: string | null | undefined; description?: string | null | undefined; ... 9 more ...; createdAt: Date; }'.
+  Property 'makerName' does not exist on type 'Post'. (ts)
+[36m                                                            {#if post.makerName}
+                                                                Repaired by {post.[35mmakerName[36m}
+                                                            {:else}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\register\+page.svelte[39m:217:33
+[33mWarn[39m: A form label must be associated with a control
+https://svelte.dev/e/a11y_label_has_associated_control (svelte)
+[36m                            >
+                                [35m<label
+                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                                >
+                                    Your Skills
+                                    <span
+                                        class="text-xs text-gray-500 font-normal ml-1"
+                                        >(Select all that apply)</span
+                                    >
+                                </label>[36m
+                                <SkillSelector[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\register\+page.svelte[39m:227:37
+[31mError[39m: Type '{ id: string; name: string; category: string | null; description: string | null; icon: string | null; displayOrder: number | null; active: boolean | null; createdAt: Date | null; }[]' is not assignable to type 'Skill[]'.
+  Type '{ id: string; name: string; category: string | null; description: string | null; icon: string | null; displayOrder: number | null; active: boolean | null; createdAt: Date | null; }' is not assignable to type 'Skill'.
+    Types of property 'active' are incompatible.
+      Type 'boolean | null' is not assignable to type 'boolean'.
+        Type 'null' is not assignable to type 'boolean'. (ts)
+[36m                                <SkillSelector
+                                    [35mavailableSkills[36m={data.skills}
+                                    bind:selectedSkills={selectedSkillIds}[39m
+
+====================================
+[31msvelte-check found 5 errors and 14 warnings in 9 files
+[39m

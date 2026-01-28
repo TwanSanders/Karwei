@@ -1,0 +1,57 @@
+Loading svelte-check in workspace: c:\Users\twani\Code\karwei\v2
+Getting Svelte diagnostics...
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\api\ai-draft\+server.ts[39m:5:33
+[31mError[39m: File name 'c:/Users/twani/Code/karwei/v2/src/lib/server/repositories/SkillRepository.ts' differs from already included file name 'c:/Users/twani/Code/karwei/v2/src/lib/server/repositories/skillRepository.ts' only in casing.
+  The file is in the program because:
+    Imported via '$lib/server/repositories/skillRepository' from file 'c:/Users/twani/Code/karwei/v2/.svelte-kit/types/src/routes/proxy+page.server.ts'
+    Imported via '$lib/server/repositories/skillRepository' from file 'c:/Users/twani/Code/karwei/v2/.svelte-kit/types/src/routes/post/create/proxy+page.server.ts'
+    Imported via '$lib/server/repositories/skillRepository' from file 'c:/Users/twani/Code/karwei/v2/.svelte-kit/types/src/routes/profile/proxy+page.server.ts'
+    Matched by include pattern '.svelte-kit/../src/**/*.ts' in 'c:/Users/twani/Code/karwei/v2/tsconfig.json'
+    Imported via '$lib/server/repositories/skillRepository' from file 'c:/Users/twani/Code/karwei/v2/src/routes/+page.server.ts'
+    Imported via "$lib/server/repositories/SkillRepository" from file 'c:/Users/twani/Code/karwei/v2/src/routes/api/ai-draft/+server.ts'
+    Imported via '$lib/server/repositories/skillRepository' from file 'c:/Users/twani/Code/karwei/v2/src/routes/post/create/+page.server.ts'
+    Imported via '$lib/server/repositories/skillRepository' from file 'c:/Users/twani/Code/karwei/v2/src/routes/profile/+page.server.ts' 
+[36mimport type { RequestHandler } from "./$types";
+import { SkillRepository } from [35m"$lib/server/repositories/SkillRepository"[36m;[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\lib\components\PasswordInput.svelte[39m:28:14
+[31mError[39m: Type 'string' is not assignable to type 'FullAutoFill | null | undefined'. (ts)
+[36m            type={showPassword ? "text" : "password"}
+            {[35mautocomplete[36m}
+            {required}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\lib\components\RepairAgentChat.svelte[39m:276:57
+[31mError[39m: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'. (ts)
+[36m                            type="button"
+                            on:click={(e) => deleteChat([35mactiveChatId[36m, e)}
+                            class="px-2 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:546:71
+[31mError[39m: Property 'makerName' does not exist on type 'Post | { makerName: string | undefined; makerImage: string | null | undefined; id: string; userId: string; title: string; imageUrl?: string | null | undefined; description?: string | null | undefined; ... 9 more ...; createdAt: Date; }'.
+  Property 'makerName' does not exist on type 'Post'. (ts)
+[36m                                                        >
+                                                            {#if post.[35mmakerName[36m}
+                                                                Repaired by {post.makerName}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\profile\+page.svelte[39m:547:83
+[31mError[39m: Property 'makerName' does not exist on type 'Post | { makerName: string | undefined; makerImage: string | null | undefined; id: string; userId: string; title: string; imageUrl?: string | null | undefined; description?: string | null | undefined; ... 9 more ...; createdAt: Date; }'.
+  Property 'makerName' does not exist on type 'Post'. (ts)
+[36m                                                            {#if post.makerName}
+                                                                Repaired by {post.[35mmakerName[36m}
+                                                            {:else}[39m
+
+c:\Users\twani\Code\karwei\v2\[32msrc\routes\register\+page.svelte[39m:227:37
+[31mError[39m: Type '{ id: string; name: string; category: string | null; description: string | null; icon: string | null; displayOrder: number | null; active: boolean | null; createdAt: Date | null; }[]' is not assignable to type 'Skill[]'.
+  Type '{ id: string; name: string; category: string | null; description: string | null; icon: string | null; displayOrder: number | null; active: boolean | null; createdAt: Date | null; }' is not assignable to type 'Skill'.
+    Types of property 'active' are incompatible.
+      Type 'boolean | null' is not assignable to type 'boolean'.
+        Type 'null' is not assignable to type 'boolean'. (ts)
+[36m                                <SkillSelector
+                                    [35mavailableSkills[36m={data.skills}
+                                    bind:selectedSkills={selectedSkillIds}[39m
+
+====================================
+[31msvelte-check found 6 errors and 14 warnings in 10 files
+[39m

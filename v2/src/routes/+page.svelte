@@ -9,6 +9,17 @@
 
     $: displayedMakers = data.topMakers || [];
 
+    // Combine posts for unified display
+    $: myRepairRequests = [
+        ...(data.assignedPosts || []),
+        ...(data.unassignedPosts || []),
+    ];
+
+    // Show separated lists only if we have BOTH assigned and unassigned posts
+    $: showSeparated =
+        (data.assignedPosts?.length || 0) > 0 &&
+        (data.unassignedPosts?.length || 0) > 0;
+
     // Reactive variables for Maker view filters (find projects section)
     let searchQuery = "";
     let locationStatus: "home" | "current" = "home";
@@ -17,6 +28,7 @@
     let maxDistance = 50;
     let makerSkillsFilter: string[] = [];
     let displayMode: "list" | "map" = "map";
+    let isLocating = false;
 
     // Pre-select user's skills for maker view
     $: if (
@@ -34,14 +46,17 @@
                 return;
             }
 
+            isLocating = true;
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    isLocating = false;
                     userLat = position.coords.latitude;
                     userLong = position.coords.longitude;
                     locationStatus = "current";
                     updateMakerFilter();
                 },
                 () => {
+                    isLocating = false;
                     alert("Permission Denied");
                     // Stay on home or revert if needed (though UI state is driven by locationStatus)
                     locationStatus = "home";
@@ -230,16 +245,19 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Assigned Posts -->
-        <div class="mb-12">
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Assigned Posts
-            </h2>
-            {#if data.assignedPosts && data.assignedPosts.length > 0}
+        <!-- My Repair Requests (Unified or Separated) -->
+        {#if showSeparated}
+            <!-- Assigned Posts -->
+            <div class="mb-12">
+                <h2
+                    class="text-2xl font-bold text-gray-900 dark:text-white mb-4"
+                >
+                    Assigned Posts
+                </h2>
                 <div
                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
-                    {#each data.assignedPosts as post}
+                    {#each data.assignedPosts || [] as post}
                         <a
                             href="/post/{post.id}"
                             class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden"
@@ -271,8 +289,9 @@
                                     </h3>
                                     <span
                                         class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
-                                        >In Progress</span
                                     >
+                                        In Progress
+                                    </span>
                                 </div>
                                 <p
                                     class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2"
@@ -283,23 +302,19 @@
                         </a>
                     {/each}
                 </div>
-            {:else}
-                <p class="text-gray-600 dark:text-gray-400">
-                    No posts assigned to a maker yet.
-                </p>
-            {/if}
-        </div>
+            </div>
 
-        <!-- Unassigned Posts -->
-        <div>
-            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                Unassigned Posts
-            </h2>
-            {#if data.unassignedPosts && data.unassignedPosts.length > 0}
+            <!-- Unassigned Posts -->
+            <div>
+                <h2
+                    class="text-2xl font-bold text-gray-900 dark:text-white mb-4"
+                >
+                    Unassigned Posts
+                </h2>
                 <div
                     class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
-                    {#each data.unassignedPosts as post}
+                    {#each data.unassignedPosts || [] as post}
                         <a
                             href="/post/{post.id}"
                             class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden"
@@ -331,8 +346,9 @@
                                     </h3>
                                     <span
                                         class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
-                                        >Open</span
                                     >
+                                        Open
+                                    </span>
                                 </div>
                                 <p
                                     class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2"
@@ -343,12 +359,108 @@
                         </a>
                     {/each}
                 </div>
-            {:else}
-                <p class="text-gray-600 dark:text-gray-400">
-                    All your posts have been assigned!
-                </p>
-            {/if}
-        </div>
+            </div>
+        {:else}
+            <!-- Unified List (Fallback or Clean View) -->
+            <div class="mb-12">
+                <h2
+                    class="text-2xl font-bold text-gray-900 dark:text-white mb-4"
+                >
+                    My Repair Requests
+                </h2>
+                {#if myRepairRequests.length > 0}
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                        {#each myRepairRequests as post}
+                            <a
+                                href="/post/{post.id}"
+                                class="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-xl transition-shadow overflow-hidden"
+                            >
+                                {#if post.imageUrl}
+                                    <img
+                                        class="w-full h-48 object-cover"
+                                        src={post.imageUrl}
+                                        alt={post.title}
+                                    />
+                                {:else}
+                                    <div
+                                        class="w-full h-48 bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+                                    >
+                                        <span
+                                            class="text-gray-400 dark:text-gray-500"
+                                            >No image</span
+                                        >
+                                    </div>
+                                {/if}
+                                <div class="p-4">
+                                    <div
+                                        class="flex items-center justify-between mb-2"
+                                    >
+                                        <h3
+                                            class="font-semibold text-gray-900 dark:text-white truncate"
+                                        >
+                                            {post.title}
+                                        </h3>
+                                        <span
+                                            class="px-2 py-1 text-xs font-medium rounded-full {post.status ===
+                                            'in_progress'
+                                                ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                                                : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'}"
+                                        >
+                                            {post.status === "in_progress"
+                                                ? "In Progress"
+                                                : "Open"}
+                                        </span>
+                                    </div>
+                                    <p
+                                        class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2"
+                                    >
+                                        {post.description || "No description"}
+                                    </p>
+                                </div>
+                            </a>
+                        {/each}
+                    </div>
+                {:else}
+                    <div
+                        class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+                    >
+                        <h3
+                            class="mt-2 text-sm font-medium text-gray-900 dark:text-white"
+                        >
+                            No active requests
+                        </h3>
+                        <p
+                            class="mt-1 text-sm text-gray-500 dark:text-gray-400"
+                        >
+                            Get started by creating a new repair request.
+                        </p>
+                        <div class="mt-6">
+                            <a
+                                href="/post/create"
+                                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                                <svg
+                                    class="-ml-1 mr-2 h-5 w-5"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20"
+                                    fill="currentColor"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        fill-rule="evenodd"
+                                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                        clip-rule="evenodd"
+                                    />
+                                </svg>
+                                New Request
+                            </a>
+                        </div>
+                    </div>
+                {/if}
+            </div>
+        {/if}
 
         <!-- Become a Maker Promo -->
         {#if !data.user.maker}
@@ -539,16 +651,39 @@
                             </button>
                             <button
                                 on:click={() => setLocationMode("current")}
-                                class="flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 z-10 {locationStatus ===
+                                disabled={isLocating}
+                                class="flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 z-10 flex items-center justify-center gap-2 {locationStatus ===
                                 'current'
                                     ? 'bg-white dark:bg-gray-600 text-indigo-600 dark:text-indigo-400 shadow-sm ring-1 ring-black/5'
-                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}"
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'} {isLocating
+                                    ? 'opacity-75 cursor-wait'
+                                    : ''}"
                             >
-                                <span
-                                    class="flex items-center justify-center gap-2"
-                                >
+                                {#if isLocating}
+                                    <svg
+                                        class="animate-spin h-4 w-4"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            class="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            stroke-width="4"
+                                        ></circle>
+                                        <path
+                                            class="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                        ></path>
+                                    </svg>
+                                    <span>Locating...</span>
+                                {:else}
                                     <span>📍</span> Current
-                                </span>
+                                {/if}
                             </button>
                         </div>
                     </div>
@@ -658,7 +793,13 @@
                     class="rounded-lg overflow-hidden shadow-lg"
                     style="height: 600px;"
                 >
-                    <ResultsMap items={data.posts || []} type="posts" />
+                    <ResultsMap
+                        items={data.posts || []}
+                        type="posts"
+                        {userLat}
+                        {userLong}
+                        locationType={locationStatus}
+                    />
                 </div>
             {:else}
                 <div

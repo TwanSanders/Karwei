@@ -307,9 +307,25 @@
                             <p
                                 class="mt-1 text-sm text-green-700 dark:text-green-300 mb-4"
                             >
-                                This item has been marked as fixed. Please leave
-                                a review for the repairer.
+                                The repairer marked this as fixed. Please
+                                confirm by leaving a review, or reopen if issues
+                                persist.
                             </p>
+
+                            <div class="mb-6 flex gap-3">
+                                <form
+                                    action="?/reopen"
+                                    method="POST"
+                                    use:enhance
+                                >
+                                    <button
+                                        type="submit"
+                                        class="text-sm text-red-600 hover:text-red-700 font-medium underline"
+                                    >
+                                        Not Fixed? Reopen
+                                    </button>
+                                </form>
+                            </div>
 
                             <form
                                 action="?/submitReview"

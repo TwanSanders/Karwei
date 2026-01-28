@@ -157,6 +157,11 @@ export const actions = {
       // Assign maker to post
       await PostRepository.assignMaker(postId, makerId);
 
+      // Notify the maker that their offer was accepted
+      await import('$lib/server/repositories/notificationRepository').then(m => 
+          m.NotificationRepository.create(makerId, 'accept', postId)
+      );
+
       // Create/get conversation and inject system message
       const { ChatRepository } = await import('$lib/server/repositories/chatRepository');
       const conversationId = await ChatRepository.getOrCreateConversation(userId, makerId);
@@ -220,10 +225,14 @@ export const actions = {
           // Since I can't edit repo typings in this `replace_file_content` call, I'm stuck.
           // I will use a TS-ignore to pass 'unassign' and then update the Repo signature in next step.
           
-          // @ts-ignore
           await import('$lib/server/repositories/notificationRepository').then(m => 
               m.NotificationRepository.create(oldMakerId, 'unassign', postId)
           );
+
+          // Inject System Message in Chat
+          const { ChatRepository } = await import('$lib/server/repositories/chatRepository');
+          const conversationId = await ChatRepository.getOrCreateConversation(userId, oldMakerId);
+          await ChatRepository.injectSystemMessage(conversationId, postId, `JOB UPDATE: The repairer has been unassigned from this job.`);
       }
 
       return { success: true };
@@ -238,12 +247,60 @@ export const actions = {
 
       if (!post) throw error(404, 'Post not found');
       
-      // Authorization change: Only the assigned MAKER can mark as fixed
+      // Authorization change: The assigned MAKER marks as fixed to signal completion
       if (post.makerId !== userId) {
           return fail(403, { unauthorized: true, message: "Only the assigned repairer can mark this as fixed." });
       }
 
       await PostRepository.updateStatus(postId, 'fixed');
+      
+      // Notify the Customer (Post Owner)
+      await import('$lib/server/repositories/notificationRepository').then(m => 
+          m.NotificationRepository.create(post.userId, 'job_completed', postId)
+      );
+
+      // Inject System Message in Chat (if conversation exists)
+      if (post.makerId) {
+          const { ChatRepository } = await import('$lib/server/repositories/chatRepository');
+          const conversationId = await ChatRepository.getOrCreateConversation(userId, post.userId); // Maker is userId here
+          await ChatRepository.injectSystemMessage(conversationId, postId, `JOB UPDATE: This job has been marked as fixed by the repairer.`);
+      }
+
+      return { success: true };
+  },
+
+  reopen: async ({ locals, params }) => {
+      if (!locals.user) throw redirect(303, '/login');
+      const userId = locals.user.id;
+      const postId = params.id;
+      
+      const post = await PostRepository.getById(postId);
+      if (!post) throw error(404, 'Post not found');
+
+      // Only Owner can reopen
+      if (post.userId !== userId) {
+          return fail(403, { unauthorized: true });
+      }
+
+      // Only if currently fixed
+      if (post.status !== 'fixed') {
+           return fail(400, { message: 'Post is not fixed' });
+      }
+
+      await PostRepository.updateStatus(postId, 'in_progress');
+
+      // Notify the Maker if one is assigned (should be, if it was fixed)
+      if (post.makerId) {
+          await import('$lib/server/repositories/notificationRepository').then(m => 
+              m.NotificationRepository.create(post.makerId!, 'job_reopened', postId)
+          );
+          
+          // Inject System Message in Chat
+          const { ChatRepository } = await import('$lib/server/repositories/chatRepository');
+          const conversationId = await ChatRepository.getOrCreateConversation(userId, post.makerId!);
+          await ChatRepository.injectSystemMessage(conversationId, postId, `JOB UPDATE: This job has been reopened by the customer.`);
+      }
+
       return { success: true };
   },
 

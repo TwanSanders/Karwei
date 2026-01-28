@@ -57,11 +57,18 @@ Key relationships:
 3.  **Assignment**: Customer accepts an `Offer`.
     - Backend: `PostRepository.assignMaker(postId, makerId)`
     - Status Update: `Open` -> `In Progress`.
+    - Status Update: `Open` -> `In Progress`.
     - Maker is recorded in `post.makerId`.
-4.  **Completion**: Customer marks "Fixed".
+4.  **Unassignment (Optional)**: Customer can remove the assigned Maker.
+    - Backend: `PostRepository.unassignMaker(postId)`
+    - Status Update: `In Progress` -> `Open`.
+5.  **Completion**: Maker marks "Fixed".
     - Backend: `PostRepository.updateStatus(postId, 'fixed')`
     - Status Update: `In Progress` -> `Fixed`.
-5.  **Review & Close**: Customer submits `Review`.
+6.  **Dispute (Optional)**: Customer Reopens.
+    - Backend: `PostRepository.updateStatus(postId, 'in_progress')`
+    - Status Update: `Fixed` -> `In Progress`.
+7.  **Review & Close**: Customer submits `Review`.
     - Backend: `ReviewRepository.create(...)`
     - Status Update: `Fixed` -> `Closed`.
 

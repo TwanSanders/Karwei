@@ -33,6 +33,7 @@ export interface Post {
   lat?: number | null;
   long?: number | null;
   score?: number | null;
+  distance?: number;
   createdAt: Date;
 }
 

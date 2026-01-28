@@ -91,7 +91,7 @@ export const contactRequestsTable = karweiSchema.table("contact_request", {
 export const notificationsTable = karweiSchema.table("notification", {
 	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
 	userId: text("user_id").notNull().references(() => usersTable.id),
-	type: text("type", { enum: ["offer", "accept", "contact_request", "unassign"] }).notNull(),
+	type: text("type", { enum: ["offer", "accept", "contact_request", "unassign", "job_completed", "job_reopened"] }).notNull(),
 	relatedId: text("related_id").notNull(), // ID of the Offer, Post, or ContactRequest
 	read: boolean("read").default(false).notNull(),
 	createdAt: timestamp("created_at").defaultNow(),

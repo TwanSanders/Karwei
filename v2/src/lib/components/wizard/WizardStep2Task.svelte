@@ -64,7 +64,7 @@
             id="title"
             bind:value={title}
             on:input={(e) => onChange("title", e.currentTarget.value)}
-            class="shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 px-4 py-3 transition-all"
+            class="shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full text-base sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 px-4 py-3 transition-all"
             placeholder="e.g. Broken Toaster"
         />
     </div>
@@ -81,7 +81,7 @@
             bind:value={description}
             on:input={(e) => onChange("description", e.currentTarget.value)}
             rows="5"
-            class="shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 px-4 py-3 transition-all"
+            class="shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full text-base sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 px-4 py-3 transition-all"
             placeholder="Describe the problem in detail. What's broken? When did it break? Any relevant history?"
         ></textarea>
         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -109,7 +109,7 @@
                 id="price"
                 bind:value={price}
                 on:input={(e) => onChange("price", e.currentTarget.value)}
-                class="focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full pl-8 pr-12 sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 py-3 transition-all"
+                class="focus:ring-2 focus:ring-indigo-500 focus:border-transparent block w-full pl-8 pr-12 text-base sm:text-sm border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 py-3 transition-all"
                 placeholder="0.00"
                 step="0.01"
                 min="0"

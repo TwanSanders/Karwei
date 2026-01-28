@@ -14,10 +14,6 @@
     $: ({ user, archivedPosts, completedProjects, skills, averageRating } =
         data);
 
-    $: incomingRequests = data.incomingRequests.filter(
-        (r) => r.status === "pending",
-    );
-
     // Edit mode states
     let isPosterEditMode = false;
     let isMakerEditMode = false;
@@ -215,67 +211,24 @@
                         >
                             {user.email}
                         </p>
-
-                        <!-- Update Profile Picture -->
-                        <form
-                            action="?/updateImage"
-                            method="POST"
-                            enctype="multipart/form-data"
-                            use:enhance
-                            class="mt-2"
-                        >
-                            <div class="flex items-center gap-2">
-                                <input
-                                    type="file"
-                                    name="image"
-                                    accept="image/*"
-                                    class="text-xs text-gray-500 dark:text-gray-400 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/60"
-                                    onchange={handleImageChange}
-                                />
-                                <button
-                                    type="submit"
-                                    class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
-                                >
-                                    Update
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
 
-                <!-- Poster/Maker Toggle (if user is maker) -->
-                {#if user.maker}
-                    <button
-                        onclick={toggleViewMode}
-                        class="relative flex items-center bg-gray-700 dark:bg-gray-600 rounded-full p-1 w-40 h-10 cursor-pointer transition-colors"
-                    >
-                        <!-- Sliding indicator -->
-                        <div
-                            class="absolute h-8 w-20 bg-white dark:bg-gray-800 rounded-full shadow-md transition-transform duration-200 ease-in-out {$viewMode ===
-                            'maker'
-                                ? 'translate-x-[4.5rem]'
-                                : 'translate-x-0'}"
-                        ></div>
+                <!-- Poster/Maker Toggle removed (redundant with Navbar) -->
+            </div>
 
-                        <!-- Labels -->
-                        <span
-                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
-                            'poster'
-                                ? 'text-gray-900 dark:text-white'
-                                : 'text-gray-300 dark:text-gray-400'}"
-                        >
-                            Poster
-                        </span>
-                        <span
-                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
-                            'maker'
-                                ? 'text-gray-900 dark:text-white'
-                                : 'text-gray-300 dark:text-gray-400'}"
-                        >
-                            Maker
-                        </span>
+            <!-- Footer Actions (Logout) -->
+            <div
+                class="px-4 py-4 sm:px-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 flex justify-end"
+            >
+                <form action="?/logout" method="POST" use:enhance>
+                    <button
+                        type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-red-200 dark:border-red-900 shadow-sm text-sm font-medium rounded-md text-red-600 dark:text-red-400 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                    >
+                        Log out
                     </button>
-                {/if}
+                </form>
             </div>
         </div>
 
@@ -300,10 +253,112 @@
                         >
                             Edit Profile
                         </button>
+                    {:else}
+                        <div class="flex items-center gap-2">
+                            <button
+                                onclick={cancelPosterEdit}
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+                            <form
+                                action="?/updateBio"
+                                method="POST"
+                                use:enhance={({ formData }) => {
+                                    formData.set("bio", currentBio);
+                                    if (posterLocationChanged) {
+                                        formData.set(
+                                            "lat",
+                                            posterLocationLat?.toString() || "",
+                                        );
+                                        formData.set(
+                                            "long",
+                                            posterLocationLong?.toString() ||
+                                                "",
+                                        );
+                                    }
+                                    return async ({ result, update }) => {
+                                        if (result.type === "success") {
+                                            data.user.bio = currentBio;
+                                            isPosterEditMode = false;
+                                        }
+                                        await update({ reset: false });
+                                    };
+                                }}
+                                class="inline"
+                            >
+                                <button
+                                    type="submit"
+                                    disabled={!bioChanged &&
+                                        !posterLocationChanged}
+                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white transition-all {bioChanged ||
+                                    posterLocationChanged
+                                        ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                        : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
+                                >
+                                    Save Changes
+                                </button>
+                            </form>
+                        </div>
                     {/if}
                 </div>
 
                 <div class="px-4 py-5 sm:p-6 space-y-6">
+                    <!-- Profile Picture (Edit Mode Only) -->
+                    {#if isPosterEditMode}
+                        <div>
+                            <label
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                            >
+                                Profile Picture
+                            </label>
+                            <form
+                                action="?/updateImage"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                use:enhance
+                                class="flex items-center gap-4"
+                            >
+                                {#if user.image}
+                                    <img
+                                        src={user.image}
+                                        alt=""
+                                        class="h-16 w-16 rounded-full object-cover ring-2 ring-indigo-100 dark:ring-indigo-900"
+                                    />
+                                {:else}
+                                    <span
+                                        class="inline-block h-16 w-16 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 ring-2 ring-gray-200 dark:ring-gray-600"
+                                    >
+                                        <svg
+                                            class="h-full w-full text-gray-300 dark:text-gray-500"
+                                            fill="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"
+                                            />
+                                        </svg>
+                                    </span>
+                                {/if}
+                                <div class="flex flex-col gap-2">
+                                    <input
+                                        type="file"
+                                        name="image"
+                                        accept="image/*"
+                                        class="text-sm text-gray-500 dark:text-gray-400 file:mr-2 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/60"
+                                        onchange={handleImageChange}
+                                    />
+                                    <button
+                                        type="submit"
+                                        class="self-start text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-medium"
+                                    >
+                                        Upload New Photo
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    {/if}
+
                     <!-- Biography -->
                     <div>
                         <label
@@ -362,29 +417,12 @@
                             />
                         </label>
                         {#if isPosterEditMode}
-                            <form
-                                action="?/updateLocation"
-                                method="POST"
-                                use:enhance={() => {
-                                    return async ({ result }) => {
-                                        if (result.type === "success") {
-                                            await invalidateAll();
-                                            posterLocationLat = data.user.lat
-                                                ? Number(data.user.lat)
-                                                : null;
-                                            posterLocationLong = data.user.long
-                                                ? Number(data.user.long)
-                                                : null;
-                                        }
-                                    };
-                                }}
-                                class="mt-2"
-                            >
+                            <div class="mt-2">
                                 <LocationPicker
                                     bind:lat={posterLocationLat}
                                     bind:long={posterLocationLong}
                                 />
-                            </form>
+                            </div>
                         {:else}
                             <p
                                 class="mt-1 text-sm text-gray-600 dark:text-gray-300"
@@ -425,48 +463,6 @@
                             </p>
                         </form>
                     </div>
-
-                    <!-- Save/Cancel Buttons -->
-                    {#if isPosterEditMode}
-                        <div
-                            class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700"
-                        >
-                            <button
-                                onclick={cancelPosterEdit}
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                            >
-                                Cancel
-                            </button>
-
-                            <!-- Save Bio Button -->
-                            <form
-                                action="?/updateBio"
-                                method="POST"
-                                use:enhance={() => {
-                                    return async ({ result, update }) => {
-                                        if (result.type === "success") {
-                                            data.user.bio = currentBio;
-                                            isPosterEditMode = false;
-                                        }
-                                        await update({ reset: false });
-                                    };
-                                }}
-                                class="inline"
-                            >
-                                <button
-                                    type="submit"
-                                    disabled={!bioChanged &&
-                                        !posterLocationChanged}
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white transition-all {bioChanged ||
-                                    posterLocationChanged
-                                        ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-                                        : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
-                                >
-                                    Save Changes
-                                </button>
-                            </form>
-                        </div>
-                    {/if}
                 </div>
             </div>
 
@@ -593,6 +589,62 @@
                         >
                             Edit Profile
                         </button>
+                    {:else}
+                        <div class="flex items-center gap-2">
+                            <button
+                                onclick={cancelMakerEdit}
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+                            >
+                                Cancel
+                            </button>
+                            <form
+                                action="?/updateMakerBio"
+                                method="POST"
+                                use:enhance={({ formData }) => {
+                                    formData.set("makerBio", currentMakerBio);
+                                    if (skillsChanged) {
+                                        formData.set(
+                                            "skillIds",
+                                            currentSkillIds.join(","),
+                                        );
+                                    }
+                                    if (makerLocationChanged) {
+                                        formData.set(
+                                            "lat",
+                                            makerLocationLat?.toString() || "",
+                                        );
+                                        formData.set(
+                                            "long",
+                                            makerLocationLong?.toString() || "",
+                                        );
+                                    }
+                                    return async ({ result, update }) => {
+                                        if (result.type === "success") {
+                                            data.user.makerBio =
+                                                currentMakerBio;
+                                            await invalidateAll();
+                                            isMakerEditMode = false;
+                                        }
+                                        await update({ reset: false });
+                                    };
+                                }}
+                                class="inline"
+                            >
+                                <button
+                                    type="submit"
+                                    disabled={!makerBioChanged &&
+                                        !skillsChanged &&
+                                        !makerLocationChanged}
+                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white transition-all {makerBioChanged ||
+                                    skillsChanged ||
+                                    makerLocationChanged
+                                        ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                                        : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
+                                >
+                                    Save Changes
+                                </button>
+                            </form>
+                        </div>
                     {/if}
                 </div>
 
@@ -728,73 +780,6 @@
                             </p>
                         {/if}
                     </div>
-
-                    <!-- Save/Cancel Buttons -->
-                    {#if isMakerEditMode}
-                        <div
-                            class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700"
-                        >
-                            <button
-                                onclick={cancelMakerEdit}
-                                class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                            >
-                                Cancel
-                            </button>
-
-                            <!-- Combined Save Button -->
-                            <form
-                                action="?/updateMakerBio"
-                                method="POST"
-                                use:enhance={({ formData }) => {
-                                    // Add all maker fields to form data
-                                    formData.set("makerBio", currentMakerBio);
-                                    if (skillsChanged) {
-                                        formData.set(
-                                            "skillIds",
-                                            currentSkillIds.join(","),
-                                        );
-                                    }
-                                    if (makerLocationChanged) {
-                                        formData.set(
-                                            "lat",
-                                            makerLocationLat?.toString() || "",
-                                        );
-                                        formData.set(
-                                            "long",
-                                            makerLocationLong?.toString() || "",
-                                        );
-                                    }
-
-                                    return async ({ result, update }) => {
-                                        if (result.type === "success") {
-                                            // Update all fields
-                                            data.user.makerBio =
-                                                currentMakerBio;
-
-                                            await invalidateAll();
-                                            isMakerEditMode = false;
-                                        }
-                                        await update({ reset: false });
-                                    };
-                                }}
-                                class="inline"
-                            >
-                                <button
-                                    type="submit"
-                                    disabled={!makerBioChanged &&
-                                        !skillsChanged &&
-                                        !makerLocationChanged}
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white transition-all {makerBioChanged ||
-                                    skillsChanged ||
-                                    makerLocationChanged
-                                        ? 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
-                                        : 'bg-gray-300 dark:bg-gray-600 cursor-not-allowed opacity-50'}"
-                                >
-                                    Save Changes
-                                </button>
-                            </form>
-                        </div>
-                    {/if}
                 </div>
             </div>
 

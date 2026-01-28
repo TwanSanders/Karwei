@@ -4,7 +4,7 @@
     import { theme } from "$lib/stores/theme"; // <--- IMPORT STORE
     import { viewMode } from "$lib/stores/viewMode"; // <--- IMPORT VIEW MODE STORE
     import { invalidateAll } from "$app/navigation";
-    import { MessageSquare } from "lucide-svelte";
+    import { MessageSquare, Hammer, LayoutList } from "lucide-svelte";
 
     // Function to toggle
     function toggleTheme() {
@@ -69,7 +69,9 @@
 
 <svelte:window on:click={handleClickOutside} />
 
-<nav class="bg-white dark:bg-gray-800 shadow transition-colors duration-200">
+<nav
+    class="bg-white dark:bg-gray-800 shadow transition-colors duration-200 sticky top-0 z-50"
+>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex items-center gap-6">
@@ -85,32 +87,34 @@
                     <!-- Poster/Maker Toggle -->
                     <button
                         on:click={toggleViewMode}
-                        class="relative flex items-center bg-gray-700 dark:bg-gray-600 rounded-full p-1 w-40 h-10 cursor-pointer transition-colors"
+                        class="relative flex items-center bg-gray-700 dark:bg-gray-600 rounded-full p-1 w-20 sm:w-40 h-10 cursor-pointer transition-colors"
                     >
                         <!-- Sliding indicator -->
                         <div
-                            class="absolute h-8 w-20 bg-white dark:bg-gray-800 rounded-full shadow-md transition-transform duration-200 ease-in-out {$viewMode ===
+                            class="absolute h-8 w-9 sm:w-20 bg-white dark:bg-gray-800 rounded-full shadow-md transition-transform duration-200 ease-in-out {$viewMode ===
                             'maker'
-                                ? 'translate-x-[4.5rem]'
+                                ? 'translate-x-[2.25rem] sm:translate-x-[4.5rem]'
                                 : 'translate-x-0'}"
                         ></div>
 
                         <!-- Labels -->
                         <span
-                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
+                            class="relative z-10 flex-1 flex justify-center items-center text-sm font-medium transition-colors {$viewMode ===
                             'poster'
                                 ? 'text-gray-900 dark:text-white'
                                 : 'text-gray-300 dark:text-gray-400'}"
                         >
-                            Poster
+                            <span class="hidden sm:block">Poster</span>
+                            <LayoutList class="block sm:hidden h-4 w-4" />
                         </span>
                         <span
-                            class="relative z-10 flex-1 text-center text-sm font-medium transition-colors {$viewMode ===
+                            class="relative z-10 flex-1 flex justify-center items-center text-sm font-medium transition-colors {$viewMode ===
                             'maker'
                                 ? 'text-gray-900 dark:text-white'
                                 : 'text-gray-300 dark:text-gray-400'}"
                         >
-                            Maker
+                            <span class="hidden sm:block">Maker</span>
+                            <Hammer class="block sm:hidden h-4 w-4" />
                         </span>
                     </button>
                 {/if}
@@ -119,15 +123,29 @@
                 <div class="flex-shrink-0">
                     <a
                         href="/post/create"
-                        class="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        class="hidden sm:inline-flex relative items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 whitespace-nowrap"
                     >
-                        <span>New Post</span>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 sm:mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 4v16m8-8H4"
+                            />
+                        </svg>
+                        <span class="hidden sm:inline">New Post</span>
                     </a>
                 </div>
                 <!-- Theme Toggle -->
                 <button
                     on:click={toggleTheme}
-                    class="relative p-2 h-10 w-10 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none transition-colors duration-500 ease-in-out"
+                    class="relative p-2 h-12 w-12 sm:h-11 sm:w-11 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none transition-colors duration-500 ease-in-out"
                     aria-label="Toggle Dark Mode"
                 >
                     <!-- Moon Icon (Dark Mode) -->
@@ -173,11 +191,11 @@
                     <!-- Chat Link -->
                     <a
                         href="/chat"
-                        class="relative p-2 text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none transition-colors"
+                        class="relative p-2 h-12 w-12 sm:h-10 sm:w-10 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white focus:outline-none transition-colors"
                         aria-label="Messages"
                     >
                         <MessageSquare class="h-6 w-6" />
-                        {#if $page.data.unreadMessagesCount && $page.data.unreadMessagesCount > 0}
+                        {#if ($page.data.unreadMessagesCount || 0) + ($page.data.pendingRequestCount || 0) > 0}
                             <span
                                 class="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white dark:ring-gray-800 bg-red-500"
                             ></span>
@@ -185,12 +203,12 @@
                     </a>
 
                     <!-- Notification Dropdown -->
-                    <div class="relative ml-3">
+                    <div class="relative ml-1 sm:ml-3">
                         <div>
                             <button
                                 on:click={toggleNotifications}
                                 type="button"
-                                class="bg-white dark:bg-gray-700 p-1 rounded-full text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 relative"
+                                class="bg-white dark:bg-gray-700 p-2 h-12 w-12 sm:h-10 sm:w-10 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 relative"
                                 id="user-menu-button"
                                 aria-expanded="false"
                                 aria-haspopup="true"
@@ -266,6 +284,12 @@
                                                 {:else if notification.type === "unassign"}
                                                     You have been unassigned
                                                     from the job
+                                                {:else if notification.type === "job_completed"}
+                                                    The job has been marked as
+                                                    fixed
+                                                {:else if notification.type === "job_reopened"}
+                                                    The job has been reopened by
+                                                    the customer
                                                 {/if}
                                             </p>
                                             <p
@@ -288,17 +312,17 @@
 
                     <a
                         href="/profile"
-                        class="flex items-center mr-4 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-md transition-colors"
+                        class="flex items-center ml-1 sm:mr-4 hover:bg-gray-50 dark:hover:bg-gray-700 px-2 py-2 sm:px-3 rounded-md transition-colors min-h-[48px] sm:min-h-0"
                     >
                         {#if $page.data.user.image}
                             <img
-                                class="h-8 w-8 rounded-full object-cover mr-2"
+                                class="h-8 w-8 rounded-full object-cover sm:mr-2"
                                 src={$page.data.user.image}
                                 alt={$page.data.user.name}
                             />
                         {:else}
                             <span
-                                class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600 mr-2"
+                                class="inline-block h-8 w-8 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-600 sm:mr-2"
                             >
                                 <svg
                                     class="h-full w-full text-gray-300"
@@ -312,26 +336,19 @@
                             </span>
                         {/if}
                         <span
-                            class="text-gray-700 dark:text-gray-200 text-sm font-medium"
+                            class="text-gray-700 dark:text-gray-200 text-sm font-medium hidden sm:block"
                             >{$page.data.user.name}</span
                         >
                     </a>
-                    <form action="/profile?/logout" method="POST" use:enhance>
-                        <button
-                            type="submit"
-                            class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                            >Log out</button
-                        >
-                    </form>
                 {:else}
                     <a
                         href="/login"
-                        class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white px-2 sm:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap"
                         >Log in</a
                     >
                     <a
                         href="/register"
-                        class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                        class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white px-2 sm:px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap"
                         >Register</a
                     >
                 {/if}

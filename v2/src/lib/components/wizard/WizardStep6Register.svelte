@@ -74,7 +74,7 @@
                 type="text"
                 bind:value={name}
                 disabled={isSubmitting}
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                class="w-full px-4 py-2 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="John Doe"
             />
         </div>
@@ -91,7 +91,7 @@
                 type="email"
                 bind:value={email}
                 disabled={isSubmitting}
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                class="w-full px-4 py-2 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="john@example.com"
             />
         </div>
@@ -108,7 +108,7 @@
                 type="tel"
                 bind:value={phoneNumber}
                 disabled={isSubmitting}
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                class="w-full px-4 py-2 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 placeholder="+32 123 456 789"
             />
         </div>
@@ -126,7 +126,7 @@
                     type={showPassword ? "text" : "password"}
                     bind:value={password}
                     disabled={isSubmitting}
-                    class="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    class="w-full px-4 py-2 pr-10 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="••••••••"
                 />
                 <button
@@ -193,7 +193,7 @@
                     type={showConfirmPassword ? "text" : "password"}
                     bind:value={confirmPassword}
                     disabled={isSubmitting}
-                    class="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    class="w-full px-4 py-2 pr-10 text-base sm:text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     placeholder="••••••••"
                 />
                 <button

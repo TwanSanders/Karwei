@@ -270,7 +270,7 @@ export const ChatRepository = {
         email: partnerRow.email,
         phoneNumber: partnerRow.phoneNumber,
         image: partnerRow.image,
-        skills: partnerRow.skills,
+        skills: [], // Skills parsing not implemented for chat view yet
         lat: partnerRow.lat ? parseFloat(partnerRow.lat) : null,
         long: partnerRow.long ? parseFloat(partnerRow.long) : null,
         bio: partnerRow.bio,

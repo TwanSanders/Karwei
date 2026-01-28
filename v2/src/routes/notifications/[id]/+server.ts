@@ -36,11 +36,11 @@ export const GET: RequestHandler = async ({ params, locals }) => {
                  targetUrl = `/user/${notification.contactTargetUserId}`;
              }
         } else {
-             // If I am the target (someone asked me), go to my profile to approve/deny
-             targetUrl = `/profile#request-${notification.relatedId}`;
+             // If I am the target (someone asked me), go to chat to see pending requests
+             targetUrl = `/chat`;
         }
-    } else if (notification.type === 'offer' || notification.type === 'accept') {
-        // For offers and accepts, go to the post
+    } else if (notification.type === 'offer' || notification.type === 'accept' || notification.type === 'job_completed' || notification.type === 'job_reopened' || notification.type === 'unassign') {
+        // For offers, accepts, job changes, go to the post
         if (notification.postId) {
              targetUrl = `/post/${notification.postId}`;
         }

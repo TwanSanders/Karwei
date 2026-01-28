@@ -3,7 +3,7 @@ import { lucia } from "$lib/server/auth";
 import type { PageServerLoad, Actions } from './$types';
 import { UserRepository } from '$lib/server/repositories/userRepository';
 import { UserSkillRepository } from '$lib/server/repositories/userSkillRepository';
-import { ContactRequestRepository } from '$lib/server/repositories/contactRequestRepository';
+
 import { PostRepository } from '$lib/server/repositories/postRepository';
 import { OfferRepository } from '$lib/server/repositories/offerRepository';
 import { SkillRepository } from '$lib/server/repositories/skillRepository';
@@ -20,11 +20,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         throw redirect(303, '/login');
     }
 
-    const incomingRequests = await ContactRequestRepository.getByTargetUser(userId);
-    const requestsWithUsers = await Promise.all(incomingRequests.map(async (req) => {
-        const requester = await UserRepository.getById(req.requesterId);
-        return { ...req, requesterName: requester?.name };
-    }));
+
 
     // Fetch all user posts
     const userPosts = await PostRepository.findByUserId(userId);
@@ -72,7 +68,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
         user: { ...user, completedRepairs, level },
-        incomingRequests: requestsWithUsers,
+
         archivedPosts: archivedPostsWithMaker,
         completedProjects,
         skills,
@@ -156,22 +152,7 @@ export const actions = {
         
         return { success: true };
     },
-    respondRequest: async ({ request, locals }) => {
-        if (!locals.user) throw redirect(303, '/login');
-        const userId = locals.user.id;
 
-        const formData = await request.formData();
-        const requestId = formData.get('requestId') as string;
-        const status = formData.get('status') as 'accepted' | 'denied';
-
-        if (!requestId || !status) return fail(400, { missing: true });
-
-        // Verify ownership (optional but good practice, though repository doesn't fully check yet)
-        // Ideally verify that the request belongs to the current user
-
-        await ContactRequestRepository.updateStatus(requestId, status);
-        return { success: true };
-    },
     deletePost: async ({ request, locals }) => {
         if (!locals.user) throw redirect(303, '/login');
         const userId = locals.user.id;
@@ -281,10 +262,23 @@ export const actions = {
 
         const formData = await request.formData();
         const bio = formData.get('bio') as string || '';
+        const latStr = formData.get('lat') as string;
+        const longStr = formData.get('long') as string;
 
-        await UserRepository.update(userId, {
+        // Build update object
+        const updateData: { bio: string; lat?: string | null; long?: string | null } = {
             bio: bio.trim().substring(0, 500) // Limit to 500 chars
-        });
+        };
+
+        // Update location if provided
+        if (latStr !== null && longStr !== null) {
+            const lat = latStr ? parseFloat(latStr) : null;
+            const long = longStr ? parseFloat(longStr) : null;
+            updateData.lat = lat ? lat.toString() : null;
+            updateData.long = long ? long.toString() : null;
+        }
+
+        await UserRepository.update(userId, updateData);
 
         return { success: true };
     },
@@ -295,10 +289,23 @@ export const actions = {
         const formData = await request.formData();
         const makerBio = formData.get('makerBio') as string || '';
         const skillIdsStr = formData.get('skillIds') as string;
+        const latStr = formData.get('lat') as string;
+        const longStr = formData.get('long') as string;
 
-        await UserRepository.update(userId, {
+        // Build update object
+        const updateData: { makerBio: string; lat?: string | null; long?: string | null } = {
             makerBio: makerBio.trim().substring(0, 500) // Limit to 500 chars
-        });
+        };
+
+        // Update location if provided
+        if (latStr !== null && longStr !== null) {
+            const lat = latStr ? parseFloat(latStr) : null;
+            const long = longStr ? parseFloat(longStr) : null;
+            updateData.lat = lat ? lat.toString() : null;
+            updateData.long = long ? long.toString() : null;
+        }
+
+        await UserRepository.update(userId, updateData);
         
         // Update skills if provided
         if (skillIdsStr) {

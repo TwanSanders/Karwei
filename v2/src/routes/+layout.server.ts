@@ -8,11 +8,15 @@ export const load: LayoutServerLoad = async ({ locals }) => {
         const notifications = await NotificationRepository.getByUser(locals.user.id, true);
         const { ChatRepository } = await import('$lib/server/repositories/chatRepository');
         const unreadMessagesCount = await ChatRepository.getUnreadMessageCount(locals.user.id);
+        const { ContactRequestRepository } = await import('$lib/server/repositories/contactRequestRepository');
+        const pendingRequestCount = await ContactRequestRepository.getPendingCount(locals.user.id);
+        
         return {
             user: locals.user,
             unreadCount,
             notifications,
-            unreadMessagesCount
+            unreadMessagesCount,
+            pendingRequestCount
         };
     }
     
@@ -20,6 +24,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
         user: null,
         unreadCount: 0,
         notifications: [],
-        unreadMessagesCount: 0
+        unreadMessagesCount: 0,
+        pendingRequestCount: 0
     };
 };

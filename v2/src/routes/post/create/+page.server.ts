@@ -38,12 +38,43 @@ export const actions = {
      const image = data.get('image') as File;
      let imageUrl = null;
 
+     // 1. Validate File Type and Size
+     const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+     const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
      if (image && image.size > 0) {
+         if (image.size > MAX_SIZE) {
+             return fail(400, { 
+                 error: "Image too large. Max 5MB allowed.", 
+                 title, 
+                 description, 
+                 type, 
+                 price: priceStr 
+             });
+         }
+         
+         if (!ALLOWED_TYPES.includes(image.type)) {
+             return fail(400, { 
+                 error: "Invalid file type. Only JPG, PNG, and WEBP are allowed.", 
+                 title, 
+                 description, 
+                 type, 
+                 price: priceStr 
+             });
+         }
+
          try {
              imageUrl = await uploadToR2(image);
          } catch (err) {
              console.error('Upload failed', err);
-             // Optionally handle error, but for now continue or fail
+             // 2. Do NOT continue if upload fails. Return an error to the user.
+             return fail(500, { 
+                 error: "Image upload failed. Please try again later.", 
+                 title, 
+                 description, 
+                 type, 
+                 price: priceStr 
+             });
          }
      }
 

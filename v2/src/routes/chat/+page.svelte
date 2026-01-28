@@ -44,6 +44,97 @@
             </h1>
         </div>
 
+        <!-- Contact Requests -->
+        {#if data.incomingRequests && data.incomingRequests.length > 0}
+            <div
+                class="p-4 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-100 dark:border-indigo-800"
+            >
+                <h2
+                    class="text-sm font-semibold text-indigo-900 dark:text-indigo-200 mb-3 uppercase tracking-wider"
+                >
+                    Contact Requests
+                </h2>
+                <div class="space-y-3">
+                    {#each data.incomingRequests as request (request.id)}
+                        <div
+                            class="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-sm flex items-center justify-between"
+                        >
+                            <div class="flex items-center gap-3">
+                                {#if request.requesterImage}
+                                    <img
+                                        src={request.requesterImage}
+                                        alt={request.requesterName}
+                                        class="w-10 h-10 rounded-full object-cover"
+                                    />
+                                {:else}
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+                                    >
+                                        <UserIcon
+                                            class="w-5 h-5 text-gray-400"
+                                        />
+                                    </div>
+                                {/if}
+                                <div>
+                                    <p
+                                        class="text-sm font-medium text-gray-900 dark:text-white"
+                                    >
+                                        {request.requesterName ||
+                                            "Unknown User"}
+                                    </p>
+                                    <p
+                                        class="text-xs text-gray-500 dark:text-gray-400"
+                                    >
+                                        Wants to send you a message
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <form
+                                    action="?/respondRequest"
+                                    method="POST"
+                                    use:enhance
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="requestId"
+                                        value={request.id}
+                                    />
+                                    <button
+                                        type="submit"
+                                        name="status"
+                                        value="denied"
+                                        class="px-3 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded border border-red-200 dark:border-red-800 transition-colors"
+                                    >
+                                        Deny
+                                    </button>
+                                </form>
+                                <form
+                                    action="?/respondRequest"
+                                    method="POST"
+                                    use:enhance
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="requestId"
+                                        value={request.id}
+                                    />
+                                    <button
+                                        type="submit"
+                                        name="status"
+                                        value="accepted"
+                                        class="px-3 py-1 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded shadow-sm transition-colors"
+                                    >
+                                        Accept
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+            </div>
+        {/if}
+
         <!-- Conversation List -->
         <div class="divide-y divide-gray-200 dark:divide-gray-700">
             {#if data.conversations.length === 0}

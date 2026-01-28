@@ -4,7 +4,7 @@ import { desc, eq, and, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 
 export const NotificationRepository = {
-  async create(userId: string, type: 'offer' | 'accept' | 'contact_request' | 'unassign', relatedId: string) {
+  async create(userId: string, type: 'offer' | 'accept' | 'contact_request' | 'unassign' | 'job_completed' | 'job_reopened', relatedId: string) {
     await db.insert(notificationsTable).values({
       userId,
       type,

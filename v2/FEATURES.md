@@ -16,14 +16,14 @@ The core mission is to:
   - Detailed profiles including Name, Bio, Skills (for Makers), and Location.
   - **Skills**: Normalized many-to-many relationship with dedicated skill catalog.
     - Each skill has an associated icon for visual identification.
-    - Skills are efficiently queried and displayed across the platform.
+    - Skills are efficiently queried using **Database-Level Filtering** (EXISTS subqueries) for performance.
   - **Profile Picture**: Users can upload and update their profile picture.
   - Contact details (Phone number) which are privacy-protected.
   - **Makers**: Users can toggle "Maker" status to receive offers.
 
 ### 2. Repair Lifecycle (Posts)
 - **Create Post**: Users can post items that need repairing.
-  - Includes Title, Description, Image (Cloudflare R2), Target Price, and Item Type.
+  - Includes Title, Description, Image (Cloudflare R2 with **strict validation**), Target Price, and Item Type.
   - Initial Status: `Open`.
 - **Browse Requests**: A feed of recent repair requests is available on the homepage.
 - **Detailed View**: Dedicated page for each repair request.
@@ -38,8 +38,10 @@ The core mission is to:
 
 ### 4. Work & Completion
 - **Execution**: The repair is carried out offline.
-- **Completion**: The Customer marks the job as "Fixed".
+- **Completion**: The Maker marks the job as "Fixed".
   - **State Transition**: `In Progress` -> `Fixed`.
+- **Dispute (Reopen)**: If not satisfied, the Customer can "Reopen" the job.
+  - **State Transition**: `Fixed` -> `In Progress`.
 
 ### 5. Review & Closure
 - **Reviews**: After a post is `Fixed`, the Customer can leave a review for the Maker.
@@ -75,13 +77,13 @@ The core mission is to:
 
 ### Logic Gaps
 1.  **One-Sided Reviews**: Currently, only Customers can review Makers. Makers cannot review Customers, which leaves them vulnerable to bad clients.
-2.  **No Cancellation Flow**: Once a Maker is assigned (`In Progress`), there is no in-app way to cancel if the Maker or Client ghosts. The post remains stuck.
+2.  **Partial Cancellation Flow**: Inspecting the code reveals that **Customers** can "Unassign Fixer" (reopening the post), but **Makers** have no way to withdraw from a job once assigned.
 3.  **Completion Trust**: Only the Customer can mark an item as "Fixed". If a Customer refuses to mark it (or forgets), the Maker receives no on-platform credit/history for the job.
 4.  **Payment Isolation**: Financial transactions are offline. The app tracks "Price" but handles no money.
 
 ### Recommended Improvements
 - **Two-way Reviews**: Allow Makers to rate Customers.
-- **Dispute/Cancellation**: Add "Cancel Job" buttons for both parties with reasoning.
+- **Maker Withdrawal**: Add "Withdraw" button for Makers when a job is `In Progress`.
 - **Status Visibility**: Better visual indicators for `In Progress` vs `Open` states in the feed.
 - **Notifications**: In-app notifications for Offers, Acceptances, and Contact Requests.
-- **Location filtering**: Filter posts by distance from user location.
+- **Location filtering**: Filter posts by distance from user location (Implemented).
